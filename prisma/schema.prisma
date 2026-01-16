@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MÓDULO A: Ledger Mensal (Core)
+model Transaction {
+  id          String   @id @default(uuid())
+  amount      Decimal  @db.Decimal(10, 2)
+  description String
+  category    String
+  subcategory String?
+  type        String   // INCOME, EXPENSE (FIXO, VARIAVEL, LAZER, ETC)
+  date        DateTime
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamento com Cartão de Crédito (Futuro)
+  creditCardId String?
+}
+
+// MÓDULO B: Janelas de Pagamento
+model PaymentWindow {
+  id        String   @id @default(uuid())
+  month     String   // YYYY-MM
+  windowDay Int      // 7, 15, 30
+  receivedAmount Decimal @db.Decimal(10, 2)
+  
+  payables  Payable[]
+}
+
+model Payable {
+  id              String   @id @default(uuid())
+  paymentWindowId String
+  paymentWindow   PaymentWindow @relation(fields: [paymentWindowId], references: [id])
+  name            String
+  amount          Decimal @db.Decimal(10, 2)
+  dueDate         DateTime
+  isPaid          Boolean @default(false)
+}
+
+// MÓDULO C: Envelopes de Planejamento (50/30/20 et al)
+model BudgetEnvelope {
+  id          String   @id @default(uuid())
+  name        String   // "Contas Fixas", "Educação", "Lazer"
+  targetPercentage Decimal @db.Decimal(5, 2) // ex: 55.00, 10.00
+  month       String   // YYYY-MM (Ou 'DEFAULT' para template)
+}
+
+// MÓDULO D: Projeções de Investimentos
+model InvestmentProjection {
+  id               String   @id @default(uuid())
+  name             String   // "Cenário Conservador"
+  initialBalance   Decimal  @db.Decimal(15, 2)
+  monthlyContribution Decimal @db.Decimal(10, 2)
+  annualReturnRate Decimal  @db.Decimal(5, 2)
+  adminFeeRate     Decimal  @db.Decimal(5, 2)
+  years            Int
+  createdAt        DateTime @default(now())
+}
+
+// MÓDULO G: Objetivos
+model Goal {
+  id          String   @id @default(uuid())
+  description String
+  targetAmount Decimal? @db.Decimal(15,2)
+  status      String   // PENDING, COMPLETED
+  createdAt   DateTime @default(now())
+}
+
+// MÓDULO H: Snapshots / Reuniões
+model FinancialSnapshot {
+  id        String   @id @default(uuid())
+  date      DateTime @default(now())
+  totalBalance Decimal @db.Decimal(15, 2)
+  totalDebt    Decimal @db.Decimal(15, 2)
+  notes        String?  @db.Text
+}
+
+// MÓDULO F: Dívidas (Legado/Manutenção)
+model Debt {
+  id             String   @id @default(uuid())
+  name           String
+  totalValue     Decimal  @db.Decimal(10, 2)
+  interestRate   Decimal  @db.Decimal(5, 2)
+  monthlyPayment Decimal? @db.Decimal(10, 2)
+  remainingValue Decimal? @db.Decimal(10, 2)
+  status         String   // ACTIVE, PAID
+}
