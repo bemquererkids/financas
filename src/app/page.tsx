@@ -12,6 +12,8 @@ import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { MonthlyOverview } from "@/components/dashboard/MonthlyOverview";
 import { TransactionList } from "@/components/transactions/TransactionList";
 
+import { QuickActions } from "@/components/dashboard/QuickActions";
+
 export const dynamic = 'force-dynamic'; // Garante que os dados sejam sempre frescos
 
 export default async function DashboardPage() {
@@ -27,17 +29,16 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2 mb-8">
-                <div>
-                    <h2 className="text-4xl font-bold tracking-tight text-white mb-1">Visão Geral</h2>
-                    <p className="text-slate-400">Acompanhe sua saúde financeira em tempo real.</p>
+            <div className="flex flex-col gap-4 mb-8">
+                <div className="flex items-center justify-between space-y-2">
+                    <div>
+                        <h2 className="text-4xl font-bold tracking-tight text-white mb-1">Visão Geral</h2>
+                        <p className="text-slate-400">Acompanhe sua saúde financeira em tempo real.</p>
+                    </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                    {/* Futuro: Botões de Filtro de Data */}
-                    <span className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-slate-300 capitalize backdrop-blur-md">
-                        {summary.period}
-                    </span>
-                </div>
+
+                {/* Ações Rápidas (Topo) */}
+                <QuickActions />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
