@@ -1,18 +1,9 @@
 'use client';
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit2, MoreHorizontal } from "lucide-react";
+import { Trash2, Edit2 } from "lucide-react";
 import { deleteTransaction } from "@/app/actions/transaction-crud";
 import { useState } from "react";
-// import { EditTransactionDialog } from "./EditTransactionDialog"; // To create
 
 interface Transaction {
     id: string;
@@ -37,41 +28,95 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
     };
 
+    const formatDate = (dateStr: string) => {
+        return new Date(dateStr).toLocaleDateString('pt-BR');
+    };
+
     return (
         <div className="rounded-3xl glass-card overflow-hidden mt-8">
-            <div className="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                <div>
-                    <h3 className="text-xl font-bold text-white">Histórico de Transações</h3>
-                    <p className="text-sm text-slate-400">Últimos lançamentos registrados.</p>
-                </div>
+            <div className="p-6 border-b border-white/5 bg-white/5">
+                <h3 className="text-xl font-bold text-white">Histórico de Transações</h3>
+                <p className="text-sm text-slate-400">Últimos lançamentos registrados.</p>
             </div>
-            <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader className="bg-white/5">
-                        <TableRow className="hover:bg-transparent border-white/5">
-                            <TableHead className="text-slate-200">Data</TableHead>
-                            <TableHead className="text-slate-200">Descrição</TableHead>
-                            <TableHead className="text-slate-200">Categoria</TableHead>
-                            <TableHead className="text-right text-slate-200">Valor</TableHead>
-                            <TableHead className="text-right text-slate-200">Ações</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+
+            {/* Mobile Layout - Cards */}
+            <div className="md:hidden divide-y divide-white/5">
+                {transactions.map((t) => (
+                    <div key={t.id} className="p-4 hover:bg-white/5 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">{t.description}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs text-slate-400">{formatDate(t.date)}</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-xs text-slate-400">
+                                        {t.category}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                                <p className={`font-mono font-medium ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {t.type === 'EXPENSE' ? '−' : '+'} {formatCurrency(Number(t.amount))}
+                                </p>
+                                <div className="flex justify-end gap-1 mt-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+                                        onClick={() => alert("Edição em breve")}
+                                    >
+                                        <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                        onClick={() => handleDelete(t.id)}
+                                        disabled={isDeleting === t.id}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {transactions.length === 0 && (
+                    <div className="text-center py-12 text-slate-500">
+                        <p>Nenhuma transação encontrada.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop Layout - Table */}
+            <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-white/5">
+                        <tr className="border-b border-white/5">
+                            <th className="text-left p-4 text-sm font-medium text-slate-200">Data</th>
+                            <th className="text-left p-4 text-sm font-medium text-slate-200">Descrição</th>
+                            <th className="text-left p-4 text-sm font-medium text-slate-200">Categoria</th>
+                            <th className="text-right p-4 text-sm font-medium text-slate-200">Valor</th>
+                            <th className="text-right p-4 text-sm font-medium text-slate-200">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
                         {transactions.map((t) => (
-                            <TableRow key={t.id} className="hover:bg-white/5 border-white/5">
-                                <TableCell className="text-slate-400 whitespace-nowrap">
-                                    {new Date(t.date).toLocaleDateString('pt-BR')}
-                                </TableCell>
-                                <TableCell className="font-medium text-white whitespace-nowrap">{t.description}</TableCell>
-                                <TableCell className="text-slate-400 whitespace-nowrap">
+                            <tr key={t.id} className="hover:bg-white/5 transition-colors">
+                                <td className="p-4 text-slate-400 whitespace-nowrap">
+                                    {formatDate(t.date)}
+                                </td>
+                                <td className="p-4 font-medium text-white">
+                                    {t.description}
+                                </td>
+                                <td className="p-4 text-slate-400">
                                     <span className="px-2 py-1 rounded-full bg-white/5 text-xs">
                                         {t.category}
                                     </span>
-                                </TableCell>
-                                <TableCell className={`text-right font-mono whitespace-nowrap ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
-                                    {t.type === 'EXPENSE' ? '-' : '+'} {formatCurrency(Number(t.amount))}
-                                </TableCell>
-                                <TableCell className="text-right whitespace-nowrap">
+                                </td>
+                                <td className={`p-4 text-right font-mono ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
+                                    {t.type === 'EXPENSE' ? '−' : '+'} {formatCurrency(Number(t.amount))}
+                                </td>
+                                <td className="p-4 text-right whitespace-nowrap">
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -89,18 +134,18 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
-                                </TableCell>
-                            </TableRow>
+                                </td>
+                            </tr>
                         ))}
                         {transactions.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                            <tr>
+                                <td colSpan={5} className="text-center py-12 text-slate-500">
                                     Nenhuma transação encontrada.
-                                </TableCell>
-                            </TableRow>
+                                </td>
+                            </tr>
                         )}
-                    </TableBody>
-                </Table>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

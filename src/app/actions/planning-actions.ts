@@ -82,3 +82,50 @@ export async function replicateMonthToFuture(
 
     revalidatePath('/planning');
 }
+
+export async function updatePlanningItem(id: string, amount: number) {
+    await prisma.transaction.update({
+        where: { id },
+        data: { amount, updatedAt: new Date() }
+    });
+
+    revalidatePath('/planning');
+    revalidatePath('/');
+}
+
+export async function deletePlanningItem(id: string) {
+    await prisma.transaction.delete({
+        where: { id }
+    });
+
+    revalidatePath('/planning');
+    revalidatePath('/');
+}
+
+export async function consolidateMonth(month: string) {
+    // Mark all transactions in this month as "consolidated" by updating description
+    const [year, m] = month.split('-');
+    const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
+    const endDate = new Date(parseInt(year), parseInt(m), 1);
+
+    // Get all recurring (planned) transactions for this month
+    const transactions = await prisma.transaction.findMany({
+        where: {
+            date: { gte: startDate, lt: endDate },
+            isRecurring: true
+        }
+    });
+
+    // Mark them as non-recurring (consolidated/real)
+    for (const t of transactions) {
+        await prisma.transaction.update({
+            where: { id: t.id },
+            data: { isRecurring: false }
+        });
+    }
+
+    revalidatePath('/planning');
+    revalidatePath('/');
+    
+    return { consolidated: transactions.length };
+}
