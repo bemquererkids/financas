@@ -1,91 +1,84 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { PlanningEngine, MonthData } from "@/lib/planning-engine";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
-const prisma = new PrismaClient();
-
-export type EnvelopeResult = {
-    name: string;
-    percentage: number;
-    idealAmount: number;
-    realAmount: number;
-    gap: number;
-    status: 'OVERSPECT' | 'UNDERSPECT' | 'ON_TRACK';
-};
-
-export async function getPlanningData() {
+export async function getPlanningData(): Promise<MonthData[]> {
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // Start from current month
+    const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    // 1. Get Income
+    // Get next 12 months
+    return await PlanningEngine.getPlanningGrid(startMonth, 12);
+}
+
+export async function addPlanningItem(
+    month: string, // YYYY-MM
+    amount: number,
+    description: string,
+    type: 'INCOME' | 'EXPENSE',
+    category: string
+) {
+    // Construct a date: 1st day of the target month
+    const [year, m] = month.split('-');
+    const date = new Date(parseInt(year), parseInt(m) - 1, 15); // Middle of month to be safe from timezone shifts
+
+    await prisma.transaction.create({
+        data: {
+            amount,
+            description,
+            type,
+            category,
+            date,
+            isRecurring: false // Manual planning entry
+        }
+    });
+
+    revalidatePath('/planning');
+    revalidatePath('/'); // Update dashboard too
+}
+
+export async function replicateMonthToFuture(
+    sourceMonth: string, // YYYY-MM
+    targetMonthsCount: number = 11
+) {
+    // 1. Fetch all transactions from source month
+    const [year, m] = sourceMonth.split('-');
+    const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
+    const endDate = new Date(parseInt(year), parseInt(m), 1);
+
     const transactions = await prisma.transaction.findMany({
         where: {
-            date: { gte: firstDay, lte: lastDay }
+            date: {
+                gte: startDate,
+                lt: endDate
+            }
         }
     });
 
-    const totalIncome = transactions
-        .filter(t => t.type === 'INCOME')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+    // 2. Clone for future months
+    for (let i = 1; i <= targetMonthsCount; i++) {
+        const nextMonthDate = new Date(parseInt(year), parseInt(m) - 1 + i, 15);
 
-    // 2. Define Envelopes Logic (Mapping Categories)
-    const envelopeDefs = [
-        {
-            name: 'Contas Fixas / Essenciais',
-            percent: 0.55,
-            categories: ['Moradia', 'Condominio', 'Luz', 'Agua', 'Gas', 'Internet', 'Mercado', 'GasolinaUber', 'IPTU', 'Saude', 'Seguros', 'Celular']
-        },
-        {
-            name: 'Educação / Evolução',
-            percent: 0.10,
-            categories: ['Educacao', 'Livros', 'Cursos']
-        },
-        {
-            name: 'Reserva de Emergência',
-            percent: 0.10,
-            categories: ['Reserva'] // Specific category required
-        },
-        {
-            name: 'Aposentadoria / Futuro',
-            percent: 0.10,
-            categories: ['Previdencia', 'Investimento']
-        },
-        {
-            name: 'Lazer e Estilo de Vida',
-            percent: 0.15,
-            categories: ['Lazer', 'Estetica', 'Academia', 'Streaming', 'Pet', 'Diarista', 'Dizimo']
+        // Simple Bulk Insert
+        const copies = transactions.map(t => ({
+            amount: t.amount,
+            description: t.description,
+            category: t.category,
+            type: t.type,
+            date: nextMonthDate,
+            isRecurring: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }));
+
+        if (copies.length > 0) {
+            await prisma.transaction.createMany({
+                data: copies
+            });
         }
-    ];
+    }
 
-    // 3. Calculate Results
-    const results: EnvelopeResult[] = envelopeDefs.map(env => {
-        const ideal = totalIncome * env.percent;
-
-        const real = transactions
-            .filter(t => t.type === 'EXPENSE' && env.categories.includes(t.category))
-            .reduce((sum, t) => sum + Number(t.amount), 0);
-
-        const gap = ideal - real; // Positive means we spent LESS than budget (Good for expenses), Negative means Overspending.
-
-        // Status Logic
-        let status: EnvelopeResult['status'] = 'ON_TRACK';
-        if (real > ideal) status = 'OVERSPECT'; // Gastou demais
-        if (real < ideal * 0.9) status = 'UNDERSPECT'; // Gastou de menos (Sobra)
-
-        return {
-            name: env.name,
-            percentage: env.percent * 100,
-            idealAmount: ideal,
-            realAmount: real,
-            gap,
-            status
-        };
-    });
-
-    return {
-        period: `${today.toLocaleString('pt-BR', { month: 'long' })}`,
-        totalIncome,
-        envelopes: results
-    };
+    revalidatePath('/planning');
 }
