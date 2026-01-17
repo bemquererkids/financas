@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 
 export function ChatWidget() {
@@ -70,7 +71,22 @@ export function ChatWidget() {
                                             : "bg-zinc-800 text-zinc-100 rounded-tl-none border border-white/5"
                                     )}
                                 >
-                                    {m.content}
+                                    {m.role === 'user' ? (
+                                        m.content
+                                    ) : (
+                                        <div className="prose prose-invert prose-sm max-w-none">
+                                            <ReactMarkdown
+                                                components={{
+                                                    strong: ({ node, ...props }) => <span className="font-bold text-emerald-400" {...props} />,
+                                                    ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-1" {...props} />,
+                                                    li: ({ node, ...props }) => <li className="text-zinc-300" {...props} />,
+                                                    p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                }}
+                                            >
+                                                {m.content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}
