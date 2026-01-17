@@ -10,8 +10,11 @@ import { cn } from '@/lib/utils';
 
 export function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
         api: '/api/chat',
+        onError: (err) => {
+            console.error("ChatWidget Error:", err);
+        }
     });
 
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -76,6 +79,12 @@ export function ChatWidget() {
                                 <div className="bg-zinc-800 rounded-2xl p-2 rounded-tl-none border border-white/5">
                                     <Loader2 className="h-4 w-4 text-emerald-500 animate-spin" />
                                 </div>
+                            </div>
+                        )}
+                        {error && (
+                            <div className="p-3 my-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                                <strong>Erro no Chat:</strong> {error.message}
+                                <br />Verifique os logs da Railway para detalhes.
                             </div>
                         )}
                     </CardContent>

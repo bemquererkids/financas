@@ -11,10 +11,24 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
     try {
+        console.log("🤖 Chat API Called");
+
+        // Check API Key
+        if (!process.env.OPENAI_API_KEY) {
+            console.error("❌ OPENAI_API_KEY is missing");
+            return new Response(JSON.stringify({ error: 'Configuração de API Key ausente' }), { status: 500 });
+        }
+
         const { messages } = await req.json();
+        console.log(`📩 Received ${messages.length} messages`);
 
         // 1. Retrieve Financial Data
+        console.log("📊 Fetching financial summary...");
         const summary = await getFinancialSummary();
+        console.log("✅ Financial summary retrieved:", JSON.stringify({
+            balance: summary.balance,
+            health: summary.healthScore
+        }));
 
         // 2. Create Context String (Correcting property access)
         // summary.rule503020 contains the nested objects needs, wants, savings
@@ -47,6 +61,8 @@ export async function POST(req: Request) {
       5. Se o usuário perguntar sobre algo não financeiro (ex: política, futebol), diga educadamente que só pode ajudar com finanças.`
         };
 
+        console.log("🧠 Sending request to OpenAI...");
+
         // 4. Call OpenAI
         const response = await openai.chat.completions.create({
             model: 'gpt-4o',
@@ -55,12 +71,15 @@ export async function POST(req: Request) {
             temperature: 0.7,
         });
 
+        console.log("🌊 Stream started");
+
         // 5. Stream Response
         const stream = OpenAIStream(response);
         return new StreamingTextResponse(stream);
 
-    } catch (error) {
-        console.error('Chat API Error:', error);
-        return new Response(JSON.stringify({ error: 'Erro ao processar mensagem' }), { status: 500 });
+    } catch (error: any) {
+        console.error('❌ Chat API Error:', error);
+        // Return the error message to the client for visible debugging
+        return new Response(JSON.stringify({ error: `Erro interno: ${error.message}` }), { status: 500 });
     }
 }
