@@ -96,10 +96,10 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
     return (
         <div className="space-y-6 overflow-hidden">
             {/* Main Scrolling Container */}
-            <div className="overflow-x-auto pb-6 hide-scrollbar">
-                <div className="flex gap-4 min-w-max">
+            <div className="overflow-x-auto pb-6 hide-scrollbar snap-x snap-mandatory">
+                <div className="flex gap-4 min-w-max px-4">
                     {initialData.map((data) => (
-                        <div key={data.month} className="w-[320px] shrink-0 space-y-4">
+                        <div key={data.month} className="w-[85vw] md:w-[350px] shrink-0 space-y-4 snap-center">
                             {/* Month Header */}
                             <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                                 <span className="font-bold text-lg text-white capitalize">{getMonthName(data.month)}</span>
@@ -123,17 +123,17 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 </div>
                                 <div className="space-y-1">
                                     {data.income.items.map(i => (
-                                        <div key={i.id} className="flex justify-between text-xs text-slate-400">
+                                        <div key={i.id} className="flex justify-between text-sm text-slate-400 py-1 border-b border-white/5 last:border-0">
                                             <span>{i.description}</span>
                                             <span>{formatMoney(Number(i.amount))}</span>
                                         </div>
                                     ))}
                                     <Button
                                         variant="ghost"
-                                        className="w-full text-xs h-6 mt-2 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                                        className="w-full text-sm h-10 mt-2 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
                                         onClick={() => openAddModal(data.month, 'INCOME', 'SALARIO')}
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Adicionar
+                                        <Plus className="h-4 w-4 mr-2" /> Adicionar
                                     </Button>
                                 </div>
                             </div>
@@ -146,7 +146,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 </div>
                                 <div className="space-y-1">
                                     {data.payrollDeductions.items.map(i => (
-                                        <div key={i.id} className="flex justify-between text-xs text-slate-400">
+                                        <div key={i.id} className="flex justify-between text-sm text-slate-400 py-1 border-b border-white/5 last:border-0">
                                             <span>{i.description}</span>
                                             <span>-{formatMoney(Number(i.amount))}</span>
                                         </div>
@@ -156,7 +156,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                         className="w-full text-xs h-6 mt-2 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
                                         onClick={() => openAddModal(data.month, 'EXPENSE', 'PAYROLL_DEDUCTION')}
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Adicionar Deducao
+                                        <Plus className="h-4 w-4 mr-2" /> Adicionar Dedução
                                     </Button>
                                 </div>
                             </div>
@@ -177,7 +177,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 </div>
                                 <div className="space-y-1">
                                     {data.fixedExpenses.items.map(i => (
-                                        <div key={i.id} className="flex justify-between text-xs text-slate-400">
+                                        <div key={i.id} className="flex justify-between text-sm text-slate-400 py-1 border-b border-white/5 last:border-0">
                                             <span>{i.description}</span>
                                             <span>{formatMoney(Number(i.amount))}</span>
                                         </div>
@@ -187,7 +187,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                         className="w-full text-xs h-6 text-slate-500 hover:text-white"
                                         onClick={() => openAddModal(data.month, 'EXPENSE', 'Moradia')}
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Adicionar Fixa
+                                        <Plus className="h-4 w-4 mr-2" /> Adicionar Fixa
                                     </Button>
                                 </div>
                             </div>
@@ -200,7 +200,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 </div>
                                 <div className="space-y-1">
                                     {data.creditCard.items.map(i => (
-                                        <div key={i.id} className="flex justify-between text-xs text-slate-400">
+                                        <div key={i.id} className="flex justify-between text-sm text-slate-400 py-1 border-b border-white/5 last:border-0">
                                             <span>{i.description}</span>
                                             <span>{formatMoney(Number(i.amount))}</span>
                                         </div>
@@ -210,7 +210,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                         className="w-full text-xs h-6 text-purple-500 hover:text-purple-300"
                                         onClick={() => openAddModal(data.month, 'EXPENSE', 'CREDIT_CARD_BILL')}
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Fatura
+                                        <Plus className="h-4 w-4 mr-2" /> Fatura
                                     </Button>
                                 </div>
                             </div>
@@ -223,7 +223,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 </div>
                                 <div className="space-y-1">
                                     {data.leisureExpenses.items.map(i => (
-                                        <div key={i.id} className="flex justify-between text-xs text-slate-400">
+                                        <div key={i.id} className="flex justify-between text-sm text-slate-400 py-1 border-b border-white/5 last:border-0">
                                             <span>{i.description}</span>
                                             <span>{formatMoney(Number(i.amount))}</span>
                                         </div>
@@ -233,7 +233,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                         className="w-full text-xs h-6 text-blue-500 hover:text-blue-300"
                                         onClick={() => openAddModal(data.month, 'EXPENSE', 'Lazer')}
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Adic. Lazer
+                                        <Plus className="h-4 w-4 mr-2" /> Adic. Lazer
                                     </Button>
                                 </div>
                             </div>
