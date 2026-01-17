@@ -1,7 +1,7 @@
 'use server';
 
 import { PlanningEngine, MonthData } from "@/lib/planning-engine";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function getPlanningData(): Promise<MonthData[]> {

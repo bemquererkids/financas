@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma';
 import { Transaction } from '@prisma/client';
 
 export type MonthData = {
