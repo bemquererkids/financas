@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileSidebar } from "@/components/layout/MobileSidebar";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ChatWidget } from "@/components/ai/ChatWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,15 +22,26 @@ export default function RootLayout({
         <html lang="pt-BR" className="dark">
             <body className={`${inter.className} bg-slate-950 min-h-screen`}>
                 <div className="h-full relative">
-                    {/* Sidebar Desktop */}
-                    <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80]">
-                        <Sidebar />
-                    </div>
+                    <AuthProvider>
+                        {/* Sidebar Desktop */}
+                        <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80]">
+                            <Sidebar />
+                        </div>
 
-                    {/* Main Content */}
-                    <main className="md:pl-72 pb-10">
-                        {children}
-                    </main>
+                        {/* Mobile Navbar */}
+                        <div className="md:hidden fixed top-0 w-full z-50 flex items-center p-4 bg-[#111827] border-b border-white/10">
+                            <MobileSidebar />
+                            <span className="ml-4 font-bold text-lg text-white">RNV Control</span>
+                        </div>
+
+                        {/* Main Content */}
+                        <main className="md:pl-72 pt-16 md:pt-0 pb-10">
+                            {children}
+                        </main>
+
+                        {/* AI Chatbot */}
+                        <ChatWidget />
+                    </AuthProvider>
                 </div>
             </body>
         </html>

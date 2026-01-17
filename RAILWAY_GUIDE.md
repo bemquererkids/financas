@@ -23,18 +23,26 @@ Este guia orienta como colocar o **Financial Control App** online usando a plata
 
 ### Passo C: Conectar o Banco
 1.  Clique no serviço do seu site (Next.js).
-2.  Vá na aba **Settings** -> **Variables**.
+2.  Vá na aba **Settings** -> **Variables`.
 3.  Adicione a variável `DATABASE_URL`.
     *   O valor deve ser o *Connection URL* do serviço Postgres que você acabou de criar.
     *   Dica: A Railway costuma injetar isso automaticamente se você linkar os serviços, mas confira. Procura por `${{Postgres.DATABASE_URL}}`.
 
-### Passo D: Outras Variáveis
-Adicione as seguintes variáveis na aba **Variables**:
+### 4. Configuração de Variáveis (Essencial)
+No painel da Railway, vá na aba **Variables** e adicione:
 
-| Variável | Valor | Descrição |
+| Variável | Valor (Exemplo) | Descrição |
 | :--- | :--- | :--- |
-| `OPENAI_API_KEY` | `sk-...` | Sua chave da OpenAI (mesma do `.env`) |
-| `NPM_FLAGS` | `--legacy-peer-deps` | (Opcional) Caso haja conflito de deps |
+| `DATABASE_URL` | `postgresql://...` | Link do Banco de Dados |
+| `OPENAI_API_KEY` | `sk-...` | Sua chave da OpenAI |
+| `NEXTAUTH_SECRET` | `uma_senha_muito_louca_123` | Senha interna para criptografia de sessão |
+| `NEXTAUTH_URL` | `https://seu-app.up.railway.app` | O link final do seu site (IMPORTANTE) |
+| `APP_USER` | `admin` | Seu usuário de login |
+| `APP_PASSWORD` | `123456` | Sua senha de login |
+| `APP_WIFE_USER` | `esposa` | (Opcional) Usuário da esposa |
+| `APP_WIFE_PASSWORD` | `654321` | (Opcional) Senha da esposa |
+
+> **Nota:** O `NEXTAUTH_URL` deve ser exatamente o link do seu site na Railway (ex: `https://financas-production.up.railway.app`). Se não colocar, o login pode falhar.ps |
 
 ## 3. Configuração de Build e Start (Importante!)
 Para que o Prisma funcione, precisamos rodar as migrations antes de iniciar o app.
