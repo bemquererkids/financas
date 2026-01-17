@@ -29,7 +29,10 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
     };
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString('pt-BR');
+        // Evita problema de hidratação: usa string diretamente, não Date
+        const datePart = dateStr.split('T')[0]; // "2026-01-15"
+        const [year, month, day] = datePart.split('-');
+        return `${day}/${month}/${year}`;
     };
 
     return (

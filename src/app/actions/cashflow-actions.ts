@@ -43,20 +43,23 @@ export async function getCashFlow(year: number, month: number): Promise<CashFlow
     today.setHours(0, 0, 0, 0);
 
     transactions.forEach(t => {
-        const dateKey = t.date.toISOString().split('T')[0];
-        const txDate = new Date(t.date);
-        txDate.setHours(0, 0, 0, 0);
+        const dateKey = t.date.toISOString().split('T')[0]; // "2026-01-15"
 
-        // Determine label
+        // Determine label using date strings (avoids timezone issues)
         let label: string;
-        const diffDays = Math.floor((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24));
+        const todayStr = today.toISOString().split('T')[0];
+        const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
 
-        if (diffDays === 0) {
+        if (dateKey === todayStr) {
             label = 'Hoje';
-        } else if (diffDays === 1) {
+        } else if (dateKey === yesterdayStr) {
             label = 'Ontem';
         } else {
-            label = txDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+            // Format as "15 de janeiro" without timezone issues
+            const [year, month, day] = dateKey.split('-');
+            const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+            label = `${parseInt(day)} de ${monthNames[parseInt(month) - 1]}`;
         }
 
         if (!dayMap.has(dateKey)) {
