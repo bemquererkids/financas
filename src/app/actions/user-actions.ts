@@ -8,21 +8,30 @@ const prisma = new PrismaClient();
 const DEFAULT_PROFILE_ID = 'default';
 
 export async function getUserProfile() {
-    let profile = await prisma.userProfile.findUnique({
-        where: { id: DEFAULT_PROFILE_ID }
-    });
-
-    // Criar perfil padrão se não existir
-    if (!profile) {
-        profile = await prisma.userProfile.create({
-            data: {
-                id: DEFAULT_PROFILE_ID,
-                name: 'Usuário'
-            }
+    try {
+        let profile = await prisma.userProfile.findUnique({
+            where: { id: DEFAULT_PROFILE_ID }
         });
-    }
 
-    return profile;
+        if (!profile) {
+            try {
+                profile = await prisma.userProfile.create({
+                    data: {
+                        id: DEFAULT_PROFILE_ID,
+                        name: 'Usuário',
+                        avatarUrl: null
+                    }
+                });
+            } catch (createError) {
+                console.error("Erro ao criar perfil padrão:", createError);
+                return { id: DEFAULT_PROFILE_ID, name: 'Usuário', avatarUrl: null };
+            }
+        }
+        return profile;
+    } catch (error) {
+        console.error("Erro ao buscar perfil do usuário:", error);
+        return { id: DEFAULT_PROFILE_ID, name: 'Usuário', avatarUrl: null };
+    }
 }
 
 export async function updateUserName(name: string) {
