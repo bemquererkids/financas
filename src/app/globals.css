@@ -74,4 +74,15 @@
   .glass-input {
     @apply bg-black/20 border-white/10 focus:border-white/20 focus:bg-black/40 transition-all;
   }
+
+  /* Utilitário para esconder scrollbar (Chrome/Safari/Webkit) */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Utilitário para esconder scrollbar (IE/Edge/Firefox) */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
