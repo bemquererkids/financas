@@ -33,10 +33,10 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
     };
 
     return (
-        <div className="rounded-3xl glass-card overflow-hidden mt-8">
-            <div className="p-6 border-b border-white/5 bg-white/5">
-                <h3 className="text-xl font-bold text-white">Histórico de Transações</h3>
-                <p className="text-sm text-slate-400">Últimos lançamentos registrados.</p>
+        <div className="rounded-2xl glass-card overflow-hidden">
+            <div className="p-4 border-b border-white/5 bg-white/5">
+                <h3 className="text-sm font-medium text-white">Histórico de Transações</h3>
+                <p className="text-xs text-slate-400">Últimos lançamentos registrados.</p>
             </div>
 
             {/* Mobile Layout - Cards */}
