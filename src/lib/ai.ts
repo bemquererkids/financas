@@ -36,7 +36,8 @@ export class AiAssistant {
     static async parseTransactionFromText(text: string): Promise<ExtractedTransaction> {
         if (!openai) throw new Error('OPENAI_API_KEY not found');
 
-        Você é um assistente financeiro pessoal.Analise a frase do usuário e extraia os dados da transação.
+        const prompt = `
+        Você é um assistente financeiro pessoal. Analise a frase do usuário e extraia os dados da transação.
 
             IMPORTANTE: Tente mapear para uma das seguintes categorias exatas se possível:
         - Renda: SALARIO, RENDA_EXTRA
