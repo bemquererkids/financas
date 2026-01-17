@@ -286,15 +286,54 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                                 <SelectTrigger className="glass-input text-white">
                                     <SelectValue placeholder="Selecione" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                    <SelectItem value="SALARIO">Salário</SelectItem>
-                                    <SelectItem value="PAYROLL_DEDUCTION">Desconto em Folha</SelectItem>
+                                <SelectContent className="bg-slate-900 border-white/10 text-white max-h-[300px]">
+                                    <SelectItem value="SALARIO" className="text-emerald-400 font-bold">Renda: Salário</SelectItem>
+                                    <SelectItem value="RENDA_EXTRA" className="text-emerald-400 font-bold">Renda: Extra</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Deduções</div>
+                                    <SelectItem value="PAYROLL_DEDUCTION">Empréstimo Consignado</SelectItem>
+                                    <SelectItem value="Previdencia">Previdência Privada</SelectItem>
+                                    <SelectItem value="Adiantamento">Adiantamento Salarial</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Essenciais / Casa</div>
+                                    <SelectItem value="Moradia">Moradia / Aluguel</SelectItem>
+                                    <SelectItem value="Condominio">Condomínio</SelectItem>
+                                    <SelectItem value="Luz">Luz</SelectItem>
+                                    <SelectItem value="Agua">Água</SelectItem>
+                                    <SelectItem value="Gas">Gás</SelectItem>
+                                    <SelectItem value="Internet">Internet</SelectItem>
+                                    <SelectItem value="Telefone Fixo">Telefone Fixo</SelectItem>
+                                    <SelectItem value="Celular">Celular</SelectItem>
+                                    <SelectItem value="Diarista">Diarista</SelectItem>
+                                    <SelectItem value="IPTU">IPTU</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Alimentação & Transporte</div>
+                                    <SelectItem value="Mercado">Mercado (Mês)</SelectItem>
+                                    <SelectItem value="Gasolina">Gasolina / Uber</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Saúde & Bem-estar</div>
+                                    <SelectItem value="Convenio">Convênio Médico</SelectItem>
+                                    <SelectItem value="Terapia">Terapia</SelectItem>
+                                    <SelectItem value="Academia">Academia</SelectItem>
+                                    <SelectItem value="Personal">Personal Trainer</SelectItem>
+                                    <SelectItem value="Estetica">Estética Geral</SelectItem>
+                                    <SelectItem value="Cabelo">Cabelo</SelectItem>
+                                    <SelectItem value="Unha">Unha e Depilação</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Pets</div>
+                                    <SelectItem value="Comida Pet">Comida Pet</SelectItem>
+                                    <SelectItem value="Banho Pet">Banho Pet</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Carro</div>
+                                    <SelectItem value="Parcela Carro">Parcela do Carro</SelectItem>
+                                    <SelectItem value="Seguro Carro">Seguro do Carro</SelectItem>
+
+                                    <div className="px-2 py-1 text-xs text-slate-500 font-bold uppercase mt-2">Outros</div>
                                     <SelectItem value="CREDIT_CARD_BILL">Fatura Cartão</SelectItem>
-                                    <SelectItem value="Moradia">Moradia</SelectItem>
-                                    <SelectItem value="Mercado">Mercado</SelectItem>
-                                    <SelectItem value="Transporte">Transporte</SelectItem>
-                                    <SelectItem value="Lazer">Lazer</SelectItem>
-                                    <SelectItem value="Estetica">Estética</SelectItem>
+                                    <SelectItem value="Educacao">Educação</SelectItem>
+                                    <SelectItem value="Dizimo">Dízimo</SelectItem>
+                                    <SelectItem value="Netflix">Netflix</SelectItem>
+                                    <SelectItem value="Spotify">Spotify</SelectItem>
                                     <SelectItem value="OUTROS">Outros</SelectItem>
                                 </SelectContent>
                             </Select>

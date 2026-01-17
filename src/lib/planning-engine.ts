@@ -65,10 +65,26 @@ export class PlanningEngine {
             const creditCardItems = expenseItems.filter(t => t.category === 'CREDIT_CARD_BILL');
 
             // Fixed Expenses (Generic list for now, can be specific later)
-            // Assuming non-payroll, non-cc are either Fixed, Variable or Leisure
-            // Mapping known fixed categories
-            const fixedCats = ['Moradia', 'Condominio', 'Internet', 'Luz', 'Agua', 'Gas', 'Escola', 'Seguro'];
-            const leisureCats = ['Lazer', 'Estetica', 'Viagem', 'Restaurante', 'Streaming'];
+            // Assumindo que essas são Fixas ou Essenciais Recorrentes
+            const fixedCats = [
+                'Moradia', 'Condominio', 'Aluguel',
+                'Telefone Fixo', 'Internet', 'Celular',
+                'Luz', 'Agua', 'Gas',
+                'Convenio', 'Plano de Saude',
+                'IPTU', 'Educacao', 'Escola',
+                'Dizimo', 'Seguro Carro', 'Parcela Carro', 'Terapia',
+                'Diarista', 'Academia', 'Personal'
+            ];
+
+            // Lazer e Estilo de Vida
+            const leisureCats = [
+                'Lazer', 'Estetica', 'Cabelo', 'Unha', 'Depilacao',
+                'Viagem', 'Restaurante', 'Streaming', 'Netflix', 'Spotify',
+                'Comida Pet', 'Banho Pet'
+            ];
+
+            // Variáveis Essenciais (Mercado, Transporte)
+            // O que não for Fixed nem Leisure nem Payroll nem CC, cai aqui (Ex: Mercado, Gasolina)
 
             const otherExpenses = expenseItems.filter(t =>
                 t.category !== 'PAYROLL_DEDUCTION' &&
