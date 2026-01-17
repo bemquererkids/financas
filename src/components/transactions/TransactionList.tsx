@@ -45,61 +45,63 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                     <p className="text-sm text-slate-400">Últimos lançamentos registrados.</p>
                 </div>
             </div>
-            <Table>
-                <TableHeader className="bg-white/5">
-                    <TableRow className="hover:bg-transparent border-white/5">
-                        <TableHead className="text-slate-200">Data</TableHead>
-                        <TableHead className="text-slate-200">Descrição</TableHead>
-                        <TableHead className="text-slate-200">Categoria</TableHead>
-                        <TableHead className="text-right text-slate-200">Valor</TableHead>
-                        <TableHead className="text-right text-slate-200">Ações</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {transactions.map((t) => (
-                        <TableRow key={t.id} className="hover:bg-white/5 border-white/5">
-                            <TableCell className="text-slate-400">
-                                {new Date(t.date).toLocaleDateString('pt-BR')}
-                            </TableCell>
-                            <TableCell className="font-medium text-white">{t.description}</TableCell>
-                            <TableCell className="text-slate-400">
-                                <span className="px-2 py-1 rounded-full bg-white/5 text-xs">
-                                    {t.category}
-                                </span>
-                            </TableCell>
-                            <TableCell className={`text-right font-mono ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
-                                {t.type === 'EXPENSE' ? '-' : '+'} {formatCurrency(Number(t.amount))}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
-                                    onClick={() => alert("Funcionalidade de Edição Em Breve (UI)")}
-                                >
-                                    <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
-                                    onClick={() => handleDelete(t.id)}
-                                    disabled={isDeleting === t.id}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </TableCell>
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader className="bg-white/5">
+                        <TableRow className="hover:bg-transparent border-white/5">
+                            <TableHead className="text-slate-200">Data</TableHead>
+                            <TableHead className="text-slate-200">Descrição</TableHead>
+                            <TableHead className="text-slate-200">Categoria</TableHead>
+                            <TableHead className="text-right text-slate-200">Valor</TableHead>
+                            <TableHead className="text-right text-slate-200">Ações</TableHead>
                         </TableRow>
-                    ))}
-                    {transactions.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                                Nenhuma transação encontrada.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {transactions.map((t) => (
+                            <TableRow key={t.id} className="hover:bg-white/5 border-white/5">
+                                <TableCell className="text-slate-400 whitespace-nowrap">
+                                    {new Date(t.date).toLocaleDateString('pt-BR')}
+                                </TableCell>
+                                <TableCell className="font-medium text-white whitespace-nowrap">{t.description}</TableCell>
+                                <TableCell className="text-slate-400 whitespace-nowrap">
+                                    <span className="px-2 py-1 rounded-full bg-white/5 text-xs">
+                                        {t.category}
+                                    </span>
+                                </TableCell>
+                                <TableCell className={`text-right font-mono whitespace-nowrap ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
+                                    {t.type === 'EXPENSE' ? '-' : '+'} {formatCurrency(Number(t.amount))}
+                                </TableCell>
+                                <TableCell className="text-right whitespace-nowrap">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
+                                        onClick={() => alert("Funcionalidade de Edição Em Breve (UI)")}
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                        onClick={() => handleDelete(t.id)}
+                                        disabled={isDeleting === t.id}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {transactions.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                                    Nenhuma transação encontrada.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     );
 }
