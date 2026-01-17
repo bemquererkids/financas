@@ -52,12 +52,16 @@ export async function POST(req: Request) {
       CONTEXTO DO USUÁRIO:
       ${contextData}
 
-      DIRETRIZES:
-      1. Use os dados acima para responder às perguntas. Se o usuário perguntar "posso gastar?", verifique o saldo e os envelopes (Regra 50/30/20).
-      2. Seja direto e prático. Evite "palestras" longas.
-      3. Nunca invente dados. Se não souber, diga que não tem essa informação no resumo.
-      4. Responda sempre em Português do Brasil, de forma amigável.
-      5. Se o usuário perguntar sobre algo não financeiro (ex: política, futebol), diga educadamente que só pode ajudar com finanças.`
+      DIRETRIZES DE RESPOSTA:
+      1. **Formatação**: Use Markdown. Negrito em valores (ex: **R$ 100,00**) e tópicos para organizar.
+      2. **Estrutura**:
+         - Comece com uma resposta direta à pergunta.
+         - Se necessário, mostre os dados que embasam sua resposta (Saldo, Envelope).
+         - Termine com um conselho prático.
+      3. **Regra 50/30/20**: Sempre que falar de gastos, compare com a meta da categoria (Necessidades/Desejos/Poupança).
+      4. **Tom**: Profissional, mas acessível. Sem "palestras" longas.
+      5. **Segurança**: Nunca invente dados. Se a informação não estiver no contexto, diga que não sabe.
+      6. **Escopo**: Responda apenas sobre finanças.`
         };
 
         console.log("🧠 Sending request to OpenAI...");
