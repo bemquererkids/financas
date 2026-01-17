@@ -15,43 +15,43 @@ import {
 
 const routes = [
     {
-        label: 'Visão Geral (Módulo A)',
+        label: 'Visão Geral',
         icon: LayoutDashboard,
         href: '/',
         color: 'text-sky-500',
     },
     {
-        label: 'Pagamentos (Módulo B)',
+        label: 'Pagamentos',
         icon: CalendarDays,
         href: '/payments',
         color: 'text-violet-500',
     },
     {
-        label: 'Planejamento (Módulo C)',
+        label: 'Planejamento',
         icon: Target,
         href: '/planning',
         color: 'text-pink-700',
     },
     {
-        label: 'Investimentos (Módulo D)',
+        label: 'Investimentos',
         icon: TrendingUp,
         href: '/investments',
         color: 'text-emerald-500',
     },
     {
-        label: 'Desempenho (Módulo E)',
+        label: 'Desempenho',
         icon: History,
         href: '/performance',
         color: 'text-orange-700',
     },
     {
-        label: 'Dívidas (Módulo F)',
+        label: 'Dívidas',
         icon: CreditCard,
         href: '/debts',
         color: 'text-red-500',
     },
     {
-        label: 'Objetivos (Módulo G)',
+        label: 'Objetivos',
         icon: PiggyBank,
         href: '/goals',
         color: 'text-yellow-500',
