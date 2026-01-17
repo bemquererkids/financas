@@ -44,10 +44,11 @@ export class AiAssistant {
                 - Casa: Moradia, Condominio, Luz, Agua, Gas, Internet, Telefone Fixo, Celular, Diarista, IPTU
                     - Transporte: Gasolina, Uber, Transporte
                         - Alimentação: Mercado, Restaurante
-                            - Saúde / Bem - estar: Convenio, Terapia, Academia, Personal, Estetica, Cabelo, Unha
-                                - Pets: Comida Pet, Banho Pet
-                                    - Carro: Parcela Carro, Seguro Carro
-                                        - Outros: Educacao, Dizimo, Netflix, Spotify, Lazer, CREDIT_CARD_BILL(Pagamento de Fatura)
+                            - Saúde: Convenio, Terapia, Academia, Personal
+                                - Estética: Estetica(inclui Cabelo, Unha, Salão, Depilação, Sobrancelha, Barba)
+                                    - Pets: Comida Pet, Banho Pet
+                                        - Carro: Parcela Carro, Seguro Carro
+                                            - Outros: Educacao, Dizimo, Netflix, Spotify, Lazer, CREDIT_CARD_BILL(Pagamento de Fatura)
 
       Se não encaixar perfeitamente, use "OUTROS" ou a mais próxima.
       
