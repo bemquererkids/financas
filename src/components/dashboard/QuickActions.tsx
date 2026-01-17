@@ -16,7 +16,7 @@ export function QuickActions() {
                 <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                     <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
                 </div>
-                <span className="text-xs font-medium text-slate-200">Receita</span>
+                <span className="text-xs font-medium text-slate-200">Nova Receita</span>
             </Button>
 
             {/* Desconto em Folha */}
@@ -28,7 +28,7 @@ export function QuickActions() {
                 <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-amber-500/20 flex items-center justify-center">
                     <TrendingDown className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
                 </div>
-                <span className="text-xs font-medium text-slate-200 text-center leading-tight">Desc. Folha</span>
+                <span className="text-xs font-medium text-slate-200 text-center leading-tight">Descontos</span>
             </Button>
 
             {/* Planejar Futuro */}
