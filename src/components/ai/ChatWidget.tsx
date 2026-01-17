@@ -27,10 +27,10 @@ export function ChatWidget() {
     }, [messages]);
 
     return (
-        <div className="fixed top-20 right-4 z-[100] flex flex-col items-end">
+        <div className="fixed bottom-4 right-4 z-[100] flex flex-col items-end">
             {/* Chat Window */}
             {isOpen && (
-                <Card className="w-[350px] md:w-[400px] h-[500px] mt-2 bg-zinc-900/95 backdrop-blur-xl border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-top-5 fade-in duration-300">
+                <Card className="w-[350px] md:w-[400px] h-[500px] mb-4 bg-zinc-900/95 backdrop-blur-xl border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-300">
                     <CardHeader className="p-4 border-b border-white/10 flex flex-row items-center justify-between space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
@@ -121,22 +121,17 @@ export function ChatWidget() {
                 </Card>
             )}
 
-            {/* Toggle Button - Sutil no canto superior */}
+            {/* Toggle Button */}
             <Button
                 onClick={() => setIsOpen(!isOpen)}
-                size="sm"
                 className={cn(
-                    "rounded-full shadow-lg transition-all duration-300 gap-2",
+                    "h-14 w-14 rounded-full shadow-xl transition-all duration-300",
                     isOpen
-                        ? "bg-zinc-800 hover:bg-zinc-700 text-white px-3"
-                        : "bg-white/10 hover:bg-white/20 text-white/80 hover:text-white backdrop-blur-sm border border-white/10 px-3"
+                        ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                        : "bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
                 )}
             >
-                {isOpen ? (
-                    <><X className="h-4 w-4" /> Fechar</>
-                ) : (
-                    <><Bot className="h-4 w-4" /> Consultor IA</>
-                )}
+                {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
             </Button>
         </div>
     );

@@ -39,9 +39,9 @@ export function SummaryCard({ title, amount, icon: Icon, subtext, variant = "def
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="text-3xl font-bold text-white tracking-tight">{amount}</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight truncate">{amount}</div>
                 {subtext && (
-                    <p className="text-xs text-slate-400 mt-1 font-light">
+                    <p className="text-xs text-slate-400 mt-1 font-light truncate">
                         {subtext}
                     </p>
                 )}

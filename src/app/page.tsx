@@ -10,6 +10,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ExpensesPieChart } from "@/components/dashboard/ExpensesPieChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
+import { UserGreeting } from "@/components/profile/UserGreeting";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +32,16 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex-1 p-4 md:p-6 space-y-4">
-            {/* Header com Quick Actions e Alertas */}
+            {/* Header com Avatar, Título e Alertas */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white">Visão Geral</h2>
-                    <p className="text-sm text-slate-400">Acompanhe sua saúde financeira em tempo real.</p>
+                <div className="flex items-center gap-4">
+                    <div className="hidden md:block">
+                        <UserGreeting />
+                    </div>
+                    <div className="hidden lg:block border-l border-white/10 pl-4">
+                        <h2 className="text-xl font-bold text-white">Visão Geral</h2>
+                        <p className="text-xs text-slate-400">Acompanhe sua saúde financeira</p>
+                    </div>
                 </div>
                 <FinancialAlerts
                     balance={summary.balance}
@@ -94,7 +100,7 @@ export default async function DashboardPage() {
                 <div className="rounded-2xl glass-card p-4">
                     <h3 className="text-sm font-medium text-white mb-1">Gastos por Categoria</h3>
                     <p className="text-xs text-slate-400 mb-3">Distribuição deste mês</p>
-                    <div className="h-[200px]">
+                    <div className="h-[280px]">
                         <ExpensesPieChart data={expensesByCategory} />
                     </div>
                 </div>

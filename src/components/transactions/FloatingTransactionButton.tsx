@@ -9,10 +9,10 @@ export function FloatingTransactionButton() {
 
     return (
         <>
-            {/* FAB Button */}
+            {/* FAB Button - Left side to not conflict with Chat */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-110 hover:rotate-90 transition-all duration-300"
+                className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-110 hover:rotate-90 transition-all duration-300"
                 aria-label="Nova Transação"
             >
                 <Plus className="h-7 w-7 text-white" />

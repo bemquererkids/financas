@@ -93,3 +93,12 @@ model Debt {
   remainingValue Decimal? @db.Decimal(10, 2)
   status         String   // ACTIVE, PAID
 }
+
+// Perfil do Usuário
+model UserProfile {
+  id        String   @id @default("default")
+  name      String   @default("Usuário")
+  avatarUrl String?  // URL ou base64 da imagem
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

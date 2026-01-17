@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ChatWidget } from "@/components/ai/ChatWidget";
+import { UserGreeting } from "@/components/profile/UserGreeting";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,10 +29,15 @@ export default function RootLayout({
                             <Sidebar />
                         </div>
 
+
+
                         {/* Mobile Navbar */}
-                        <div className="md:hidden fixed top-0 w-full z-50 flex items-center p-4 bg-[#111827] border-b border-white/10">
-                            <MobileSidebar />
-                            <span className="ml-4 font-bold text-lg text-white">RNV Control</span>
+                        <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10">
+                            <div className="flex items-center">
+                                <MobileSidebar />
+                                <span className="ml-4 font-bold text-lg text-white">RNV Control</span>
+                            </div>
+                            <UserGreeting />
                         </div>
 
                         {/* Main Content */}
