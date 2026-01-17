@@ -26,8 +26,7 @@ export async function POST(req: Request) {
         console.log("📊 Fetching financial summary...");
         const summary = await getFinancialSummary();
         console.log("✅ Financial summary retrieved:", JSON.stringify({
-            balance: summary.balance,
-            health: summary.healthScore
+            balance: summary.balance
         }));
 
         // 2. Create Context String (Correcting property access)
@@ -40,9 +39,9 @@ export async function POST(req: Request) {
       - Taxa de Poupança: ${summary.savingsRate}%
       
       Regra 50/30/20:
-      - Necessidades (50%): Gastou R$ ${summary.rule503020.needs.spent.toFixed(2)} (Meta: R$ ${summary.rule503020.needs.target.toFixed(2)})
-      - Desejos (30%): Gastou R$ ${summary.rule503020.wants.spent.toFixed(2)} (Meta: R$ ${summary.rule503020.wants.target.toFixed(2)})
-      - Poupança/Dívidas (20%): Gastou R$ ${summary.rule503020.savings.spent.toFixed(2)} (Meta: R$ ${summary.rule503020.savings.target.toFixed(2)})
+      - Necessidades (50%): Gastou R$ ${(summary.rule503020.needs.actual || 0).toFixed(2)} (Meta: R$ ${(summary.rule503020.needs.target || 0).toFixed(2)})
+      - Desejos (30%): Gastou R$ ${(summary.rule503020.wants.actual || 0).toFixed(2)} (Meta: R$ ${(summary.rule503020.wants.target || 0).toFixed(2)})
+      - Poupança/Dívidas (20%): Gastou R$ ${(summary.rule503020.savings.actual || 0).toFixed(2)} (Meta: R$ ${(summary.rule503020.savings.target || 0).toFixed(2)})
     `;
 
         // 3. System Prompt
@@ -75,7 +74,7 @@ export async function POST(req: Request) {
 
         // 5. Stream Response
         const stream = OpenAIStream(response);
-        return new StreamingTextResponse(stream);
+        return new StreamingTextResponse(stream as any);
 
     } catch (error: any) {
         console.error('❌ Chat API Error:', error);
