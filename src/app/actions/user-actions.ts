@@ -35,33 +35,48 @@ export async function getUserProfile() {
 }
 
 export async function updateUserName(name: string) {
-    await prisma.userProfile.upsert({
-        where: { id: DEFAULT_PROFILE_ID },
-        create: { id: DEFAULT_PROFILE_ID, name },
-        update: { name }
-    });
+    try {
+        await prisma.userProfile.upsert({
+            where: { id: DEFAULT_PROFILE_ID },
+            create: { id: DEFAULT_PROFILE_ID, name },
+            update: { name }
+        });
 
-    revalidatePath('/');
-    return { success: true };
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Erro ao atualizar nome:", error);
+        return { success: false, error: "Falha ao atualizar nome" };
+    }
 }
 
 export async function updateUserAvatar(avatarBase64: string) {
-    await prisma.userProfile.upsert({
-        where: { id: DEFAULT_PROFILE_ID },
-        create: { id: DEFAULT_PROFILE_ID, name: 'Usuário', avatarUrl: avatarBase64 },
-        update: { avatarUrl: avatarBase64 }
-    });
+    try {
+        await prisma.userProfile.upsert({
+            where: { id: DEFAULT_PROFILE_ID },
+            create: { id: DEFAULT_PROFILE_ID, name: 'Usuário', avatarUrl: avatarBase64 },
+            update: { avatarUrl: avatarBase64 }
+        });
 
-    revalidatePath('/');
-    return { success: true };
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Erro ao atualizar avatar:", error);
+        return { success: false, error: "Falha ao salvar imagem" };
+    }
 }
 
 export async function removeUserAvatar() {
-    await prisma.userProfile.update({
-        where: { id: DEFAULT_PROFILE_ID },
-        data: { avatarUrl: null }
-    });
+    try {
+        await prisma.userProfile.update({
+            where: { id: DEFAULT_PROFILE_ID },
+            data: { avatarUrl: null }
+        });
 
-    revalidatePath('/');
-    return { success: true };
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Erro ao remover avatar:", error);
+        return { success: false, error: "Falha ao remover imagem" };
+    }
 }

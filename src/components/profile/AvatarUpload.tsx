@@ -75,9 +75,13 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
     const saveAvatar = () => {
         if (!preview) return;
         startTransition(async () => {
-            await updateUserAvatar(preview);
-            setPreview(null);
-            setIsOpen(false);
+            const result = await updateUserAvatar(preview);
+            if (result.success) {
+                setPreview(null);
+                setIsOpen(false);
+            } else {
+                alert('Erro ao salvar avatar. Verifique sua conexão e tente novamente.');
+            }
         });
     };
 
