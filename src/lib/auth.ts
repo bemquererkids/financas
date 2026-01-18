@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma) as Adapter,
+    // Adapter temporariamente desativado para permitir login sem tabelas de Auth no banco
+    // adapter: PrismaAdapter(prisma) as Adapter,
+    session: {
+        strategy: "jwt",
+    },
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -13,15 +17,21 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        session: async ({ session, user }) => {
-            if (session?.user) {
+        session: async ({ session, token }) => {
+            if (session?.user && token?.sub) {
                 // @ts-ignore
-                session.user.id = user.id;
+                session.user.id = token.sub;
             }
             return session;
         },
+        jwt: async ({ token, user }) => {
+            if (user) {
+                token.sub = user.id;
+            }
+            return token;
+        }
     },
     pages: {
-        signIn: '/auth/signin', // Criaremos uma página customizada bonita
+        signIn: '/auth/signin',
     }
 };
