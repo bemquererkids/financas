@@ -6,11 +6,12 @@ import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { UserGreeting } from "@/components/profile/UserGreeting";
+import { PiggyBank } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Controle Financeiro RNV",
+    title: "MyWallet - Gestão Inteligente",
     description: "Sistema de gestão financeira pessoal e familiar",
 };
 
@@ -29,13 +30,16 @@ export default function RootLayout({
                             <Sidebar />
                         </div>
 
-
-
                         {/* Mobile Navbar */}
-                        <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10">
-                            <div className="flex items-center">
+                        <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
+                            <div className="flex items-center gap-3">
                                 <MobileSidebar />
-                                <span className="ml-4 font-bold text-lg text-white">RNV Control</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                        <PiggyBank className="h-5 w-5 text-slate-900" />
+                                    </div>
+                                    <span className="font-bold text-lg text-white">MyWallet</span>
+                                </div>
                             </div>
                             <UserGreeting />
                         </div>
