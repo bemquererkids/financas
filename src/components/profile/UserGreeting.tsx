@@ -49,8 +49,8 @@ export function UserGreeting() {
 
             <div className="hidden sm:block text-left">
                 <p className="text-xs text-slate-400 font-medium">{greeting},</p>
-                <p className="text-sm font-bold text-white leading-tight truncate max-w-[120px]">
-                    {session.user?.name?.split(' ')[0]}
+                <p className="text-sm font-bold text-white leading-tight truncate max-w-[140px]">
+                    {session.user?.name}
                 </p>
             </div>
 
