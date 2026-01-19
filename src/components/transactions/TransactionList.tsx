@@ -17,6 +17,7 @@ interface Transaction {
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { EditTransactionDialog } from "./EditTransactionDialog";
 
 // ... (imports anteriores mantidos se não listados aqui, mas vou assumir que o replace context lida com blocos)
 
@@ -25,6 +26,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
     const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+    const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
 
     // Sincroniza estado local se novas props chegarem do servidor
     useEffect(() => {
@@ -33,6 +35,10 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
 
     const handleDeleteClick = (id: string) => {
         setTransactionToDelete(id);
+    };
+
+    const handleEditClick = (transaction: Transaction) => {
+        setTransactionToEdit(transaction);
     };
 
     const confirmDelete = async () => {
@@ -107,7 +113,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
-                                            onClick={() => alert("Edição em breve")}
+                                            onClick={() => handleEditClick(t)}
                                         >
                                             <Edit2 className="h-3.5 w-3.5" />
                                         </Button>
@@ -166,7 +172,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
-                                            onClick={() => alert("Funcionalidade de Edição Em Breve (UI)")}
+                                            onClick={() => handleEditClick(t)}
                                         >
                                             <Edit2 className="h-4 w-4" />
                                         </Button>
@@ -193,6 +199,12 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                     </table>
                 </div>
             </div>
+
+            <EditTransactionDialog
+                open={!!transactionToEdit}
+                onOpenChange={(open) => !open && setTransactionToEdit(null)}
+                transaction={transactionToEdit}
+            />
 
             <Dialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
                 <DialogContent className="sm:max-w-md border-white/10 bg-slate-900/95 backdrop-blur-xl">
