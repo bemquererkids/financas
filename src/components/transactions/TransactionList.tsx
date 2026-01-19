@@ -15,9 +15,21 @@ interface Transaction {
     type: string;
 }
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+// ... (imports anteriores mantidos se não listados aqui, mas vou assumir que o replace context lida com blocos)
+
 export function TransactionList({ transactions }: { transactions: Transaction[] }) {
+    const router = useRouter();
+    const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+
+    // Sincroniza estado local se novas props chegarem do servidor
+    useEffect(() => {
+        setLocalTransactions(transactions);
+    }, [transactions]);
 
     const handleDeleteClick = (id: string) => {
         setTransactionToDelete(id);
@@ -26,18 +38,31 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
     const confirmDelete = async () => {
         if (!transactionToDelete) return;
 
-        setIsDeleting(transactionToDelete);
+        const id = transactionToDelete;
+        setIsDeleting(id);
+
+        // Optimistic Update: Remove visualmente antes de confirmar no banco
+        const previousTransactions = [...localTransactions];
+        setLocalTransactions(prev => prev.filter(t => t.id !== id));
+        setTransactionToDelete(null); // Fecha modal imediatamente
+
         try {
-            const result = await deleteTransaction(transactionToDelete);
+            const result = await deleteTransaction(id);
+
             if (result && 'error' in result) {
+                // Rollback em caso de erro
+                setLocalTransactions(previousTransactions);
                 alert("Erro ao excluir transação: " + result.error);
+            } else {
+                // Sucesso confirmado, atualiza dados do servidor
+                router.refresh();
             }
         } catch (error) {
             console.error("Erro ao excluir:", error);
-            alert("Ocorreu um erro inesperado ao tentar excluir.");
+            setLocalTransactions(previousTransactions);
+            alert("Ocorreu um erro inesperado. A transação foi restaurada.");
         } finally {
             setIsDeleting(null);
-            setTransactionToDelete(null);
         }
     };
 
@@ -61,7 +86,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
 
                 {/* Mobile Layout - Cards */}
                 <div className="md:hidden divide-y divide-white/5">
-                    {transactions.map((t) => (
+                    {localTransactions.map((t) => (
                         <div key={t.id} className="p-4 hover:bg-white/5 transition-colors">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
@@ -100,7 +125,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                             </div>
                         </div>
                     ))}
-                    {transactions.length === 0 && (
+                    {localTransactions.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
                             <p>Nenhuma transação encontrada.</p>
                         </div>
@@ -120,7 +145,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {transactions.map((t) => (
+                            {localTransactions.map((t) => (
                                 <tr key={t.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 text-slate-400 whitespace-nowrap">
                                         {formatDate(t.date)}
@@ -157,7 +182,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                     </td>
                                 </tr>
                             ))}
-                            {transactions.length === 0 && (
+                            {localTransactions.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="text-center py-12 text-slate-500">
                                         Nenhuma transação encontrada.
