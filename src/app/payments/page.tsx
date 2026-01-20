@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, CheckCircle, Circle, Calendar } from 'lucide-react';
+import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
 
 export default function PaymentsPage() {
     const [data, setData] = useState<any>(null);
@@ -26,16 +27,18 @@ export default function PaymentsPage() {
     };
 
     return (
-        <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h2 className="text-4xl font-bold tracking-tight text-white mb-1">Pagamentos</h2>
-                    <p className="text-slate-400">Controle de contas por Janelas (7, 15, 30).</p>
-                </div>
-                <Button onClick={() => setIsAdding(!isAdding)} className={`${isAdding ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white`}>
+        <div className="flex-1 space-y-4 p-4 md:p-6">
+            <ModuleHeader
+                title="Pagamentos"
+                subtitle="Controle de contas por Janelas (7, 15, 30)"
+            >
+                <Button
+                    onClick={() => setIsAdding(!isAdding)}
+                    className={`${isAdding ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white`}
+                >
                     {isAdding ? 'Cancelar' : <><Plus className="mr-2 h-4 w-4" /> Nova Conta</>}
                 </Button>
-            </div>
+            </ModuleHeader>
 
             {isAdding && (
                 <div className="mb-8 p-6 rounded-3xl glass-card border border-emerald-500/20 bg-emerald-950/20 animate-in fade-in slide-in-from-top-4">
