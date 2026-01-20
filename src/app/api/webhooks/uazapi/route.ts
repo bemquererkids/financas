@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseTransactionCheck } from '@/lib/nlp';
+import { parseTransactionCheck, analyzeImageTransaction, transcribeAudioMessage } from '@/lib/nlp';
 import { prisma } from '@/lib/prisma';
 
 // Configurações
@@ -29,16 +29,15 @@ export async function POST(request: Request) {
         }
 
         // --- RAIO-X DEBUG ---
-        console.log("📦 [DEBUG] msgObject Encontrado:", JSON.stringify(msgObject).substring(0, 500));
+        console.log("📦 [DEBUG] msgObject:", JSON.stringify(msgObject).substring(0, 300));
         // --------------------
 
-        // Extrair quem mandou (Ajustado para log do usuário: 'sender')
+        // Extrair quem mandou
         const remoteJid = msgObject.sender ||
             msgObject.key?.remoteJid ||
             msgObject.from ||
             msgObject.remoteJid ||
-            msgObject.chatid ||
-            "";
+            msgObject.chatid || "";
 
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
 
@@ -50,40 +49,85 @@ export async function POST(request: Request) {
         if (MY_PHONE_NUMBER && remoteJid) {
             const cleanRemote = String(remoteJid).replace(/\D/g, '');
             const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
-
-            // Verifica se contém o número
             if (!cleanRemote.includes(cleanMyNumber)) {
                 console.log(`⛔ Bloqueado: Recebido de ${cleanRemote}. Autorizado apenas: ${cleanMyNumber}`);
                 return NextResponse.json({ status: 'ignored_unauthorized' });
             }
         }
 
-        // Extrair texto (Ajustado para log do usuário: 'text' ou 'content')
-        const messageContent = msgObject.message || msgObject;
-        const text = messageContent.text ||
-            messageContent.content ||
-            messageContent.conversation ||
-            messageContent.extendedTextMessage?.text ||
-            messageContent.textMessage?.text ||
-            messageContent.body ||
-            "";
+        // ---PROCESSAMENTO DE MÍDIA E TEXTO---
+        const messageInfo = msgObject.message || msgObject;
+        let transaction = null;
 
-        console.log(`📝 Texto extraído: "${text}"`);
+        // 1. É Áudio?
+        // Verifica se tem audioMessage OU se o messageType diz que é audio
+        const isAudio = messageInfo.audioMessage || (msgObject.messageType === 'audioMessage') || (msgObject.type === 'audio');
 
-        if (!text) return NextResponse.json({ status: 'no_text' });
+        if (isAudio) {
+            console.log("🎤 Áudio detectado! Baixando e transcrevendo...");
+            const mediaUrl = messageInfo.audioMessage?.url || msgObject.mediaUrl || msgObject.url;
+            // Se tiver URL pública ou em base64 (algumas APIs mandam em 'mediaData' ou 'base64')
+            let base64Audio = null;
 
-        // 1. IA
-        console.log("🧠 Enviando para IA...");
-        const transaction = await parseTransactionCheck(text);
-        console.log("🧠 Resultado IA:", JSON.stringify(transaction));
+            if (mediaUrl) {
+                base64Audio = await downloadMediaAsBase64(mediaUrl);
+            } else if (msgObject.base64) {
+                base64Audio = msgObject.base64;
+            }
 
+            if (base64Audio) {
+                const transcription = await transcribeAudioMessage(base64Audio);
+                console.log(`🎤 Transcrição: "${transcription}"`);
+                if (transcription) {
+                    transaction = await parseTransactionCheck(transcription);
+                }
+            } else {
+                console.log("⚠️ URL de áudio não encontrada ou vazia.");
+            }
+        }
+
+        // 2. É Imagem?
+        else if (messageInfo.imageMessage || (msgObject.messageType === 'imageMessage') || (msgObject.type === 'image')) {
+            console.log("📸 Imagem detectada! Analisando Recibo/Nota...");
+            const mediaUrl = messageInfo.imageMessage?.url || msgObject.mediaUrl || msgObject.url;
+            let base64Image = null;
+
+            if (mediaUrl) {
+                base64Image = await downloadMediaAsBase64(mediaUrl);
+            } else if (msgObject.base64) {
+                base64Image = msgObject.base64;
+            }
+
+            if (base64Image) {
+                transaction = await analyzeImageTransaction(base64Image);
+            } else {
+                console.log("⚠️ URL de imagem não encontrada.");
+            }
+        }
+
+        // 3. É Texto? (Fallback)
+        else {
+            const text = messageInfo.text ||
+                messageInfo.content ||
+                messageInfo.conversation ||
+                messageInfo.extendedTextMessage?.text ||
+                messageInfo.textMessage?.text ||
+                messageInfo.body || "";
+
+            console.log(`📝 Texto: "${text}"`);
+            if (text) {
+                transaction = await parseTransactionCheck(text);
+            }
+        }
+
+        // Conclusão
         if (!transaction || !transaction.found) {
-            console.log("🤷‍♂️ IA não detectou transação.");
+            console.log("🤷‍♂️ Nenhuma transação identificada na mensagem.");
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
-        // 2. Salva no banco
-        console.log("💾 Salvando ID no Postgres...");
+        // Salvar
+        console.log(`💾 Salvando ${transaction.type} de R$ ${transaction.amount}...`);
         const saved = await prisma.transaction.create({
             data: {
                 description: transaction.description,
@@ -95,13 +139,12 @@ export async function POST(request: Request) {
         });
         console.log(`✅ Salvo ID: ${saved.id}`);
 
-        // 3. Responde
+        // Resposta
         const replyText = `✅ *Lançamento Registrado!*
 💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
 🏷️ ${transaction.category}
 📝 ${transaction.description}`;
 
-        console.log("📤 Respondendo...");
         await sendWhatsAppReply(remoteJid, replyText);
 
         return NextResponse.json({ success: true, savedId: saved.id });
@@ -109,6 +152,22 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error("❌ ERRO WEBHOOK:", error);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    }
+}
+
+// Helper para baixar mídia de URL pública (caso a UAZAPI mande URL)
+async function downloadMediaAsBase64(url: string): Promise<string | null> {
+    try {
+        console.log("⬇️ Baixando mídia de:", url);
+        // Nota: A URL da UAZAPI pode exigir headers/auth se não for pública
+        // Se falhar com fetch simples, teremos que adicionar a APIKey como header, mas nem sempre funciona para mídia CDN
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const arrayBuffer = await res.arrayBuffer();
+        return Buffer.from(arrayBuffer).toString('base64');
+    } catch (e) {
+        console.error("Erro download mídia:", e);
+        return null;
     }
 }
 
@@ -121,8 +180,6 @@ async function sendWhatsAppReply(to: string, text: string) {
         return;
     }
 
-    // Tentar limpar a URL para pegar a base e a instância
-    // Ex: https://bemquerer.uazapi.com/message/sendText/sistema -> Base: ...uazapi.com, Instance: sistema
     let baseUrl = "";
     let instance = "";
 
@@ -133,19 +190,17 @@ async function sendWhatsAppReply(to: string, text: string) {
         instance = parts[parts.length - 1]; // pega o último pedaço
     } catch (e) {
         console.error("Erro ao parsear URL UAZAPI:", e);
-        // Fallback: usa a url original
         baseUrl = apiUrl;
     }
 
     // Lista de endpoints para tentar (Fallback Strategy)
     const endpointsTrying = [
-        apiUrl, // Tenta a configurada primeiro
-        `${baseUrl}/message/sendText/${instance}`, // v2 padrão
-        `${baseUrl}/message/text/${instance}`,     // v1 padrão
-        `${baseUrl}/chat/sendText/${instance}`     // Forks
+        apiUrl,
+        `${baseUrl}/message/sendText/${instance}`,
+        `${baseUrl}/message/text/${instance}`,
+        `${baseUrl}/chat/sendText/${instance}`
     ];
 
-    // Remove duplicatas
     const uniqueEndpoints = endpointsTrying.filter((value, index, self) => self.indexOf(value) === index);
 
     console.log(`🚀 Iniciando tentativa de envio. Endpoints candidatos: ${uniqueEndpoints.length}`);
@@ -166,7 +221,6 @@ async function sendWhatsAppReply(to: string, text: string) {
         try {
             console.log(`👉 Tentando: ${url}`);
 
-            // Tenta primeiro com payload V2
             let res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -174,7 +228,6 @@ async function sendWhatsAppReply(to: string, text: string) {
             });
 
             if (res.status === 405 || res.status === 404) {
-                // Se falhar com 405/404, tenta payload V1 nesse mesmo endpoint (algumas versoes mudam o body)
                 console.log(`⚠️ Falha v2 (${res.status}). Tentando payload v1...`);
                 res = await fetch(url, {
                     method: 'POST',
@@ -187,7 +240,7 @@ async function sendWhatsAppReply(to: string, text: string) {
 
             if (res.ok) {
                 console.log(`✅ SUCESSO! Mensagem enviada via ${url}`);
-                return; // Parar tentativas
+                return;
             } else {
                 console.log(`❌ Falha em ${url}: ${res.status} - ${responseText}`);
             }
