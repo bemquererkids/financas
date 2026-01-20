@@ -115,3 +115,54 @@ export async function getMonthlyTrend() {
 
     return months;
 }
+
+// Função agregadora de notificações para o Sino
+export async function getNotifications() {
+
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+
+    // 1. Últimas 5 Transações
+    const recentTx = await prisma.transaction.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' } // Pela data de criação (insert), não pela data da despesa
+    });
+
+    // 2. Contas a Pagar Próximas (vencimento hoje ou futuro próximo)
+    // Note: Precisamos verificar se o model Payable existe e está acessível.
+    // O schema.prisma mostrou que Payable existe.
+    const upcomingPayables = await prisma.payable.findMany({
+        where: {
+            dueDate: {
+                gte: today,
+                lte: nextWeek
+            },
+            isPaid: false
+        },
+        orderBy: { dueDate: 'asc' },
+        take: 3
+    });
+
+    const notifications = [
+        ...recentTx.map(t => ({
+            id: t.id,
+            type: t.type === 'INCOME' ? 'income' : 'expense',
+            title: t.description,
+            subtitle: t.type === 'INCOME' ? `Receita de R$ ${Number(t.amount)}` : `Gasto de R$ ${Number(t.amount)}`,
+            date: t.createdAt.toISOString(),
+            icon: t.type === 'INCOME' ? 'arrow-up' : 'arrow-down'
+        })),
+        ...upcomingPayables.map(p => ({
+            id: p.id,
+            type: 'alert',
+            title: `Vencimento: ${p.name}`,
+            subtitle: `R$ ${Number(p.amount)} vence em breve`,
+            date: p.dueDate.toISOString(),
+            icon: 'alert'
+        }))
+    ];
+
+    // Ordenar por data (mais recente primeiro)
+    return notifications.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
