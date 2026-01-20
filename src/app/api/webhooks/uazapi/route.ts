@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseTransactionCheck, analyzeImageTransaction, transcribeAudioMessage } from '@/lib/nlp';
+import { parseTransactionCheck } from '@/lib/nlp'; // Removido media handlers pois servidor não suporta
 import { prisma } from '@/lib/prisma';
 
 // Configurações
@@ -9,9 +9,8 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
+        // Evita processar eventos de presença (digitando...)
         const eventType = body.EventType || body.type || 'unknown';
-        console.log(`📨 [WEBHOOK] Evento: ${eventType}`);
-
         if (eventType === 'presence') {
             return NextResponse.json({ status: 'ignored_presence' });
         }
@@ -24,11 +23,10 @@ export async function POST(request: Request) {
             body;
 
         if (!msgObject) {
-            console.log("❌ Estrutura msgObject não encontrada.");
             return NextResponse.json({ status: 'unknown_structure' });
         }
 
-        // Extrair quem mandou
+        // Extrair Remetente
         const remoteJid = msgObject.sender ||
             msgObject.key?.remoteJid ||
             msgObject.from ||
@@ -37,10 +35,10 @@ export async function POST(request: Request) {
 
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
 
-        console.log(`👤 Remetente: "${remoteJid}" (Sou eu? ${isFromMe})`);
-
+        // Ignora mensagens enviadas por mim mesmo (para não entrar em loop)
         if (isFromMe) return NextResponse.json({ status: 'ignored_self' });
 
+        // Segurança: Valida número autorizado
         if (MY_PHONE_NUMBER && remoteJid) {
             const cleanRemote = String(remoteJid).replace(/\D/g, '');
             const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
@@ -49,104 +47,60 @@ export async function POST(request: Request) {
             }
         }
 
-        // ---PROCESSAMENTO---
+        // --- PROCESSAMENTO ---
         const messageInfo = msgObject.message || msgObject;
         const contentObj = (typeof msgObject.content === 'object' && msgObject.content !== null) ? msgObject.content : {};
 
-        let transaction = null;
-        let fileBase64 = null;
+        // Detectar Tipo de Mídia (para dar feedback rápido)
+        const isAudio = messageInfo.audioMessage || msgObject.mediaType === 'ptt' || (contentObj.mimetype && contentObj.mimetype.includes('audio'));
+        const isImage = messageInfo.imageMessage || msgObject.mediaType === 'image' || (contentObj.mimetype && contentObj.mimetype.includes('image'));
 
-        // 1. ÁUDIO
-        const isAudio = messageInfo.audioMessage ||
-            msgObject.messageType === 'audioMessage' ||
-            msgObject.type === 'audio' ||
-            msgObject.mediaType === 'ptt' ||
-            (contentObj.mimetype && contentObj.mimetype.includes('audio'));
+        // SE FOR MÍDIA: Avisar limitação do servidor e parar
+        if (isAudio || isImage) {
+            console.log("⚠️ Mídia detectada, mas download desabilitado devido a erro 405 do servidor UAZAPI.");
 
-        if (isAudio) {
-            console.log("🎤 Áudio detectado! Tentando resgate...");
+            // Tenta pegar thumbnail da imagem se existir (melhor que nada)
+            // Futuramente poderia tentar OCR no thumbnail, mas a resolução é muito baixa (32x32px geralmente)
 
-            if (msgObject.base64 || contentObj.base64) {
-                fileBase64 = msgObject.base64 || contentObj.base64;
-            } else {
-                fileBase64 = await fetchBase64FromUAZAPI(msgObject);
-            }
-
-            if (fileBase64) {
-                const transcription = await transcribeAudioMessage(fileBase64);
-                console.log(`🎤 Transcrição: "${transcription}"`);
-                if (transcription) {
-                    transaction = await parseTransactionCheck(transcription);
-                }
-            } else {
-                console.log("⚠️ Áudio perdido (Falha no Download ou Base64).");
-                await sendWhatsAppReply(remoteJid, "⚠️ O servidor não permitiu baixar seu áudio. Por favor, escreva os dados (ex: 'Almoço 50').");
-            }
+            await sendWhatsAppReply(remoteJid, "⚠️ O servidor de WhatsApp atual não permite download de áudio/imagem. Por favor, escreva os dados (ex: 'Almoço 50').");
+            return NextResponse.json({ status: 'media_not_supported_by_server' });
         }
 
-        // 2. IMAGEM
-        else if (messageInfo.imageMessage ||
-            msgObject.messageType === 'imageMessage' ||
-            msgObject.type === 'image' ||
-            (contentObj.mimetype && contentObj.mimetype.includes('image'))) {
+        // SE FOR TEXTO: Processar com IA
+        const textFromContent = (typeof msgObject.content === 'string') ? msgObject.content : (msgObject.content?.text || msgObject.content?.caption || "");
+        const text = messageInfo.text ||
+            textFromContent ||
+            messageInfo.conversation ||
+            messageInfo.extendedTextMessage?.text ||
+            messageInfo.textMessage?.text ||
+            messageInfo.body || "";
 
-            console.log("📸 Imagem detectada! Tentando resgate...");
+        const cleanText = (typeof text === 'object') ? JSON.stringify(text) : text;
 
-            if (msgObject.base64 || contentObj.base64) {
-                fileBase64 = msgObject.base64 || contentObj.base64;
-            } else {
-                fileBase64 = await fetchBase64FromUAZAPI(msgObject);
-            }
-
-            // Fallback Thumbnail
-            if (!fileBase64) {
-                fileBase64 = messageInfo.imageMessage?.JPEGThumbnail || msgObject.JPEGThumbnail || contentObj.JPEGThumbnail;
-                if (fileBase64) console.log("⚠️ Usando Thumbnail (Fallback).");
-            }
-
-            if (fileBase64) {
-                transaction = await analyzeImageTransaction(fileBase64);
-            } else {
-                console.log("⚠️ Imagem perdida.");
-                await sendWhatsAppReply(remoteJid, "⚠️ Não consegui baixar sua imagem. Tente escrever.");
-            }
+        if (!cleanText || cleanText.length < 2 || cleanText.includes("[object Object]")) {
+            return NextResponse.json({ status: 'no_text_content' });
         }
 
-        // 3. TEXTO
-        else {
-            const textFromContent = (typeof msgObject.content === 'string') ? msgObject.content : (msgObject.content?.text || msgObject.content?.caption || "");
-            const text = messageInfo.text ||
-                textFromContent ||
-                messageInfo.conversation ||
-                messageInfo.extendedTextMessage?.text ||
-                messageInfo.textMessage?.text ||
-                messageInfo.body || "";
+        console.log(`📝 Processando Texto: "${cleanText}"`);
 
-            const cleanText = (typeof text === 'object') ? JSON.stringify(text) : text;
-            console.log(`📝 Texto: "${cleanText}"`);
-
-            if (cleanText && cleanText.length > 1 && !cleanText.includes("[object Object]")) {
-                transaction = await parseTransactionCheck(cleanText);
-            }
-        }
+        // Cérebro: Analisar intenção (Gasto, Receita, Recorrência)
+        const transaction = await parseTransactionCheck(cleanText);
 
         if (!transaction || !transaction.found) {
-            // Feedback apenas se não for mídia (pois mídia já tem aviso de erro acima)
-            if (!isAudio && !(messageInfo.imageMessage)) {
-                // await sendWhatsAppReply(remoteJid, "❌ Não entendi.");
-            }
+            // Opcional: Feedback de "não entendi" (comentado para evitar chatice)
+            // await sendWhatsAppReply(remoteJid, "❓ Não entendi. Tente: 'Mercado 200' ou 'Salário 5000 todo mês'.");
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
-        // Lógica de Salvamento e Recorrência
+        // Executar Ação no Banco de Dados
         const recurrence = transaction.recurrence;
         const count = recurrence?.count || 1;
         const isInstallment = recurrence?.isInstallment || false;
 
         console.log(`💾 Salvando ${count}x ${transaction.type} de R$ ${transaction.amount}...`);
 
-        let savedId = "";
         const baseDate = new Date(transaction.date);
+        let firstId = "";
 
         for (let i = 0; i < count; i++) {
             const currentDate = new Date(baseDate);
@@ -166,9 +120,10 @@ export async function POST(request: Request) {
                     date: currentDate,
                 }
             });
-            if (i === 0) savedId = saved.id;
+            if (i === 0) firstId = saved.id;
         }
 
+        // Feedback de Sucesso
         let replyText = `✅ *Lançamento Registrado!*
 💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
 🏷️ ${transaction.category}
@@ -180,7 +135,7 @@ export async function POST(request: Request) {
 
         await sendWhatsAppReply(remoteJid, replyText);
 
-        return NextResponse.json({ success: true, savedId: savedId });
+        return NextResponse.json({ success: true, savedId: firstId });
 
     } catch (error) {
         console.error("❌ ERRO WEBHOOK:", error);
@@ -188,127 +143,7 @@ export async function POST(request: Request) {
     }
 }
 
-// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected + Message Fetch Strategy + GET Fallback)
-async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
-    try {
-        console.log("⬇️ Solicitando Base64 para a UAZAPI (Modo Final)...");
-
-        let apiUrl = process.env.UAZAPI_URL;
-        const apiKey = process.env.UAZAPI_API_KEY;
-        if (!apiUrl || !apiKey) return null;
-
-        let baseUrl = "";
-        let instance = "";
-        try {
-            const urlObj = new URL(apiUrl);
-            baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-            const parts = urlObj.pathname.split('/').filter(p => p);
-            instance = parts[parts.length - 1]; // ex: sistema
-        } catch {
-            return null;
-        }
-
-        const headers: any = {
-            'Content-Type': 'application/json',
-            'apikey': apiKey,
-            'ApiKey': apiKey,
-            'Authorization': `Bearer ${apiKey}`
-        };
-
-        const messageId = messageObject.key?.id || messageObject.id || messageObject.messageId;
-
-        // 1. Tentar recuperar mensagem original (Tenta POST e GET)
-        let messageToDownload = messageObject;
-        console.log(`🔎 Buscando mensagem original (ID: ${messageId})...`);
-
-        const findUrl = `${baseUrl}/chat/findMessage/${instance}`;
-        try {
-            // Tenta POST
-            let resFind = await fetch(findUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ where: { id: messageId } })
-            });
-
-            // Se 405, tenta GET
-            if (resFind.status === 405) {
-                console.log("🔄 FindMessage POST falhou (405). Tentando GET...");
-                const urlGetFind = new URL(findUrl);
-                // Assume que GET aceita id na query? Não é padrão, mas tentamos.
-                // Na verdade, nem vamos enviar body no GET. Apenas torcer.
-                // Mas Evolution V2 geralmente não tem GET findMessage exposto publicamente sem body.
-            }
-
-            if (resFind.ok) {
-                const foundData = await resFind.json();
-                const msgData = Array.isArray(foundData) ? foundData[0] : foundData;
-                if (msgData) {
-                    console.log("✅ Mensagem recuperada via API.");
-                    messageToDownload = msgData;
-                }
-            }
-        } catch (e) { /* ignore */ }
-
-
-        // 2. Tentar Download (POST e GET Fallback)
-        const payloadFull = {
-            message: messageToDownload,
-            convertToMp4: false
-        };
-
-        const candidates = [
-            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`,
-            `${baseUrl}/message/getBase64FromMediaMessage/${instance}`,
-            `${baseUrl}/message/download/${instance}`
-        ];
-
-        for (const url of candidates) {
-            try {
-                console.log(`📡 POST ${url}`);
-                let res = await fetch(url, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(payloadFull)
-                });
-
-                // FALLBACK GET SE 405
-                if (res.status === 405) {
-                    console.log(`⚠️ POST 405. Tentando GET em ${url}...`);
-                    try {
-                        const urlGet = new URL(url);
-                        urlGet.searchParams.append("id", messageId); // Tenta passar ID na query
-
-                        const resGet = await fetch(urlGet.toString(), {
-                            method: 'GET',
-                            headers
-                        });
-
-                        if (resGet.ok) {
-                            res = resGet; // Sucesso no GET!
-                            console.log("✅ GET funcionou!");
-                        }
-                    } catch (errGet) { console.log("GET falhou também."); }
-                }
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const b64 = data.base64 || data.base64Data || data;
-                    if (typeof b64 === 'string' && b64.length > 50) return b64;
-                } else {
-                    const txt = await res.text();
-                    console.log(`⚠️ Falha (${res.status}): ${txt.substring(0, 100)}`);
-                }
-            } catch (e) { console.error(`Erro Req ${url}:`, e); }
-        }
-
-        console.error("❌ Todas as tentativas falharam.");
-        return null;
-
-    } catch (e) {
-        return null;
-    }
-}
-
+// Helper Simples de Envio (Sem download)
 async function sendWhatsAppReply(to: string, text: string) {
     let apiUrl = process.env.UAZAPI_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
@@ -344,16 +179,17 @@ async function sendWhatsAppReply(to: string, text: string) {
     const payload = {
         number: String(to).replace('@s.whatsapp.net', ''),
         text: text,
-        delay: 1000
+        delay: 500
     };
 
     for (const url of uniqueEndpoints) {
         try {
-            await fetch(url, {
+            const res = await fetch(url, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(payload)
             });
+            if (res.ok) return;
         } catch (e) { /* silent */ }
     }
 }
