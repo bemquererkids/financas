@@ -60,28 +60,30 @@ export default async function DashboardPage() {
                 <SummaryCard
                     title="Receita Total"
                     amount={formatCurrency(summary.income)}
-                    icon={<TrendingUp className="h-4 w-4 text-emerald-500" />}
-                    trend="+12% vs mês anterior"
-                    trendUp={true}
+                    icon={TrendingUp}
+                    subtext="+12% vs mês anterior"
+                    variant="success"
                 />
                 <SummaryCard
                     title="Despesas"
                     amount={formatCurrency(summary.expenses)}
-                    icon={<TrendingDown className="h-4 w-4 text-rose-500" />}
-                    trend="-2% vs mês anterior"
-                    trendUp={true}
+                    icon={TrendingDown}
+                    subtext="-2% vs mês anterior"
+                    variant="danger"
                 />
                 <SummaryCard
                     title="Saldo Atual"
                     amount={formatCurrency(summary.balance)}
-                    icon={<Wallet className="h-4 w-4 text-blue-500" />}
+                    icon={Wallet}
+                    subtext="Disponível"
+                    variant={summary.balance >= 0 ? "success" : "danger"}
                 />
                 <SummaryCard
                     title="Economia"
                     amount={`${summary.savingsRate.toFixed(1)}%`}
-                    icon={<PiggyBank className="h-4 w-4 text-purple-500" />}
-                    trend="Meta: 20%"
-                    trendUp={summary.savingsRate >= 20}
+                    icon={PiggyBank}
+                    subtext="Meta: 20%"
+                    variant={summary.savingsRate >= 20 ? "success" : "warning"}
                 />
             </div>
 
@@ -125,7 +127,7 @@ export default async function DashboardPage() {
             <div className="grid lg:grid-cols-5 gap-6">
                 {/* Transaction History (Maior destaque - 60% width) */}
                 <div className="lg:col-span-3">
-                    <TransactionList initialTransactions={recentTransactions} />
+                    <TransactionList transactions={recentTransactions} />
                 </div>
 
                 {/* Cash Flow e Gráficos (Lateral - 40% width) */}
