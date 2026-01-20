@@ -4,11 +4,12 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "prisma migrate deploy && prisma generate && next build",
-        "start": "next start",
+        "build": "prisma generate && prisma migrate deploy && next build",
+        "start": "next start -p ${PORT:-3000}",
         "lint": "next lint",
         "postinstall": "prisma generate",
-        "prisma:deploy": "prisma migrate deploy"
+        "prisma:deploy": "prisma migrate deploy",
+        "prisma:resolve": "prisma migrate resolve --applied 20260118123807_init_mywallet && prisma migrate deploy"
     },
     "dependencies": {
         "@auth/prisma-adapter": "^2.11.1",
