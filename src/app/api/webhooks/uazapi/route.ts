@@ -24,8 +24,8 @@ export async function POST(request: Request) {
             body;
 
         if (!msgObject) {
-            console.log("❌ Estrutura msgObject não encontrada. Keys:", Object.keys(body));
-            return NextResponse.json({ status: 'unknown_structure', keys: Object.keys(body) });
+            console.log("❌ Estrutura msgObject não encontrada.");
+            return NextResponse.json({ status: 'unknown_structure' });
         }
 
         // --- RAIO-X DEBUG ---
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             msgObject.key?.remoteJid ||
             msgObject.from ||
             msgObject.remoteJid ||
-            msgObject.chatid || "";
+            "";
 
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
 
@@ -45,7 +45,6 @@ export async function POST(request: Request) {
 
         if (isFromMe) return NextResponse.json({ status: 'ignored_self' });
 
-        // Validação de segurança
         if (MY_PHONE_NUMBER && remoteJid) {
             const cleanRemote = String(remoteJid).replace(/\D/g, '');
             const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
@@ -55,33 +54,29 @@ export async function POST(request: Request) {
             }
         }
 
-        // ---PROCESSAMENTO DE MÍDIA E TEXTO---
+        // ---PROCESSAMENTO---
         const messageInfo = msgObject.message || msgObject;
-
-        // Verifica se 'content' é um objeto (estrutura rica da UAZAPI)
         const contentObj = (typeof msgObject.content === 'object' && msgObject.content !== null) ? msgObject.content : {};
 
         let transaction = null;
 
-        // 1. É Áudio?
+        // 1. ÁUDIO
         const isAudio = messageInfo.audioMessage ||
             msgObject.messageType === 'audioMessage' ||
             msgObject.type === 'audio' ||
             (contentObj.mimetype && contentObj.mimetype.includes('audio'));
 
         if (isAudio) {
-            console.log("🎤 Áudio detectado! Baixando e transcrevendo...");
-            const mediaUrl = messageInfo.audioMessage?.url ||
-                msgObject.mediaUrl ||
-                msgObject.url ||
-                contentObj.URL; // UAZAPI URL no content
-
+            console.log("🎤 Áudio detectado! Buscando Base64...");
             let base64Audio = null;
 
-            if (mediaUrl) {
-                base64Audio = await downloadMediaAsBase64(mediaUrl);
-            } else if (msgObject.base64 || contentObj.base64) {
+            if (msgObject.base64 || contentObj.base64) {
                 base64Audio = msgObject.base64 || contentObj.base64;
+            } else {
+                // Tenta buscar via API da UAZAPI (Evolution)
+                // Passamos o messageInfo completo ou o msgObject, dependendo do que a API espera.
+                // Geralmente a Evolution espera o objeto "message" completo que contém as keys.
+                base64Audio = await fetchBase64FromUAZAPI(msgObject);
             }
 
             if (base64Audio) {
@@ -91,51 +86,42 @@ export async function POST(request: Request) {
                     transaction = await parseTransactionCheck(transcription);
                 }
             } else {
-                console.log("⚠️ URL de áudio não encontrada ou vazia.");
+                console.log("⚠️ Falha ao obter Base64 do áudio.");
             }
         }
 
-        // 2. É Imagem?
+        // 2. IMAGEM
         else if (messageInfo.imageMessage ||
             msgObject.messageType === 'imageMessage' ||
             msgObject.type === 'image' ||
             (contentObj.mimetype && contentObj.mimetype.includes('image'))) {
 
-            console.log("📸 Imagem detectada! Analisando Recibo/Nota...");
-            const mediaUrl = messageInfo.imageMessage?.url ||
-                msgObject.mediaUrl ||
-                msgObject.url ||
-                contentObj.URL;
-
+            console.log("📸 Imagem detectada! Buscando Base64...");
             let base64Image = null;
 
-            if (mediaUrl) {
-                base64Image = await downloadMediaAsBase64(mediaUrl);
-            } else if (msgObject.base64 || contentObj.base64) {
+            if (msgObject.base64 || contentObj.base64) {
                 base64Image = msgObject.base64 || contentObj.base64;
+            } else {
+                base64Image = await fetchBase64FromUAZAPI(msgObject);
             }
 
             if (base64Image) {
                 transaction = await analyzeImageTransaction(base64Image);
             } else {
-                console.log("⚠️ URL de imagem não encontrada.");
+                console.log("⚠️ Falha ao obter Base64 da imagem.");
             }
         }
 
-        // 3. É Texto? (Fallback)
+        // 3. TEXTO
         else {
-            // Se content for objeto e não caiu nas mídias acima, tenta pegar caption ou text dele
             const textFromContent = (typeof msgObject.content === 'string') ? msgObject.content : (msgObject.content?.text || msgObject.content?.caption || "");
-
             const text = messageInfo.text ||
                 textFromContent ||
-                messageInfo.content ||
                 messageInfo.conversation ||
                 messageInfo.extendedTextMessage?.text ||
                 messageInfo.textMessage?.text ||
                 messageInfo.body || "";
 
-            // Filtra [object Object] pra logar bonito
             const cleanText = (typeof text === 'object') ? JSON.stringify(text) : text;
             console.log(`📝 Texto: "${cleanText}"`);
 
@@ -144,14 +130,11 @@ export async function POST(request: Request) {
             }
         }
 
-        // Conclusão
         if (!transaction || !transaction.found) {
-            console.log("🤷‍♂️ Nenhuma transação identificada na mensagem.");
-            // Não retorna erro, só ignora
+            console.log("🤷‍♂️ Nenhuma transação identificada.");
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
-        // Salvar
         console.log(`💾 Salvando ${transaction.type} de R$ ${transaction.amount}...`);
         const saved = await prisma.transaction.create({
             data: {
@@ -164,7 +147,6 @@ export async function POST(request: Request) {
         });
         console.log(`✅ Salvo ID: ${saved.id}`);
 
-        // Resposta
         const replyText = `✅ *Lançamento Registrado!*
 💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
 🏷️ ${transaction.category}
@@ -180,18 +162,65 @@ export async function POST(request: Request) {
     }
 }
 
-// Helper para baixar mídia de URL pública (caso a UAZAPI mande URL)
-async function downloadMediaAsBase64(url: string): Promise<string | null> {
+// NOVO HELPER PARA UAZAPI (Baixar Mídia via API)
+async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
     try {
-        console.log("⬇️ Baixando mídia de:", url);
-        // Nota: A URL da UAZAPI pode exigir headers/auth se não for pública
-        // Para mídia CDN do Whatsapp geralmente não precisa auth extra se a URL for temporária
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const arrayBuffer = await res.arrayBuffer();
-        return Buffer.from(arrayBuffer).toString('base64');
+        console.log("⬇️ Solicitando Base64 para a UAZAPI...");
+
+        let apiUrl = process.env.UAZAPI_URL;
+        const apiKey = process.env.UAZAPI_API_KEY;
+        if (!apiUrl || !apiKey) return null;
+
+        // Construir URL base do endpoint
+        // apiUrl é algo como .../message/sendText/sistema
+        // Queremos .../message/base64/sistema
+
+        let targetUrl = "";
+
+        try {
+            // Tenta substituir 'sendText' por 'base64' (Evolution v2)
+            if (apiUrl.includes("sendText")) {
+                targetUrl = apiUrl.replace("sendText", "base64");
+            } else if (apiUrl.includes("text")) {
+                targetUrl = apiUrl.replace("text", "base64");
+            } else {
+                // Tenta construir na força bruta
+                const urlObj = new URL(apiUrl);
+                const parts = urlObj.pathname.split('/').filter(p => p);
+                const instance = parts[parts.length - 1];
+                targetUrl = `${urlObj.protocol}//${urlObj.host}/message/base64/${instance}`;
+            }
+        } catch {
+            return null;
+        }
+
+        console.log(`📡 URL Download: ${targetUrl}`);
+
+        const payload = {
+            message: messageObject, // Importante: Manda o objeto COMPLETO da mensagem
+            convertToMp4: false
+        };
+
+        const res = await fetch(targetUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': apiKey
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            console.error(`Status erro download: ${res.status}`);
+            return null;
+        }
+
+        const data = await res.json();
+        // Evolution retorna { base64: "..." }
+        return data.base64 || null;
+
     } catch (e) {
-        console.error("Erro download mídia:", e);
+        console.error("Erro fetchBase64FromUAZAPI:", e);
         return null;
     }
 }
@@ -200,10 +229,7 @@ async function sendWhatsAppReply(to: string, text: string) {
     let apiUrl = process.env.UAZAPI_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
 
-    if (!apiUrl || !apiKey) {
-        console.error("⚠️ Variaveis UAZAPI faltando.");
-        return;
-    }
+    if (!apiUrl || !apiKey) return;
 
     let baseUrl = "";
     let instance = "";
@@ -212,13 +238,11 @@ async function sendWhatsAppReply(to: string, text: string) {
         const urlObj = new URL(apiUrl);
         baseUrl = `${urlObj.protocol}//${urlObj.host}`;
         const parts = urlObj.pathname.split('/').filter(p => p);
-        instance = parts[parts.length - 1]; // pega o último pedaço
+        instance = parts[parts.length - 1];
     } catch (e) {
-        console.error("Erro ao parsear URL UAZAPI:", e);
         baseUrl = apiUrl;
     }
 
-    // Lista de endpoints para tentar (Fallback Strategy)
     const endpointsTrying = [
         apiUrl,
         `${baseUrl}/message/sendText/${instance}`,
@@ -226,16 +250,16 @@ async function sendWhatsAppReply(to: string, text: string) {
         `${baseUrl}/chat/sendText/${instance}`
     ];
 
+    // Filtra duplicados
     const uniqueEndpoints = endpointsTrying.filter((value, index, self) => self.indexOf(value) === index);
 
-    console.log(`🚀 Iniciando tentativa de envio. Endpoints candidatos: ${uniqueEndpoints.length}`);
+    console.log(`🚀 Tentando enviar resposta (${uniqueEndpoints.length} endpoints).`);
 
     const payloadV2 = {
         number: String(to).replace('@s.whatsapp.net', ''),
         textMessage: { text: text },
         options: { delay: 1000, presence: 'composing' }
     };
-
     const payloadV1 = {
         number: String(to).replace('@s.whatsapp.net', ''),
         text: text,
@@ -244,8 +268,6 @@ async function sendWhatsAppReply(to: string, text: string) {
 
     for (const url of uniqueEndpoints) {
         try {
-            console.log(`👉 Tentando: ${url}`);
-
             let res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -253,25 +275,15 @@ async function sendWhatsAppReply(to: string, text: string) {
             });
 
             if (res.status === 405 || res.status === 404) {
-                console.log(`⚠️ Falha v2 (${res.status}). Tentando payload v1...`);
                 res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                     body: JSON.stringify(payloadV1)
                 });
             }
-
-            const responseText = await res.text();
-
-            if (res.ok) {
-                console.log(`✅ SUCESSO! Mensagem enviada via ${url}`);
-                return;
-            } else {
-                console.log(`❌ Falha em ${url}: ${res.status} - ${responseText}`);
-            }
+            if (res.ok) return;
         } catch (e) {
-            console.error(`❌ Erro de conexão em ${url}:`, e);
+            console.error(`Erro envio em ${url}:`, e);
         }
     }
-    console.error("🏁 Todas as tentativas de envio falharam.");
 }
