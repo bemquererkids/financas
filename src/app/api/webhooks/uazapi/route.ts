@@ -2,51 +2,60 @@ import { NextResponse } from 'next/server';
 import { parseTransactionCheck } from '@/lib/nlp';
 import { prisma } from '@/lib/prisma';
 
-// Configurações (idealmente viriam do .env)
-const MY_PHONE_NUMBER = process.env.MY_WHATSAPP_NUMBER; // ex: 5511999998888@s.whatsapp.net
-// Se não tiver config, aceita qualquer um por enquanto (cuidado em prod!)
+// Configurações
+const MY_PHONE_NUMBER = process.env.MY_WHATSAPP_NUMBER;
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        console.log("Webhook recebido:", JSON.stringify(body, null, 2));
+        console.log("📨 [WEBHOOK] Recebido Payload Bruto:", JSON.stringify(body).substring(0, 500) + "...");
 
-        // Adaptação para estrutura comum de APIs tipo Base/Evolution/UAZAPI
-        // Geralmente vem em body.message ou body.data.message
-        // Ajuste conforme o JSON real da sua versão da UAZAPI
-
-        const messageData = body.message || body.data?.message || body;
+        // Adaptação para estrutura
+        // Evolution/UAZAPI v2 costuma mandar em 'data.message' ou 'data'
+        const messageData = body.data?.message || body.message || body.data || body;
 
         // Extrair quem mandou
-        const remoteJid = messageData.key?.remoteJid || messageData.from;
-        const isFromMe = messageData.key?.fromMe || false;
+        const remoteJid = messageData.key?.remoteJid || messageData.from || messageData.remoteJid;
+        const isFromMe = messageData.key?.fromMe || messageData.fromMe || false;
 
-        // Ignora mensagens enviadas por mim mesmo (loop) ou de grupos, se quiser
+        console.log(`👤 [WEBHOOK] Remetente: ${remoteJid}, É meu?: ${isFromMe}`);
+
         if (isFromMe) return NextResponse.json({ status: 'ignored_self' });
 
-        // Segurança básica: Só processa se for do meu número
-        if (MY_PHONE_NUMBER && !remoteJid.includes(MY_PHONE_NUMBER)) {
-            console.log(`Mensagem ignorada de ${remoteJid} (Não autorizado)`);
-            return NextResponse.json({ status: 'ignored_unauthorized' });
+        if (MY_PHONE_NUMBER) {
+            // Remove caracteres não numéricos para comparação segura
+            const cleanRemote = (remoteJid || '').replace(/\D/g, '');
+            const cleanMyNumber = MY_PHONE_NUMBER.replace(/\D/g, '');
+
+            if (!cleanRemote.includes(cleanMyNumber)) {
+                console.log(`⛔ [WEBHOOK] Ignorado: Número ${cleanRemote} não autorizado.`);
+                return NextResponse.json({ status: 'ignored_unauthorized' });
+            }
         }
 
         // Extrair texto
         const text = messageData.conversation ||
             messageData.extendedTextMessage?.text ||
             messageData.body ||
+            messageData.text?.body ||
             "";
+
+        console.log(`📝 [WEBHOOK] Texto extraído: "${text}"`);
 
         if (!text) return NextResponse.json({ status: 'no_text' });
 
-        // 1. Inteligência Artificial processa o texto
+        // 1. IA
+        console.log("🧠 [IA] Processando texto...");
         const transaction = await parseTransactionCheck(text);
+        console.log("🧠 [IA] Resultado:", JSON.stringify(transaction));
 
         if (!transaction || !transaction.found) {
-            // Não parecia uma transação, ignora e não responde nada (pra não ser chato)
+            console.log("🤷‍♂️ [IA] Nenhuma transação identificada.");
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
         // 2. Salva no banco
+        console.log("💾 [DB] Salvando transação...");
         const saved = await prisma.transaction.create({
             data: {
                 description: transaction.description,
@@ -54,54 +63,66 @@ export async function POST(request: Request) {
                 type: transaction.type,
                 category: transaction.category,
                 date: transaction.date,
-                // Associa a um usuário padrão (admin) ou tenta achar pelo telefone no futuro
-                // Por enquando, null no usuario se schema nao exigir, ou hack do "default"
             }
         });
+        console.log(`✅ [DB] Salvo com ID: ${saved.id}`);
 
-        // 3. Responde via API da UAZAPI
-        // Precisa configurar URL e Key
-        await sendWhatsAppReply(remoteJid, `✅ *Lançamento Registrado!*
+        // 3. Responde
+        const replyText = `✅ *Lançamento Registrado!*
 💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
 🏷️ ${transaction.category}
-📝 ${transaction.description}`);
+📝 ${transaction.description}`;
+
+        console.log("📤 [API] Tentando enviar resposta para:", remoteJid);
+        await sendWhatsAppReply(remoteJid, replyText);
 
         return NextResponse.json({ success: true, savedId: saved.id });
 
     } catch (error) {
-        console.error("Erro no webhook:", error);
+        console.error("❌ [ERRO CRÍTICO] Webhook falhou:", error);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
 
 async function sendWhatsAppReply(to: string, text: string) {
-    const apiUrl = process.env.UAZAPI_URL; // ex: https://server.uazapi.com/message/sendText/INSTANCE
+    const apiUrl = process.env.UAZAPI_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
 
+    console.log(`📡 [ENVIO] URL: ${apiUrl}, Key (início): ${apiKey?.substring(0, 5)}...`);
+
     if (!apiUrl || !apiKey) {
-        console.warn("UAZAPI variables not set. Cannot reply.");
+        console.error("⚠️ [ENVIO] Variáveis UAZAPI não configuradas!");
         return;
     }
 
     try {
-        await fetch(apiUrl, {
+        // Formato Evolution v2 / UAZAPI
+        const payload = {
+            number: to.replace('@s.whatsapp.net', ''),
+            textMessage: {
+                text: text
+            },
+            options: {
+                delay: 1000,
+                presence: 'composing'
+            }
+        };
+
+        console.log("📦 [ENVIO] Payload:", JSON.stringify(payload));
+
+        const res = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'apikey': apiKey
             },
-            body: JSON.stringify({
-                number: to.replace('@s.whatsapp.net', ''), // Algumas APIs pedem só numero
-                options: {
-                    delay: 1200,
-                    presence: 'composing'
-                },
-                textMessage: {
-                    text: text
-                }
-            })
+            body: JSON.stringify(payload)
         });
+
+        const responseData = await res.text();
+        console.log(`🔄 [ENVIO] Status: ${res.status}, Resposta: ${responseData}`);
+
     } catch (e) {
-        console.error("Falha ao responder WhatsApp:", e);
+        console.error("❌ [ENVIO] Falha na requisição fetch:", e);
     }
 }
