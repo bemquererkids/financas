@@ -64,7 +64,7 @@ export async function POST(request: Request) {
             (contentObj.mimetype && contentObj.mimetype.includes('audio'));
 
         if (isAudio) {
-            console.log("🎤 Áudio detectado! Iniciando resgate...");
+            console.log("🎤 Áudio detectado! Tentando resgate...");
 
             if (msgObject.base64 || contentObj.base64) {
                 fileBase64 = msgObject.base64 || contentObj.base64;
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
                 }
             } else {
                 console.log("⚠️ Áudio perdido (Falha no Download ou Base64).");
-                await sendWhatsAppReply(remoteJid, "⚠️ Não consegui baixar seu áudio.");
+                await sendWhatsAppReply(remoteJid, "⚠️ O servidor não permitiu baixar seu áudio. Por favor, escreva os dados (ex: 'Almoço 50').");
             }
         }
 
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
             msgObject.type === 'image' ||
             (contentObj.mimetype && contentObj.mimetype.includes('image'))) {
 
-            console.log("📸 Imagem detectada! Iniciando resgate...");
+            console.log("📸 Imagem detectada! Tentando resgate...");
 
             if (msgObject.base64 || contentObj.base64) {
                 fileBase64 = msgObject.base64 || contentObj.base64;
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
                 transaction = await analyzeImageTransaction(fileBase64);
             } else {
                 console.log("⚠️ Imagem perdida.");
-                await sendWhatsAppReply(remoteJid, "⚠️ Não consegui baixar sua imagem.");
+                await sendWhatsAppReply(remoteJid, "⚠️ Não consegui baixar sua imagem. Tente escrever.");
             }
         }
 
@@ -131,6 +131,7 @@ export async function POST(request: Request) {
         }
 
         if (!transaction || !transaction.found) {
+            // Feedback apenas se não for mídia (pois mídia já tem aviso de erro acima)
             if (!isAudio && !(messageInfo.imageMessage)) {
                 // await sendWhatsAppReply(remoteJid, "❌ Não entendi.");
             }
@@ -187,10 +188,10 @@ export async function POST(request: Request) {
     }
 }
 
-// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected + Message Fetch Strategy)
+// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected + Message Fetch Strategy + GET Fallback)
 async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
     try {
-        console.log("⬇️ Solicitando Base64 para a UAZAPI (Modo Detetive)...");
+        console.log("⬇️ Solicitando Base64 para a UAZAPI (Modo Final)...");
 
         let apiUrl = process.env.UAZAPI_URL;
         const apiKey = process.env.UAZAPI_API_KEY;
@@ -216,33 +217,40 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
 
         const messageId = messageObject.key?.id || messageObject.id || messageObject.messageId;
 
-        // 1. Tentar recuperar mensagem original
+        // 1. Tentar recuperar mensagem original (Tenta POST e GET)
         let messageToDownload = messageObject;
         console.log(`🔎 Buscando mensagem original (ID: ${messageId})...`);
 
         const findUrl = `${baseUrl}/chat/findMessage/${instance}`;
         try {
-            const resFind = await fetch(findUrl, {
+            // Tenta POST
+            let resFind = await fetch(findUrl, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ where: { id: messageId } })
             });
 
+            // Se 405, tenta GET
+            if (resFind.status === 405) {
+                console.log("🔄 FindMessage POST falhou (405). Tentando GET...");
+                const urlGetFind = new URL(findUrl);
+                // Assume que GET aceita id na query? Não é padrão, mas tentamos.
+                // Na verdade, nem vamos enviar body no GET. Apenas torcer.
+                // Mas Evolution V2 geralmente não tem GET findMessage exposto publicamente sem body.
+            }
+
             if (resFind.ok) {
                 const foundData = await resFind.json();
                 const msgData = Array.isArray(foundData) ? foundData[0] : foundData;
                 if (msgData) {
-                    console.log("✅ Mensagem recuperada! Tem mediaKey? " + (JSON.stringify(msgData).includes('mediaKey')));
+                    console.log("✅ Mensagem recuperada via API.");
                     messageToDownload = msgData;
                 }
-            } else {
-                console.log(`⚠️ Falha FindMessage (${resFind.status}): ${await resFind.text()}`);
             }
-        } catch (e) {
-            console.log("⚠️ Erro FindMessage (Exception):", e);
-        }
+        } catch (e) { /* ignore */ }
 
-        // 2. Tentar Download (POST)
+
+        // 2. Tentar Download (POST e GET Fallback)
         const payloadFull = {
             message: messageToDownload,
             convertToMp4: false
@@ -257,20 +265,40 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
         for (const url of candidates) {
             try {
                 console.log(`📡 POST ${url}`);
-                const res = await fetch(url, {
+                let res = await fetch(url, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify(payloadFull)
                 });
+
+                // FALLBACK GET SE 405
+                if (res.status === 405) {
+                    console.log(`⚠️ POST 405. Tentando GET em ${url}...`);
+                    try {
+                        const urlGet = new URL(url);
+                        urlGet.searchParams.append("id", messageId); // Tenta passar ID na query
+
+                        const resGet = await fetch(urlGet.toString(), {
+                            method: 'GET',
+                            headers
+                        });
+
+                        if (resGet.ok) {
+                            res = resGet; // Sucesso no GET!
+                            console.log("✅ GET funcionou!");
+                        }
+                    } catch (errGet) { console.log("GET falhou também."); }
+                }
 
                 if (res.ok) {
                     const data = await res.json();
                     const b64 = data.base64 || data.base64Data || data;
                     if (typeof b64 === 'string' && b64.length > 50) return b64;
                 } else {
-                    console.log(`⚠️ Falha POST (${res.status}): ${await res.text()}`);
+                    const txt = await res.text();
+                    console.log(`⚠️ Falha (${res.status}): ${txt.substring(0, 100)}`);
                 }
-            } catch (e) { console.error(`Erro Exception POST ${url}:`, e); }
+            } catch (e) { console.error(`Erro Req ${url}:`, e); }
         }
 
         console.error("❌ Todas as tentativas falharam.");
