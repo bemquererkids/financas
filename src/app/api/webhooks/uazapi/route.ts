@@ -29,15 +29,15 @@ export async function POST(request: Request) {
         }
 
         // --- RAIO-X DEBUG ---
-        // Esse log vai salvar nossa vida: mostra exatamente o que recebemos
-        console.log("📦 [DEBUG] msgObject Encontrado:", JSON.stringify(msgObject).substring(0, 1000));
+        console.log("📦 [DEBUG] msgObject Encontrado:", JSON.stringify(msgObject).substring(0, 500));
         // --------------------
 
-        // Extrair quem mandou
-        const remoteJid = msgObject.key?.remoteJid ||
+        // Extrair quem mandou (Ajustado para log do usuário: 'sender')
+        const remoteJid = msgObject.sender ||
+            msgObject.key?.remoteJid ||
             msgObject.from ||
             msgObject.remoteJid ||
-            msgObject.chatId ||
+            msgObject.chatid ||
             "";
 
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
@@ -51,18 +51,20 @@ export async function POST(request: Request) {
             const cleanRemote = String(remoteJid).replace(/\D/g, '');
             const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
 
+            // Verifica se contém o número
             if (!cleanRemote.includes(cleanMyNumber)) {
-                console.log(`⛔ Bloqueado: ${cleanRemote} não é ${cleanMyNumber}`);
+                console.log(`⛔ Bloqueado: Recebido de ${cleanRemote}. Autorizado apenas: ${cleanMyNumber}`);
                 return NextResponse.json({ status: 'ignored_unauthorized' });
             }
         }
 
-        // Extrair texto (Tentativa Bruta)
+        // Extrair texto (Ajustado para log do usuário: 'text' ou 'content')
         const messageContent = msgObject.message || msgObject;
-        const text = messageContent.conversation ||
+        const text = messageContent.text ||
+            messageContent.content ||
+            messageContent.conversation ||
             messageContent.extendedTextMessage?.text ||
-            messageContent.textMessage?.text || // Evolution v2
-            messageContent.text?.body ||
+            messageContent.textMessage?.text ||
             messageContent.body ||
             "";
 
