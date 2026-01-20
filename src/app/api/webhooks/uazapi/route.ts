@@ -143,6 +143,8 @@ export async function POST(request: Request) {
 
         if (!transaction || !transaction.found) {
             console.log("🤷‍♂️ Nenhuma transação identificada.");
+            // Feedback de erro para o usuário
+            await sendWhatsAppReply(remoteJid, "❌ Não consegui identificar os dados da transação (valor, descrição). Tente digitar ou mandar um áudio mais claro.\nEx: 'Almoço 50'");
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
