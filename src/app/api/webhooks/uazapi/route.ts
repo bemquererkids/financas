@@ -225,59 +225,40 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
             return null;
         }
 
-        // Recuperar ID da mensagem corretamente
-        const messageId = messageObject.key?.id || messageObject.id || messageObject.messageId;
+        // Payload Robusto: Envia a mensagem completa para garantir que a API tenha a mediaKey
+        // A Evolution API precisa do objeto "message" que contém { imageMessage: { url, mediaKey ... } }
+        // messageObject aqui já é o objeto da mensagem recebido no webhook.
 
-        if (!messageId) {
-            console.error("❌ Não foi possível encontrar o ID da mensagem para download.");
-            return null;
-        }
-
-        // Payload correto conforme Documentação Oficial UAZAPI / Evolution v2
-        const validPayload = {
-            id: messageId,
-            return_base64: true,
-            generate_mp3: true,   // Garante formato comum para áudio
-            return_link: false
+        const payloadFull = {
+            message: messageObject,
+            convertToMp4: false
         };
 
-        // Lista de endpoints prioritários
-        // A doc diz /message/download (que vira /message/download/{instance} no SaaS)
+        // Lista de endpoints prioritários para Evolution API
         const candidates = [
-            `${baseUrl}/message/download/${instance}`,
-            `${baseUrl}/message/base64/${instance}`,
-            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`
+            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`, // Endpoint mais confiável para v1.5+
+            `${baseUrl}/message/getBase64FromMediaMessage/${instance}`,
+            `${baseUrl}/message/download/${instance}` // v2 (geralmente salva em disco, mas tentamos)
         ];
 
         for (const url of candidates) {
             try {
-                console.log(`📡 Tentando baixar de: ${url} (ID: ${messageId})`);
+                console.log(`📡 Tentando baixar de: ${url}`);
 
-                // Tenta payload v2 (só ID)
-                let res = await fetch(url, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'apikey': apiKey
                     },
-                    body: JSON.stringify(validPayload)
+                    body: JSON.stringify(payloadFull) // Envia FULL payload
                 });
-
-                // Se der erro 400/405/404, tenta payload antigo (objeto completo) só por garantia para endpoints legados
-                if (!res.ok && (res.status === 400 || res.status === 404)) {
-                    console.log(`⚠️ Falha v2 (${res.status}). Tentando payload legacy...`);
-                    res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                        body: JSON.stringify({ message: messageObject, convertToMp4: false })
-                    });
-                }
 
                 if (res.ok) {
                     const data = await res.json();
 
-                    // UAZAPI pode retornar: { base64Data: "..." } ou { base64: "..." } ou string direta
-                    const b64 = data.base64Data || data.base64 || data;
+                    // Suporta diferentes formatos de resposta da UAZAPI
+                    const b64 = data.base64 || data.base64Data || data;
 
                     if (typeof b64 === 'string' && b64.length > 50) {
                         return b64;
@@ -291,6 +272,10 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
         }
 
         console.error("❌ Todas as tentativas de download de mídia falharam.");
+
+        // Feedback para o usuário (opcional, para não flodar, mas útil em debug)
+        // await sendWhatsAppReply(messageObject.key?.remoteJid, "⚠️ Recebi sua mídia, mas não consegui baixar o arquivo. Verifique se a sua API permite download.");
+
         return null;
 
     } catch (e) {
