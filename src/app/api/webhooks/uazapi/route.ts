@@ -9,7 +9,6 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Log básico
         const eventType = body.EventType || body.type || 'unknown';
         console.log(`📨 [WEBHOOK] Evento: ${eventType}`);
 
@@ -17,8 +16,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'ignored_presence' });
         }
 
-        // Tenta encontrar a mensagem real na estrutura da UAZAPI
-        // Estrutura provável: { EventType: 'messages', messages: [ { key: {...}, message: {...} } ] }
+        // Estratégia de extração da mensagem
         const msgObject = (Array.isArray(body.messages) ? body.messages[0] : null) ||
             (Array.isArray(body.data) ? body.data[0] : null) ||
             body.data?.message ||
@@ -30,18 +28,28 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'unknown_structure', keys: Object.keys(body) });
         }
 
+        // --- RAIO-X DEBUG ---
+        // Esse log vai salvar nossa vida: mostra exatamente o que recebemos
+        console.log("📦 [DEBUG] msgObject Encontrado:", JSON.stringify(msgObject).substring(0, 1000));
+        // --------------------
+
         // Extrair quem mandou
-        const remoteJid = msgObject.key?.remoteJid || msgObject.from || msgObject.remoteJid;
+        const remoteJid = msgObject.key?.remoteJid ||
+            msgObject.from ||
+            msgObject.remoteJid ||
+            msgObject.chatId ||
+            "";
+
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
 
-        console.log(`👤 Remetente: ${remoteJid} (Sou eu? ${isFromMe})`);
+        console.log(`👤 Remetente: "${remoteJid}" (Sou eu? ${isFromMe})`);
 
         if (isFromMe) return NextResponse.json({ status: 'ignored_self' });
 
         // Validação de segurança
         if (MY_PHONE_NUMBER && remoteJid) {
-            const cleanRemote = remoteJid.replace(/\D/g, '');
-            const cleanMyNumber = MY_PHONE_NUMBER.replace(/\D/g, '');
+            const cleanRemote = String(remoteJid).replace(/\D/g, '');
+            const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
 
             if (!cleanRemote.includes(cleanMyNumber)) {
                 console.log(`⛔ Bloqueado: ${cleanRemote} não é ${cleanMyNumber}`);
@@ -49,11 +57,11 @@ export async function POST(request: Request) {
             }
         }
 
-        // Extrair texto
-        // UAZAPI/Evolution pode colocar o texto em message.conversation ou extendedTextMessage.text
+        // Extrair texto (Tentativa Bruta)
         const messageContent = msgObject.message || msgObject;
         const text = messageContent.conversation ||
             messageContent.extendedTextMessage?.text ||
+            messageContent.textMessage?.text || // Evolution v2
             messageContent.text?.body ||
             messageContent.body ||
             "";
@@ -73,7 +81,7 @@ export async function POST(request: Request) {
         }
 
         // 2. Salva no banco
-        console.log("💾 Salvando no Postgres...");
+        console.log("💾 Salvando ID no Postgres...");
         const saved = await prisma.transaction.create({
             data: {
                 description: transaction.description,
@@ -113,7 +121,7 @@ async function sendWhatsAppReply(to: string, text: string) {
 
     try {
         const payload = {
-            number: to.replace('@s.whatsapp.net', ''),
+            number: String(to).replace('@s.whatsapp.net', ''),
             textMessage: {
                 text: text
             },
@@ -122,6 +130,9 @@ async function sendWhatsAppReply(to: string, text: string) {
                 presence: 'composing'
             }
         };
+
+        console.log("📦 [ENVIO] Payload Envio:", JSON.stringify(payload));
+        console.log("📡 [ENVIO] URL Destino:", apiUrl);
 
         const res = await fetch(apiUrl, {
             method: 'POST',
