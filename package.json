@@ -4,10 +4,10 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "prisma generate && prisma migrate deploy && next build",
-        "start": "next start -p ${PORT:-3000}",
+        "build": "next build",
+        "start": "next start",
         "lint": "next lint",
-        "postinstall": "prisma generate",
+        "postinstall": "prisma generate && prisma migrate deploy",
         "prisma:deploy": "prisma migrate deploy",
         "prisma:resolve": "prisma migrate resolve --applied 20260118123807_init_mywallet && prisma migrate deploy"
     },
