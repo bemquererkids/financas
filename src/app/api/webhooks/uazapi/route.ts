@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         }
 
         // --- RAIO-X DEBUG ---
-        console.log("📦 [DEBUG] msgObject:", JSON.stringify(msgObject).substring(0, 300));
+        console.log("📦 [DEBUG] msgObject:", JSON.stringify(msgObject).substring(0, 400));
         // --------------------
 
         // Extrair quem mandou
@@ -57,22 +57,31 @@ export async function POST(request: Request) {
 
         // ---PROCESSAMENTO DE MÍDIA E TEXTO---
         const messageInfo = msgObject.message || msgObject;
+
+        // Verifica se 'content' é um objeto (estrutura rica da UAZAPI)
+        const contentObj = (typeof msgObject.content === 'object' && msgObject.content !== null) ? msgObject.content : {};
+
         let transaction = null;
 
         // 1. É Áudio?
-        // Verifica se tem audioMessage OU se o messageType diz que é audio
-        const isAudio = messageInfo.audioMessage || (msgObject.messageType === 'audioMessage') || (msgObject.type === 'audio');
+        const isAudio = messageInfo.audioMessage ||
+            msgObject.messageType === 'audioMessage' ||
+            msgObject.type === 'audio' ||
+            (contentObj.mimetype && contentObj.mimetype.includes('audio'));
 
         if (isAudio) {
             console.log("🎤 Áudio detectado! Baixando e transcrevendo...");
-            const mediaUrl = messageInfo.audioMessage?.url || msgObject.mediaUrl || msgObject.url;
-            // Se tiver URL pública ou em base64 (algumas APIs mandam em 'mediaData' ou 'base64')
+            const mediaUrl = messageInfo.audioMessage?.url ||
+                msgObject.mediaUrl ||
+                msgObject.url ||
+                contentObj.URL; // UAZAPI URL no content
+
             let base64Audio = null;
 
             if (mediaUrl) {
                 base64Audio = await downloadMediaAsBase64(mediaUrl);
-            } else if (msgObject.base64) {
-                base64Audio = msgObject.base64;
+            } else if (msgObject.base64 || contentObj.base64) {
+                base64Audio = msgObject.base64 || contentObj.base64;
             }
 
             if (base64Audio) {
@@ -87,15 +96,23 @@ export async function POST(request: Request) {
         }
 
         // 2. É Imagem?
-        else if (messageInfo.imageMessage || (msgObject.messageType === 'imageMessage') || (msgObject.type === 'image')) {
+        else if (messageInfo.imageMessage ||
+            msgObject.messageType === 'imageMessage' ||
+            msgObject.type === 'image' ||
+            (contentObj.mimetype && contentObj.mimetype.includes('image'))) {
+
             console.log("📸 Imagem detectada! Analisando Recibo/Nota...");
-            const mediaUrl = messageInfo.imageMessage?.url || msgObject.mediaUrl || msgObject.url;
+            const mediaUrl = messageInfo.imageMessage?.url ||
+                msgObject.mediaUrl ||
+                msgObject.url ||
+                contentObj.URL;
+
             let base64Image = null;
 
             if (mediaUrl) {
                 base64Image = await downloadMediaAsBase64(mediaUrl);
-            } else if (msgObject.base64) {
-                base64Image = msgObject.base64;
+            } else if (msgObject.base64 || contentObj.base64) {
+                base64Image = msgObject.base64 || contentObj.base64;
             }
 
             if (base64Image) {
@@ -107,22 +124,30 @@ export async function POST(request: Request) {
 
         // 3. É Texto? (Fallback)
         else {
+            // Se content for objeto e não caiu nas mídias acima, tenta pegar caption ou text dele
+            const textFromContent = (typeof msgObject.content === 'string') ? msgObject.content : (msgObject.content?.text || msgObject.content?.caption || "");
+
             const text = messageInfo.text ||
+                textFromContent ||
                 messageInfo.content ||
                 messageInfo.conversation ||
                 messageInfo.extendedTextMessage?.text ||
                 messageInfo.textMessage?.text ||
                 messageInfo.body || "";
 
-            console.log(`📝 Texto: "${text}"`);
-            if (text) {
-                transaction = await parseTransactionCheck(text);
+            // Filtra [object Object] pra logar bonito
+            const cleanText = (typeof text === 'object') ? JSON.stringify(text) : text;
+            console.log(`📝 Texto: "${cleanText}"`);
+
+            if (cleanText && cleanText !== "{}" && !cleanText.includes("[object Object]")) {
+                transaction = await parseTransactionCheck(cleanText);
             }
         }
 
         // Conclusão
         if (!transaction || !transaction.found) {
             console.log("🤷‍♂️ Nenhuma transação identificada na mensagem.");
+            // Não retorna erro, só ignora
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
@@ -160,7 +185,7 @@ async function downloadMediaAsBase64(url: string): Promise<string | null> {
     try {
         console.log("⬇️ Baixando mídia de:", url);
         // Nota: A URL da UAZAPI pode exigir headers/auth se não for pública
-        // Se falhar com fetch simples, teremos que adicionar a APIKey como header, mas nem sempre funciona para mídia CDN
+        // Para mídia CDN do Whatsapp geralmente não precisa auth extra se a URL for temporária
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const arrayBuffer = await res.arrayBuffer();
