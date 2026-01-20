@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { processIntent, transcribeAudioMessage, analyzeImageTransaction } from '@/lib/nlp';
+import { processIntent } from '@/lib/nlp';
 import { prisma } from '@/lib/prisma';
 
 // Configurações
@@ -80,8 +80,18 @@ export async function POST(request: Request) {
         // --- CÉREBRO NLP ---
         const result = await processIntent(cleanText);
 
+        // FALLBACK INTELIGENTE (Substitui Chatbot Externo)
         if (!result || !result.found || !result.data) {
-            // await sendWhatsAppReply(remoteJid, "❓ Não entendi a intenção.");
+            const helpText = `🤔 *Não entendi bem.*
+Tente estes formatos:
+
+💸 *Gastos:* "Mercado 200", "Salário 5000"
+🎯 *Metas:* "Nova meta Viagem 10k"
+🧾 *Boletos:* "Luz vence dia 10 valor 150"
+📈 *Investir:* "Simular CDB 500 reais"
+📊 *Planejar:* "Planejar 500 pra Lazer"`;
+
+            await sendWhatsAppReply(remoteJid, helpText);
             return NextResponse.json({ status: 'intent_unknown' });
         }
 
