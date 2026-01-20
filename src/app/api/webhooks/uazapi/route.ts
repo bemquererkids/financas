@@ -104,9 +104,12 @@ export async function POST(request: Request) {
             }
 
             // Fallback: Tenta usar o Thumbnail se o download falhou
-            // O thumbnail geralmente vem em messageInfo.imageMessage.JPEGThumbnail
+            // O thumbnail geralmente vem em messageInfo.imageMessage.JPEGThumbnail ou content.JPEGThumbnail
             if (!base64Image) {
-                const thumb = messageInfo.imageMessage?.JPEGThumbnail || msgObject.JPEGThumbnail;
+                const thumb = messageInfo.imageMessage?.JPEGThumbnail ||
+                    msgObject.JPEGThumbnail ||
+                    contentObj.JPEGThumbnail; // <--- Bingo!
+
                 if (thumb) {
                     console.log("⚠️ Download Full HD falhou. Usando Thumbnail (Baixa Resolução) como fallback.");
                     base64Image = thumb;
