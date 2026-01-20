@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 }
 
 async function sendWhatsAppReply(to: string, text: string) {
-    const apiUrl = process.env.UAZAPI_URL;
+    let apiUrl = process.env.UAZAPI_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
 
     if (!apiUrl || !apiKey) {
@@ -121,34 +121,79 @@ async function sendWhatsAppReply(to: string, text: string) {
         return;
     }
 
+    // Tentar limpar a URL para pegar a base e a instância
+    // Ex: https://bemquerer.uazapi.com/message/sendText/sistema -> Base: ...uazapi.com, Instance: sistema
+    let baseUrl = "";
+    let instance = "";
+
     try {
-        const payload = {
-            number: String(to).replace('@s.whatsapp.net', ''),
-            textMessage: {
-                text: text
-            },
-            options: {
-                delay: 1000,
-                presence: 'composing'
-            }
-        };
-
-        console.log("📦 [ENVIO] Payload Envio:", JSON.stringify(payload));
-        console.log("📡 [ENVIO] URL Destino:", apiUrl);
-
-        const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': apiKey
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const responseText = await res.text();
-        console.log(`🔄 Envio Status: ${res.status} | Body: ${responseText}`);
-
+        const urlObj = new URL(apiUrl);
+        baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+        const parts = urlObj.pathname.split('/').filter(p => p);
+        instance = parts[parts.length - 1]; // pega o último pedaço
     } catch (e) {
-        console.error("❌ Erro fetch envio:", e);
+        console.error("Erro ao parsear URL UAZAPI:", e);
+        // Fallback: usa a url original
+        baseUrl = apiUrl;
     }
+
+    // Lista de endpoints para tentar (Fallback Strategy)
+    const endpointsTrying = [
+        apiUrl, // Tenta a configurada primeiro
+        `${baseUrl}/message/sendText/${instance}`, // v2 padrão
+        `${baseUrl}/message/text/${instance}`,     // v1 padrão
+        `${baseUrl}/chat/sendText/${instance}`     // Forks
+    ];
+
+    // Remove duplicatas
+    const uniqueEndpoints = endpointsTrying.filter((value, index, self) => self.indexOf(value) === index);
+
+    console.log(`🚀 Iniciando tentativa de envio. Endpoints candidatos: ${uniqueEndpoints.length}`);
+
+    const payloadV2 = {
+        number: String(to).replace('@s.whatsapp.net', ''),
+        textMessage: { text: text },
+        options: { delay: 1000, presence: 'composing' }
+    };
+
+    const payloadV1 = {
+        number: String(to).replace('@s.whatsapp.net', ''),
+        text: text,
+        delay: 1000
+    };
+
+    for (const url of uniqueEndpoints) {
+        try {
+            console.log(`👉 Tentando: ${url}`);
+
+            // Tenta primeiro com payload V2
+            let res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                body: JSON.stringify(payloadV2)
+            });
+
+            if (res.status === 405 || res.status === 404) {
+                // Se falhar com 405/404, tenta payload V1 nesse mesmo endpoint (algumas versoes mudam o body)
+                console.log(`⚠️ Falha v2 (${res.status}). Tentando payload v1...`);
+                res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify(payloadV1)
+                });
+            }
+
+            const responseText = await res.text();
+
+            if (res.ok) {
+                console.log(`✅ SUCESSO! Mensagem enviada via ${url}`);
+                return; // Parar tentativas
+            } else {
+                console.log(`❌ Falha em ${url}: ${res.status} - ${responseText}`);
+            }
+        } catch (e) {
+            console.error(`❌ Erro de conexão em ${url}:`, e);
+        }
+    }
+    console.error("🏁 Todas as tentativas de envio falharam.");
 }
