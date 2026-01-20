@@ -73,9 +73,7 @@ export async function POST(request: Request) {
             if (msgObject.base64 || contentObj.base64) {
                 base64Audio = msgObject.base64 || contentObj.base64;
             } else {
-                // Tenta buscar via API da UAZAPI (Evolution)
-                // Passamos o messageInfo completo ou o msgObject, dependendo do que a API espera.
-                // Geralmente a Evolution espera o objeto "message" completo que contém as keys.
+                // Tenta buscar via API
                 base64Audio = await fetchBase64FromUAZAPI(msgObject);
             }
 
@@ -162,7 +160,7 @@ export async function POST(request: Request) {
     }
 }
 
-// NOVO HELPER PARA UAZAPI (Baixar Mídia via API)
+// Helper para buscar Base64 (Multi-Endpoint Try)
 async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
     try {
         console.log("⬇️ Solicitando Base64 para a UAZAPI...");
@@ -171,53 +169,55 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
         const apiKey = process.env.UAZAPI_API_KEY;
         if (!apiUrl || !apiKey) return null;
 
-        // Construir URL base do endpoint
-        // apiUrl é algo como .../message/sendText/sistema
-        // Queremos .../message/base64/sistema
-
-        let targetUrl = "";
-
+        let baseUrl = "";
+        let instance = "";
         try {
-            // Tenta substituir 'sendText' por 'base64' (Evolution v2)
-            if (apiUrl.includes("sendText")) {
-                targetUrl = apiUrl.replace("sendText", "base64");
-            } else if (apiUrl.includes("text")) {
-                targetUrl = apiUrl.replace("text", "base64");
-            } else {
-                // Tenta construir na força bruta
-                const urlObj = new URL(apiUrl);
-                const parts = urlObj.pathname.split('/').filter(p => p);
-                const instance = parts[parts.length - 1];
-                targetUrl = `${urlObj.protocol}//${urlObj.host}/message/base64/${instance}`;
-            }
+            const urlObj = new URL(apiUrl);
+            baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+            const parts = urlObj.pathname.split('/').filter(p => p);
+            instance = parts[parts.length - 1];
         } catch {
             return null;
         }
 
-        console.log(`📡 URL Download: ${targetUrl}`);
+        // Lista de endpoints possíveis para download de base64
+        const candidates = [
+            `${baseUrl}/message/base64/${instance}`, // v2
+            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`, // v1.6+
+            `${baseUrl}/message/downloadMedia/${instance}` // alguns forks
+        ];
 
         const payload = {
-            message: messageObject, // Importante: Manda o objeto COMPLETO da mensagem
+            message: messageObject,
             convertToMp4: false
         };
 
-        const res = await fetch(targetUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': apiKey
-            },
-            body: JSON.stringify(payload)
-        });
+        for (const url of candidates) {
+            try {
+                console.log(`📡 Tentando baixar de: ${url}`);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': apiKey
+                    },
+                    body: JSON.stringify(payload)
+                });
 
-        if (!res.ok) {
-            console.error(`Status erro download: ${res.status}`);
-            return null;
+                if (res.ok) {
+                    const data = await res.json();
+                    const b64 = data.base64 || data;
+                    if (typeof b64 === 'string' && b64.length > 50) return b64;
+                } else {
+                    console.log(`⚠️ Falha (${res.status}) em ${url}`);
+                }
+            } catch (e) {
+                console.error(`Erro conexão ${url}:`, e);
+            }
         }
 
-        const data = await res.json();
-        // Evolution retorna { base64: "..." }
-        return data.base64 || null;
+        console.error("❌ Todas as tentativas de download de mídia falharam.");
+        return null;
 
     } catch (e) {
         console.error("Erro fetchBase64FromUAZAPI:", e);
@@ -252,8 +252,6 @@ async function sendWhatsAppReply(to: string, text: string) {
 
     // Filtra duplicados
     const uniqueEndpoints = endpointsTrying.filter((value, index, self) => self.indexOf(value) === index);
-
-    console.log(`🚀 Tentando enviar resposta (${uniqueEndpoints.length} endpoints).`);
 
     const payloadV2 = {
         number: String(to).replace('@s.whatsapp.net', ''),
