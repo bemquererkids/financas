@@ -175,7 +175,7 @@ export async function POST(request: Request) {
     }
 }
 
-// Helper para buscar Base64 (Multi-Endpoint Try)
+// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected)
 async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
     try {
         console.log("⬇️ Solicitando Base64 para a UAZAPI...");
@@ -190,39 +190,68 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
             const urlObj = new URL(apiUrl);
             baseUrl = `${urlObj.protocol}//${urlObj.host}`;
             const parts = urlObj.pathname.split('/').filter(p => p);
-            instance = parts[parts.length - 1];
+            instance = parts[parts.length - 1]; // ex: sistema
         } catch {
             return null;
         }
 
-        // Lista de endpoints possíveis para download de base64
-        const candidates = [
-            `${baseUrl}/message/base64/${instance}`, // v2
-            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`, // v1.6+
-            `${baseUrl}/message/downloadMedia/${instance}` // alguns forks
-        ];
+        // Recuperar ID da mensagem corretamente
+        const messageId = messageObject.key?.id || messageObject.id || messageObject.messageId;
 
-        const payload = {
-            message: messageObject,
-            convertToMp4: false
+        if (!messageId) {
+            console.error("❌ Não foi possível encontrar o ID da mensagem para download.");
+            return null;
+        }
+
+        // Payload correto conforme Documentação Oficial UAZAPI / Evolution v2
+        const validPayload = {
+            id: messageId,
+            return_base64: true,
+            generate_mp3: true,   // Garante formato comum para áudio
+            return_link: false
         };
+
+        // Lista de endpoints prioritários
+        // A doc diz /message/download (que vira /message/download/{instance} no SaaS)
+        const candidates = [
+            `${baseUrl}/message/download/${instance}`,
+            `${baseUrl}/message/base64/${instance}`,
+            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`
+        ];
 
         for (const url of candidates) {
             try {
-                console.log(`📡 Tentando baixar de: ${url}`);
-                const res = await fetch(url, {
+                console.log(`📡 Tentando baixar de: ${url} (ID: ${messageId})`);
+
+                // Tenta payload v2 (só ID)
+                let res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'apikey': apiKey
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(validPayload)
                 });
+
+                // Se der erro 400/405/404, tenta payload antigo (objeto completo) só por garantia para endpoints legados
+                if (!res.ok && (res.status === 400 || res.status === 404)) {
+                    console.log(`⚠️ Falha v2 (${res.status}). Tentando payload legacy...`);
+                    res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                        body: JSON.stringify({ message: messageObject, convertToMp4: false })
+                    });
+                }
 
                 if (res.ok) {
                     const data = await res.json();
-                    const b64 = data.base64 || data;
-                    if (typeof b64 === 'string' && b64.length > 50) return b64;
+
+                    // UAZAPI pode retornar: { base64Data: "..." } ou { base64: "..." } ou string direta
+                    const b64 = data.base64Data || data.base64 || data;
+
+                    if (typeof b64 === 'string' && b64.length > 50) {
+                        return b64;
+                    }
                 } else {
                     console.log(`⚠️ Falha (${res.status}) em ${url}`);
                 }
