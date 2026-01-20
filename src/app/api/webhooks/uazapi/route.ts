@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         const isAudio = messageInfo.audioMessage ||
             msgObject.messageType === 'audioMessage' ||
             msgObject.type === 'audio' ||
+            msgObject.mediaType === 'ptt' || // Audio PTT do payload UAZAPI
             (contentObj.mimetype && contentObj.mimetype.includes('audio'));
 
         if (isAudio) {
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
             if (msgObject.base64 || contentObj.base64) {
                 base64Audio = msgObject.base64 || contentObj.base64;
             } else {
-                // Tenta buscar via API
+                // Tenta buscar via API com estratégia robusta
                 base64Audio = await fetchBase64FromUAZAPI(msgObject);
             }
 
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
                 }
             } else {
                 console.log("⚠️ Falha ao obter Base64 do áudio.");
+                await sendWhatsAppReply(remoteJid, "⚠️ Recebi seu áudio, mas ocorreu um erro no download. Tente enviar novamente.");
             }
         }
 
@@ -104,11 +106,10 @@ export async function POST(request: Request) {
             }
 
             // Fallback: Tenta usar o Thumbnail se o download falhou
-            // O thumbnail geralmente vem em messageInfo.imageMessage.JPEGThumbnail ou content.JPEGThumbnail
             if (!base64Image) {
                 const thumb = messageInfo.imageMessage?.JPEGThumbnail ||
                     msgObject.JPEGThumbnail ||
-                    contentObj.JPEGThumbnail; // <--- Bingo!
+                    contentObj.JPEGThumbnail;
 
                 if (thumb) {
                     console.log("⚠️ Download Full HD falhou. Usando Thumbnail (Baixa Resolução) como fallback.");
@@ -120,6 +121,7 @@ export async function POST(request: Request) {
                 transaction = await analyzeImageTransaction(base64Image);
             } else {
                 console.log("⚠️ Falha ao obter Base64 da imagem (nem thumbnail disponível).");
+                await sendWhatsAppReply(remoteJid, "⚠️ Recebi a imagem, mas não consegui baixar. Tente enviar novamente.");
             }
         }
 
@@ -143,8 +145,10 @@ export async function POST(request: Request) {
 
         if (!transaction || !transaction.found) {
             console.log("🤷‍♂️ Nenhuma transação identificada.");
-            // Feedback de erro para o usuário
-            await sendWhatsAppReply(remoteJid, "❌ Não consegui identificar os dados da transação (valor, descrição). Tente digitar ou mandar um áudio mais claro.\nEx: 'Almoço 50'");
+            // Só envia feedback se não for mídia que falhou o download (já avisado acima)
+            if (!isAudio && !(messageInfo.imageMessage)) {
+                await sendWhatsAppReply(remoteJid, "❌ Não consegui identificar transação. Tente: 'Almoço 50' ou envie um áudio/foto.");
+            }
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
@@ -168,8 +172,6 @@ export async function POST(request: Request) {
             if (isInstallment && count > 1) {
                 description = `${transaction.description} (${i + 1}/${count})`;
             }
-            // Se for recorrência mensal sem ser parcela (ex: "Salário"), mantém descrição limpa ou adiciona mês opcionalmente
-            // Optei por manter limpa para agrupar melhor, mas a data será diferente.
 
             const saved = await prisma.transaction.create({
                 data: {
@@ -181,7 +183,7 @@ export async function POST(request: Request) {
                 }
             });
 
-            if (i === 0) savedId = saved.id; // Guarda o primeiro ID para retorno/log
+            if (i === 0) savedId = saved.id;
         }
 
         console.log(`✅ Salvo(s) ${count} registro(s). ID Inicial: ${savedId}`);
@@ -205,15 +207,16 @@ export async function POST(request: Request) {
     }
 }
 
-// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected)
+// NOVO HELPER PARA UAZAPI (Baixar Mídia via API - v2 Payload Corrected + Message Fetch Strategy)
 async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null> {
     try {
-        console.log("⬇️ Solicitando Base64 para a UAZAPI...");
+        console.log("⬇️ Solicitando Base64 para a UAZAPI (Estratégia Anti-405)...");
 
         let apiUrl = process.env.UAZAPI_URL;
         const apiKey = process.env.UAZAPI_API_KEY;
         if (!apiUrl || !apiKey) return null;
 
+        // Normalização da URL
         let baseUrl = "";
         let instance = "";
         try {
@@ -225,46 +228,86 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
             return null;
         }
 
-        // Payload Robusto: Envia a mensagem completa para garantir que a API tenha a mediaKey
-        // A Evolution API precisa do objeto "message" que contém { imageMessage: { url, mediaKey ... } }
-        // messageObject aqui já é o objeto da mensagem recebido no webhook.
+        // Headers Robustos (Envia todas as variações conhecidas)
+        const headers: any = {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+            'ApiKey': apiKey,
+            'Authorization': `Bearer ${apiKey}`
+        };
 
+        const messageId = messageObject.key?.id || messageObject.id || messageObject.messageId;
+        if (!messageId) {
+            console.error("❌ ID da mensagem não encontrado.");
+            return null;
+        }
+
+        // Tenta recuperar a mensagem original do banco da API primeiro
+        // Isso é crucial porque o webhook as vezes vem num formato diferente do que o endpoint de download precisa
+        let messageToDownload = messageObject;
+
+        console.log(`🔎 Tentando recuperar mensagem original (ID: ${messageId})...`);
+        const findEndpoints = [
+            `${baseUrl}/chat/findMessage/${instance}`,
+            `${baseUrl}/message/find/${instance}`
+        ];
+
+        for (const findUrl of findEndpoints) {
+            try {
+                const resFind = await fetch(findUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ where: { id: messageId } })
+                });
+
+                if (resFind.ok) {
+                    const foundData = await resFind.json();
+                    // UAZAPI / Evolution às vezes retorna array ou objeto direto
+                    const msgData = Array.isArray(foundData) ? foundData[0] : foundData;
+
+                    if (msgData && (msgData.key || msgData.id)) {
+                        console.log("✅ Mensagem original recuperada com sucesso!");
+                        messageToDownload = msgData;
+                        break;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+
+        // Payload para Download
+        // As versões mais recentes da Evolution preferem { message: fullMessageObject }
+        // Se falhar o objeto full, tenta só o ID se existir endpoint pra isso
         const payloadFull = {
-            message: messageObject,
+            message: messageToDownload,
             convertToMp4: false
         };
 
-        // Lista de endpoints prioritários para Evolution API
         const candidates = [
-            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`, // Endpoint mais confiável para v1.5+
+            `${baseUrl}/chat/getBase64FromMediaMessage/${instance}`, // Preferencial
             `${baseUrl}/message/getBase64FromMediaMessage/${instance}`,
-            `${baseUrl}/message/download/${instance}` // v2 (geralmente salva em disco, mas tentamos)
+            `${baseUrl}/message/download/${instance}`
         ];
 
         for (const url of candidates) {
             try {
                 console.log(`📡 Tentando baixar de: ${url}`);
-
                 const res = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': apiKey
-                    },
-                    body: JSON.stringify(payloadFull) // Envia FULL payload
+                    headers,
+                    body: JSON.stringify(payloadFull)
                 });
 
                 if (res.ok) {
                     const data = await res.json();
-
-                    // Suporta diferentes formatos de resposta da UAZAPI
                     const b64 = data.base64 || data.base64Data || data;
 
                     if (typeof b64 === 'string' && b64.length > 50) {
+                        console.log("✅ Download Concluído!");
                         return b64;
                     }
                 } else {
-                    console.log(`⚠️ Falha (${res.status}) em ${url}`);
+                    console.log(`⚠️ Falha (${res.status} - ${res.statusText}) em ${url}`);
                 }
             } catch (e) {
                 console.error(`Erro conexão ${url}:`, e);
@@ -272,10 +315,6 @@ async function fetchBase64FromUAZAPI(messageObject: any): Promise<string | null>
         }
 
         console.error("❌ Todas as tentativas de download de mídia falharam.");
-
-        // Feedback para o usuário (opcional, para não flodar, mas útil em debug)
-        // await sendWhatsAppReply(messageObject.key?.remoteJid, "⚠️ Recebi sua mídia, mas não consegui baixar o arquivo. Verifique se a sua API permite download.");
-
         return null;
 
     } catch (e) {
@@ -302,6 +341,12 @@ async function sendWhatsAppReply(to: string, text: string) {
         baseUrl = apiUrl;
     }
 
+    const headers: any = {
+        'Content-Type': 'application/json',
+        'apikey': apiKey,
+        'ApiKey': apiKey
+    };
+
     const endpointsTrying = [
         apiUrl,
         `${baseUrl}/message/sendText/${instance}`,
@@ -309,7 +354,6 @@ async function sendWhatsAppReply(to: string, text: string) {
         `${baseUrl}/chat/sendText/${instance}`
     ];
 
-    // Filtra duplicados
     const uniqueEndpoints = endpointsTrying.filter((value, index, self) => self.indexOf(value) === index);
 
     const payloadV2 = {
@@ -327,14 +371,14 @@ async function sendWhatsAppReply(to: string, text: string) {
         try {
             let res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                headers,
                 body: JSON.stringify(payloadV2)
             });
 
             if (res.status === 405 || res.status === 404) {
                 res = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    headers,
                     body: JSON.stringify(payloadV1)
                 });
             }
