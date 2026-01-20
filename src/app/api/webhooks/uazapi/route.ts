@@ -148,26 +148,56 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'no_transaction_intent' });
         }
 
-        console.log(`💾 Salvando ${transaction.type} de R$ ${transaction.amount}...`);
-        const saved = await prisma.transaction.create({
-            data: {
-                description: transaction.description,
-                amount: transaction.amount,
-                type: transaction.type,
-                category: transaction.category,
-                date: transaction.date,
-            }
-        });
-        console.log(`✅ Salvo ID: ${saved.id}`);
+        // Lógica de Salvamento com Suporte a Recorrência
+        const recurrence = transaction.recurrence;
+        const count = recurrence?.count || 1;
+        const isInstallment = recurrence?.isInstallment || false;
 
-        const replyText = `✅ *Lançamento Registrado!*
+        console.log(`💾 Salvando ${count}x ${transaction.type} de R$ ${transaction.amount}...`);
+
+        let savedId = "";
+        const baseDate = new Date(transaction.date);
+
+        for (let i = 0; i < count; i++) {
+            // Calcular Data: Soma 'i' meses à data base
+            const currentDate = new Date(baseDate);
+            currentDate.setMonth(baseDate.getMonth() + i);
+
+            // Ajustar Descrição para parcelas (ex: "Compra (1/3)")
+            let description = transaction.description;
+            if (isInstallment && count > 1) {
+                description = `${transaction.description} (${i + 1}/${count})`;
+            }
+            // Se for recorrência mensal sem ser parcela (ex: "Salário"), mantém descrição limpa ou adiciona mês opcionalmente
+            // Optei por manter limpa para agrupar melhor, mas a data será diferente.
+
+            const saved = await prisma.transaction.create({
+                data: {
+                    description: description,
+                    amount: transaction.amount,
+                    type: transaction.type,
+                    category: transaction.category,
+                    date: currentDate,
+                }
+            });
+
+            if (i === 0) savedId = saved.id; // Guarda o primeiro ID para retorno/log
+        }
+
+        console.log(`✅ Salvo(s) ${count} registro(s). ID Inicial: ${savedId}`);
+
+        let replyText = `✅ *Lançamento Registrado!*
 💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
 🏷️ ${transaction.category}
 📝 ${transaction.description}`;
 
+        if (count > 1) {
+            replyText += `\n🔄 Repetição: ${count} meses${isInstallment ? ' (Parcelado)' : ''}`;
+        }
+
         await sendWhatsAppReply(remoteJid, replyText);
 
-        return NextResponse.json({ success: true, savedId: saved.id });
+        return NextResponse.json({ success: true, savedId: savedId });
 
     } catch (error) {
         console.error("❌ ERRO WEBHOOK:", error);

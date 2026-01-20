@@ -15,6 +15,11 @@ export interface ParsedTransaction {
     type: 'INCOME' | 'EXPENSE';
     date: Date;
     found: boolean;
+    recurrence?: {
+        frequency: 'MONTHLY' | 'WEEKLY' | 'YEARLY';
+        count?: number; // Se for parcelado ou período fixo (ex: 12 meses)
+        isInstallment?: boolean; // Se true, o valor total deve ser dividido ou é o valor da parcela? (Prompt define: valor da parcela)
+    };
 }
 
 // Prompt unificado para garantir consistência
@@ -24,6 +29,7 @@ const SYSTEM_PROMPT_KNOWLEDGE = `
     Moeda: BRL (R$).
     Se o usuário mandar foto de nota fiscal, extraia o total e a categoria do estabelecimento.
     Se o usuário mandar áudio, entenda a intenção.
+    Detecte intenções de RECORRÊNCIA ou PARCELAMENTO (ex: "todo mês", "durante 1 ano", "parcelado em 3x").
 `;
 
 export async function parseTransactionCheck(text: string): Promise<ParsedTransaction | null> {
@@ -34,14 +40,26 @@ export async function parseTransactionCheck(text: string): Promise<ParsedTransac
             
             Analise este texto: "${text}"
 
+            Regras de Recorrência:
+            - "Todo mês" -> frequency: MONTHLY, count: null (indefinido)
+            - "Durante 12 meses" ou "para cada mês de 2026" -> frequency: MONTHLY, count: 12
+            - "Parcelado em 3x" -> frequency: MONTHLY, count: 3, isInstallment: true
+            - Indique se o 'amount' é o valor TOTAL (que deve ser dividido) ou o valor da PARCELA.
+            - IMPORTANTE: Sempre retorne 'amount' como o valor DA PARCELA/MENSAL se possível. Se o usuário disser "Compra de 300 em 3x", amount = 100. Se disser "3x de 100", amount = 100.
+
             Retorne APENAS um JSON (sem markdown):
             {
                 "found": true|false,
-                "description": "descrição curta (ex: Almoço, Uber)",
+                "description": "descrição curta",
                 "amount": 0.00,
                 "type": "EXPENSE" | "INCOME",
-                "category": "Categoria mais adequada",
-                "date": "YYYY-MM-DD"
+                "category": "Categoria",
+                "date": "YYYY-MM-DD",
+                "recurrence": {
+                    "frequency": "MONTHLY" | "WEEKLY" | null,
+                    "count": number | null,
+                    "isInstallment": boolean
+                } (opcional, só se detectar)
             }
         `;
 

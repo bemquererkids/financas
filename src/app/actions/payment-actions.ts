@@ -42,7 +42,7 @@ export async function getPaymentWindows(monthStr?: string) {
                 id: p.id,
                 name: p.name,
                 amount: Number(p.amount),
-                dueDate: p.dueDate,
+                dueDate: p.dueDate.toISOString(), // Fix Date serialization
                 isPaid: p.isPaid
             });
             result.windows[day].total += Number(p.amount);

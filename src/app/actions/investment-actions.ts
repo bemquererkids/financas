@@ -7,9 +7,18 @@ import { revalidatePath } from 'next/cache';
 const prisma = new PrismaClient();
 
 export async function getProjections() {
-    return await prisma.investmentProjection.findMany({
+    const projections = await prisma.investmentProjection.findMany({
         orderBy: { createdAt: 'desc' }
     });
+
+    return projections.map(p => ({
+        ...p,
+        initialBalance: Number(p.initialBalance),
+        monthlyContribution: Number(p.monthlyContribution),
+        annualReturnRate: Number(p.annualReturnRate),
+        adminFeeRate: Number(p.adminFeeRate),
+        createdAt: p.createdAt.toISOString()
+    }));
 }
 
 export async function createProjection(formData: FormData) {

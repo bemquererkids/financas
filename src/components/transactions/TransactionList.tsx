@@ -105,8 +105,9 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                     </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <p className={`font-mono font-medium ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {t.type === 'EXPENSE' ? '−' : '+'} {formatCurrency(Number(t.amount))}
+                                    <p className={`font-mono font-medium ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {t.type === 'EXPENSE' && '− '}
+                                        {formatCurrency(Number(t.amount))}
                                     </p>
                                     <div className="flex justify-end gap-1 mt-1">
                                         <Button
@@ -139,58 +140,64 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                 </div>
 
                 {/* Desktop Layout - Table */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full">
+                <div className="hidden md:block overflow-x-auto custom-scrollbar">
+                    <table className="w-full min-w-[600px] table-auto">
                         <thead className="bg-white/5">
                             <tr className="border-b border-white/5">
-                                <th className="text-left p-4 text-sm font-medium text-slate-200">Data</th>
-                                <th className="text-left p-4 text-sm font-medium text-slate-200">Descrição</th>
-                                <th className="text-left p-4 text-sm font-medium text-slate-200">Categoria</th>
-                                <th className="text-right p-4 text-sm font-medium text-slate-200">Valor</th>
-                                <th className="text-right p-4 text-sm font-medium text-slate-200">Ações</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[100px]">Data</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[140px]">Categoria</th>
+                                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[140px]">Valor</th>
+                                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[90px]">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {localTransactions.map((t) => (
-                                <tr key={t.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="p-4 text-slate-400 whitespace-nowrap">
+                                <tr key={t.id} className="group hover:bg-white/5 transition-colors">
+                                    <td className="py-3 px-4 text-slate-400 whitespace-nowrap text-sm">
                                         {formatDate(t.date)}
                                     </td>
-                                    <td className="p-4 font-medium text-white">
+                                    <td className="py-3 px-4 font-medium text-white text-sm truncate max-w-[200px]">
                                         {t.description}
                                     </td>
-                                    <td className="p-4 text-slate-400">
-                                        <span className="px-2 py-1 rounded-full bg-white/5 text-xs">
+                                    <td className="py-3 px-4">
+                                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300 border border-white/5 inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span className={`w-1.5 h-1.5 rounded-full ${t.type === 'INCOME' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                                             {t.category}
                                         </span>
                                     </td>
-                                    <td className={`p-4 text-right font-mono ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
-                                        {t.type === 'EXPENSE' ? '−' : '+'} {formatCurrency(Number(t.amount))}
+                                    <td className="py-3 px-4 text-right font-mono text-sm whitespace-nowrap">
+                                        <span className={t.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}>
+                                            {t.type === 'EXPENSE' && '− '}
+                                            {formatCurrency(Number(t.amount))}
+                                        </span>
                                     </td>
-                                    <td className="p-4 text-right whitespace-nowrap">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
-                                            onClick={() => handleEditClick(t)}
-                                        >
-                                            <Edit2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
-                                            onClick={() => handleDeleteClick(t.id)}
-                                            disabled={isDeleting === t.id}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
+                                                onClick={() => handleEditClick(t)}
+                                            >
+                                                <Edit2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                                onClick={() => handleDeleteClick(t.id)}
+                                                disabled={isDeleting === t.id}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                             {localTransactions.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-slate-500">
+                                    <td colSpan={5} className="text-center py-12 text-slate-500 text-sm">
                                         Nenhuma transação encontrada.
                                     </td>
                                 </tr>

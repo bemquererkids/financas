@@ -136,9 +136,14 @@ export default async function DashboardPage() {
             </div>
 
             {/* Histórico e Fluxo de Caixa */}
-            <div className="grid gap-4 lg:grid-cols-2">
-                <TransactionList transactions={recentTransactions} />
-                <CashFlowView initialData={cashFlowData} />
+            {/* Histórico e Fluxo de Caixa */}
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
+                <div className="lg:col-span-3">
+                    <TransactionList transactions={recentTransactions} />
+                </div>
+                <div className="lg:col-span-2">
+                    <CashFlowView initialData={cashFlowData} />
+                </div>
             </div>
 
             {/* FAB - Nova Transação */}

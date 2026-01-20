@@ -1,38 +1,58 @@
 import { prisma } from './prisma';
 import { Transaction } from '@prisma/client';
 
+export type SafeTransaction = Omit<Transaction, 'amount' | 'date' | 'createdAt' | 'updatedAt'> & {
+    amount: number;
+    date: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export type MonthData = {
     month: string; // YYYY-MM
     income: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     payrollDeductions: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     netIncome: number;
     fixedExpenses: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     variableExpenses: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     leisureExpenses: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     creditCard: {
         total: number;
-        items: Transaction[];
+        items: SafeTransaction[];
     };
     totalExpenses: number;
     balance: number;
 };
 
 export class PlanningEngine {
+
+    /**
+     * Helper to serialize prisma transaction to plain object
+     */
+    private static serializeTransactions(transactions: Transaction[]): SafeTransaction[] {
+        return transactions.map(t => ({
+            ...t,
+            amount: Number(t.amount),
+            date: t.date.toISOString(),
+            createdAt: t.createdAt.toISOString(),
+            updatedAt: t.updatedAt.toISOString()
+        }));
+    }
 
     /**
      * Get planning grid for the next N months
@@ -114,13 +134,13 @@ export class PlanningEngine {
 
             grid.push({
                 month: monthKey,
-                income: { total: totalIncome, items: incomeItems },
-                payrollDeductions: { total: totalPayroll, items: payrollItems },
+                income: { total: totalIncome, items: this.serializeTransactions(incomeItems) },
+                payrollDeductions: { total: totalPayroll, items: this.serializeTransactions(payrollItems) },
                 netIncome,
-                fixedExpenses: { total: totalFixed, items: fixedItems },
-                variableExpenses: { total: totalVariable, items: variableItems },
-                leisureExpenses: { total: totalLeisure, items: leisureItems },
-                creditCard: { total: totalCC, items: creditCardItems },
+                fixedExpenses: { total: totalFixed, items: this.serializeTransactions(fixedItems) },
+                variableExpenses: { total: totalVariable, items: this.serializeTransactions(variableItems) },
+                leisureExpenses: { total: totalLeisure, items: this.serializeTransactions(leisureItems) },
+                creditCard: { total: totalCC, items: this.serializeTransactions(creditCardItems) },
                 totalExpenses,
                 balance
             });
