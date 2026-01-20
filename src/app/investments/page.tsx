@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { InvestmentChart } from '@/components/investments/InvestmentChart';
-import { calculateProjectionData, createProjection } from '@/app/actions/investment-actions';
+import { calculateProjectionData, createProjection, getProjections } from '@/app/actions/investment-actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,15 @@ export default function InvestmentsPage() {
 
     const [chartData, setChartData] = useState<any[]>([]);
     const [finalAmount, setFinalAmount] = useState(0);
+    const [savedProjections, setSavedProjections] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadProjections = async () => {
+            const data = await getProjections();
+            setSavedProjections(data);
+        };
+        loadProjections();
+    }, []);
 
     // Recalculate whenever inputs change
     useEffect(() => {
@@ -34,6 +43,15 @@ export default function InvestmentsPage() {
         runProjection();
     }, [inputs]);
 
+    const handleLoadProjection = (proj: any) => {
+        setInputs({
+            initialBalance: proj.initialBalance,
+            monthlyContribution: proj.monthlyContribution,
+            annualReturnRate: proj.annualReturnRate,
+            years: proj.years
+        });
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputs({
             ...inputs,
@@ -43,13 +61,18 @@ export default function InvestmentsPage() {
 
     const handleSave = async () => {
         const formData = new FormData();
-        formData.append('name', `Cenário ${new Date().toLocaleDateString()}`);
+        formData.append('name', `Cenário ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()}`);
         formData.append('initialBalance', inputs.initialBalance.toString());
         formData.append('monthlyContribution', inputs.monthlyContribution.toString());
         formData.append('annualReturnRate', inputs.annualReturnRate.toString());
         formData.append('years', inputs.years.toString());
 
         await createProjection(formData);
+
+        // Atualiza lista
+        const data = await getProjections();
+        setSavedProjections(data);
+
         alert('Cenário salvo com sucesso!');
     };
 
@@ -130,6 +153,33 @@ export default function InvestmentsPage() {
                             <p className="text-xs text-emerald-200/60">
                                 *Valores projetados brutos.
                             </p>
+                        </CardContent>
+                    </Card>
+
+                    {/* LISTA DE CENÁRIOS SALVOS */}
+                    <Card className="glass-card border-white/10 bg-white/5">
+                        <CardHeader>
+                            <CardTitle className="text-white text-base">Cenários Salvos</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 max-h-60 overflow-y-auto">
+                            {savedProjections.length === 0 && (
+                                <p className="text-xs text-slate-500">Nenhum cenário salvo ainda.</p>
+                            )}
+                            {savedProjections.map((proj) => (
+                                <div
+                                    key={proj.id}
+                                    onClick={() => handleLoadProjection(proj)}
+                                    className="p-3 rounded bg-white/5 hover:bg-emerald-500/20 cursor-pointer transition-colors border border-white/5"
+                                >
+                                    <div className="text-sm font-medium text-white mb-1">{proj.name}</div>
+                                    <div className="text-xs text-slate-400 flex justify-between">
+                                        <span>R$ {proj.initialBalance} + R$ {proj.monthlyContribution}/mês</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 mt-1 text-right">
+                                        {new Date(proj.createdAt).toLocaleDateString()}
+                                    </div>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
                 </div>
