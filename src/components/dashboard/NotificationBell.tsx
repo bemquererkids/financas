@@ -21,30 +21,62 @@ export function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const updateUnreadCount = (items: NotificationItem[]) => {
-        const lastRead = localStorage.getItem('lastReadTime');
-        const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+    // Estados persistentes
+    const [lastMarkAllRead, setLastMarkAllRead] = useState<number>(0);
+    const [readItemIds, setReadItemIds] = useState<string[]>([]);
 
-        const count = items.filter(item => new Date(item.date).getTime() > lastReadTime).length;
-        setUnreadCount(count);
-    };
-
-    // Fetch notifications
     useEffect(() => {
-        const fetchNotes = async () => {
-            try {
-                const data = await getNotifications();
-                setNotifications(data as NotificationItem[]);
-                updateUnreadCount(data as NotificationItem[]);
-            } catch (e) {
-                console.error("Failed to fetch notifications", e);
-            }
-        };
-        fetchNotes();
+        // Carregar estados iniciais do localStorage
+        if (typeof window !== 'undefined') {
+            const storedLastRead = localStorage.getItem('lastMarkAllReadTime');
+            const storedReadIds = localStorage.getItem('readItemIds');
+            if (storedLastRead) setLastMarkAllRead(Number(storedLastRead));
+            if (storedReadIds) setReadItemIds(JSON.parse(storedReadIds));
+        }
 
+        fetchNotes();
         const interval = setInterval(fetchNotes, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    // Recalcular contagem sempre que notificações ou estados de leitura mudarem
+    useEffect(() => {
+        const count = notifications.filter(n => !isRead(n)).length;
+        setUnreadCount(count);
+    }, [notifications, lastMarkAllRead, readItemIds]);
+
+    const fetchNotes = async () => {
+        try {
+            const data = await getNotifications();
+            setNotifications(data as NotificationItem[]);
+        } catch (e) {
+            console.error("Failed to fetch notifications", e);
+        }
+    };
+
+    const isRead = (item: NotificationItem) => {
+        const itemTime = new Date(item.date).getTime();
+        // É lido se: data do item for anterior ao 'Marcar todos como lido' OU se o ID estiver na lista de lidos manuais
+        return itemTime <= lastMarkAllRead || readItemIds.includes(item.id);
+    };
+
+    const markItemAsRead = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (!readItemIds.includes(id)) {
+            const newIds = [...readItemIds, id];
+            setReadItemIds(newIds);
+            localStorage.setItem('readItemIds', JSON.stringify(newIds));
+        }
+    };
+
+    const markAllAsRead = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        const now = Date.now();
+        setLastMarkAllRead(now);
+        setReadItemIds([]); // Limpa lista individual pois o 'global' já cobre tudo para trás
+        localStorage.setItem('lastMarkAllReadTime', String(now));
+        localStorage.setItem('readItemIds', JSON.stringify([]));
+    };
 
     // Close on click outside
     useEffect(() => {
@@ -57,23 +89,12 @@ export function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const markAllAsRead = () => {
-        const now = new Date().toISOString();
-        localStorage.setItem('lastReadTime', now);
-        setUnreadCount(0);
-    };
-
-    const toggleOpen = () => {
-        if (!isOpen && unreadCount > 0) {
-            markAllAsRead();
-        }
-        setIsOpen(!isOpen);
-    };
+    const toggleOpen = () => setIsOpen(!isOpen);
 
     const getIcon = (type: string) => {
         switch (type) {
             case 'income': return <ArrowUp className="h-4 w-4 text-emerald-500" />;
-            case 'expense': return <ArrowDown className="h-4 w-4 text-red-500" />;
+            case 'expense': return <ArrowDown className="h-4 w-4 text-rose-500" />;
             case 'alert': return <AlertTriangle className="h-4 w-4 text-amber-500" />;
             default: return <Bell className="h-4 w-4 text-slate-400" />;
         }
@@ -107,13 +128,29 @@ export function NotificationBell() {
 
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 md:w-96 rounded-xl glass-card border border-white/10 bg-[#09090b]/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="flex items-center justify-between p-4 border-b border-white/5">
-                        <h4 className="font-semibold text-white text-sm">Notificações</h4>
-                        <div className="flex gap-2">
-                            <button onClick={markAllAsRead} className="text-xs text-slate-400 hover:text-emerald-400 transition-colors" title="Marcar todas como lidas">
-                                <CheckCircle className="h-4 w-4" />
-                            </button>
-                            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white">
+                    <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
+                        <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-white text-sm">Notificações</h4>
+                            {unreadCount > 0 && (
+                                <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-medium">
+                                    {unreadCount} novas
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex gap-1">
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={markAllAsRead}
+                                    className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-emerald-400 transition-colors"
+                                    title="Marcar todas como lidas"
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-colors"
+                            >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
@@ -121,35 +158,60 @@ export function NotificationBell() {
 
                     <div className="max-h-[60vh] overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-slate-500 text-xs">
+                            <div className="p-8 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
+                                <Bell className="h-8 w-8 opacity-20" />
                                 Nenhuma notificação recente.
                             </div>
                         ) : (
-                            <div className="py-2">
-                                {notifications.map((note) => (
-                                    <div key={note.id} className="px-4 py-3 hover:bg-white/5 transition-colors flex gap-3 items-start border-b border-white/5 last:border-0 cursor-pointer">
-                                        <div className={cn(
-                                            "mt-1 p-2 rounded-full bg-opacity-10 shrink-0",
-                                            note.type === 'income' && "bg-emerald-500/10",
-                                            note.type === 'expense' && "bg-red-500/10",
-                                            note.type === 'alert' && "bg-amber-500/10"
-                                        )}>
-                                            {getIcon(note.type)}
+                            <div className="py-1">
+                                {notifications.map((note) => {
+                                    const read = isRead(note);
+                                    return (
+                                        <div
+                                            key={note.id}
+                                            onClick={() => markItemAsRead(note.id)}
+                                            className={cn(
+                                                "px-4 py-3 flex gap-3 items-start border-b border-white/5 last:border-0 cursor-pointer transition-all hover:bg-white/5",
+                                                read
+                                                    ? "opacity-60"
+                                                    : "bg-emerald-500/5 border-l-2 border-l-emerald-500"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "mt-1 p-2 rounded-full shrink-0",
+                                                read ? "bg-white/5" : "bg-white/10 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
+                                                note.type === 'expense' && !read && "shadow-[0_0_10px_rgba(244,63,94,0.2)]"
+                                            )}>
+                                                {getIcon(note.type)}
+                                            </div>
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <div className="flex justify-between items-start">
+                                                    <p className={cn(
+                                                        "text-sm truncate pr-2",
+                                                        read ? "font-medium text-slate-300" : "font-bold text-white"
+                                                    )}>
+                                                        {note.title}
+                                                    </p>
+                                                    {!read && <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>}
+                                                </div>
+                                                <p className={cn(
+                                                    "text-xs truncate",
+                                                    read ? "text-slate-500" : "text-slate-300"
+                                                )}>
+                                                    {note.subtitle}
+                                                </p>
+                                                <p className="text-[10px] text-slate-500 pt-1">{formatDate(note.date)}</p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0 space-y-1">
-                                            <p className="text-sm font-medium text-white truncate">{note.title}</p>
-                                            <p className="text-xs text-slate-400 truncate">{note.subtitle}</p>
-                                            <p className="text-[10px] text-slate-500 pt-1">{formatDate(note.date)}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
 
                     <div className="p-2 border-t border-white/5 bg-white/5 text-center">
-                        <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors bg-transparent border-none">
-                            Ver todas as atividades
+                        <button className="text-xs text-slate-400 hover:text-white transition-colors bg-transparent border-none">
+                            Ver histórico completo
                         </button>
                     </div>
                 </div>

@@ -96,28 +96,28 @@ export default async function DashboardPage() {
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-400">Necessidades (50%)</span>
                                 <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.needs)} ({((summary.rule503020.needs / summary.income) * 100 || 0).toFixed(0)}%)
+                                    {formatCurrency(summary.rule503020.needs.actual)} ({summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%)
                                 </span>
                             </div>
-                            <Progress value={(summary.rule503020.needs / summary.income) * 100} className="bg-slate-800" indicatorClassName="bg-blue-500" />
+                            <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-blue-500" />
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-400">Desejos (30%)</span>
                                 <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.wants)} ({((summary.rule503020.wants / summary.income) * 100 || 0).toFixed(0)}%)
+                                    {formatCurrency(summary.rule503020.wants.actual)} ({summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%)
                                 </span>
                             </div>
-                            <Progress value={(summary.rule503020.wants / summary.income) * 100} className="bg-slate-800" indicatorClassName="bg-purple-500" />
+                            <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-purple-500" />
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-400">Investimentos/Dívidas (20%)</span>
                                 <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.savings)} ({((summary.rule503020.savings / summary.income) * 100 || 0).toFixed(0)}%)
+                                    {formatCurrency(summary.rule503020.savings.actual)} ({summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%)
                                 </span>
                             </div>
-                            <Progress value={(summary.rule503020.savings / summary.income) * 100} className="bg-slate-800" indicatorClassName="bg-emerald-500" />
+                            <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-emerald-500" />
                         </div>
                     </div>
                 </div>
