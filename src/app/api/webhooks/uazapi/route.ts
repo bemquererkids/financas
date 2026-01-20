@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseTransactionCheck } from '@/lib/nlp'; // Removido media handlers pois servidor não suporta
+import { processIntent, transcribeAudioMessage, analyzeImageTransaction } from '@/lib/nlp';
 import { prisma } from '@/lib/prisma';
 
 // Configurações
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Evita processar eventos de presença (digitando...)
+        // Evita processar eventos de presença
         const eventType = body.EventType || body.type || 'unknown';
         if (eventType === 'presence') {
             return NextResponse.json({ status: 'ignored_presence' });
@@ -34,11 +34,9 @@ export async function POST(request: Request) {
             "";
 
         const isFromMe = msgObject.key?.fromMe || msgObject.fromMe || false;
-
-        // Ignora mensagens enviadas por mim mesmo (para não entrar em loop)
         if (isFromMe) return NextResponse.json({ status: 'ignored_self' });
 
-        // Segurança: Valida número autorizado
+        // Segurança
         if (MY_PHONE_NUMBER && remoteJid) {
             const cleanRemote = String(remoteJid).replace(/\D/g, '');
             const cleanMyNumber = String(MY_PHONE_NUMBER).replace(/\D/g, '');
@@ -47,95 +45,185 @@ export async function POST(request: Request) {
             }
         }
 
-        // --- PROCESSAMENTO ---
+        // --- PROCESSAMENTO PRINCIPAL ---
         const messageInfo = msgObject.message || msgObject;
         const contentObj = (typeof msgObject.content === 'object' && msgObject.content !== null) ? msgObject.content : {};
 
-        // Detectar Tipo de Mídia (para dar feedback rápido)
+        let textToAnalyze = "";
+
+        // 1. Áudio / Imagem -> Detectar e Avisar (Limitação 405) ou Tentar (se texto vier junto)
         const isAudio = messageInfo.audioMessage || msgObject.mediaType === 'ptt' || (contentObj.mimetype && contentObj.mimetype.includes('audio'));
         const isImage = messageInfo.imageMessage || msgObject.mediaType === 'image' || (contentObj.mimetype && contentObj.mimetype.includes('image'));
 
-        // SE FOR MÍDIA: Avisar limitação do servidor e parar
         if (isAudio || isImage) {
-            console.log("⚠️ Mídia detectada, mas download desabilitado devido a erro 405 do servidor UAZAPI.");
-
-            // Tenta pegar thumbnail da imagem se existir (melhor que nada)
-            // Futuramente poderia tentar OCR no thumbnail, mas a resolução é muito baixa (32x32px geralmente)
-
-            await sendWhatsAppReply(remoteJid, "⚠️ O servidor de WhatsApp atual não permite download de áudio/imagem. Por favor, escreva os dados (ex: 'Almoço 50').");
-            return NextResponse.json({ status: 'media_not_supported_by_server' });
+            await sendWhatsAppReply(remoteJid, "⚠️ Servidor não permite download de mídia. Por favor, envie como texto.");
+            return NextResponse.json({ status: 'media_blocked' });
         }
 
-        // SE FOR TEXTO: Processar com IA
+        // 2. Extrair Texto
         const textFromContent = (typeof msgObject.content === 'string') ? msgObject.content : (msgObject.content?.text || msgObject.content?.caption || "");
-        const text = messageInfo.text ||
+        textToAnalyze = messageInfo.text ||
             textFromContent ||
             messageInfo.conversation ||
             messageInfo.extendedTextMessage?.text ||
             messageInfo.textMessage?.text ||
             messageInfo.body || "";
 
-        const cleanText = (typeof text === 'object') ? JSON.stringify(text) : text;
+        const cleanText = (typeof textToAnalyze === 'object') ? JSON.stringify(textToAnalyze) : textToAnalyze;
 
         if (!cleanText || cleanText.length < 2 || cleanText.includes("[object Object]")) {
             return NextResponse.json({ status: 'no_text_content' });
         }
 
-        console.log(`📝 Processando Texto: "${cleanText}"`);
+        console.log(`📝 Texto Recebido: "${cleanText}"`);
 
-        // Cérebro: Analisar intenção (Gasto, Receita, Recorrência)
-        const transaction = await parseTransactionCheck(cleanText);
+        // --- CÉREBRO NLP ---
+        const result = await processIntent(cleanText);
 
-        if (!transaction || !transaction.found) {
-            // Opcional: Feedback de "não entendi" (comentado para evitar chatice)
-            // await sendWhatsAppReply(remoteJid, "❓ Não entendi. Tente: 'Mercado 200' ou 'Salário 5000 todo mês'.");
-            return NextResponse.json({ status: 'no_transaction_intent' });
+        if (!result || !result.found || !result.data) {
+            // await sendWhatsAppReply(remoteJid, "❓ Não entendi a intenção.");
+            return NextResponse.json({ status: 'intent_unknown' });
         }
 
-        // Executar Ação no Banco de Dados
-        const recurrence = transaction.recurrence;
-        const count = recurrence?.count || 1;
-        const isInstallment = recurrence?.isInstallment || false;
+        console.log(`🧠 Intenção Detectada: ${result.intent}`);
+        let replyText = "";
+        let savedId = "";
 
-        console.log(`💾 Salvando ${count}x ${transaction.type} de R$ ${transaction.amount}...`);
+        // --- ROTEAMENTO POR INTENÇÃO ---
+        switch (result.intent) {
+            case 'TRANSACTION': {
+                const data = result.data as any; // Cast seguro pois nlp garante estrutura
+                const count = data.recurrence?.count || 1;
+                const isInstallment = data.recurrence?.isInstallment || false;
+                const baseDate = new Date(data.date || new Date());
 
-        const baseDate = new Date(transaction.date);
-        let firstId = "";
+                for (let i = 0; i < count; i++) {
+                    const currentDate = new Date(baseDate);
+                    currentDate.setMonth(baseDate.getMonth() + i);
 
-        for (let i = 0; i < count; i++) {
-            const currentDate = new Date(baseDate);
-            currentDate.setMonth(baseDate.getMonth() + i);
+                    let description = data.description;
+                    if (isInstallment && count > 1) {
+                        description = `${data.description} (${i + 1}/${count})`;
+                    }
 
-            let description = transaction.description;
-            if (isInstallment && count > 1) {
-                description = `${transaction.description} (${i + 1}/${count})`;
+                    const tx = await prisma.transaction.create({
+                        data: {
+                            description,
+                            amount: data.amount,
+                            type: data.type,
+                            category: data.category || 'Outros',
+                            date: currentDate,
+                        }
+                    });
+                    if (i === 0) savedId = tx.id;
+                }
+
+                replyText = `✅ *Transação Registrada!*
+💰 ${data.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${data.amount}
+🏷️ ${data.category}
+📝 ${data.description}`;
+                if (count > 1) replyText += `\n🔄 Repetição: ${count}x`;
+                break;
             }
 
-            const saved = await prisma.transaction.create({
-                data: {
-                    description: description,
-                    amount: transaction.amount,
-                    type: transaction.type,
-                    category: transaction.category,
-                    date: currentDate,
+            case 'GOAL': {
+                const data = result.data as any;
+                const goal = await prisma.goal.create({
+                    data: {
+                        description: data.description,
+                        targetAmount: data.targetAmount || 0,
+                        status: 'PENDING'
+                    }
+                });
+                savedId = goal.id;
+                replyText = `🎯 *Nova Meta Criada!*
+📌 ${data.description}
+🎯 Meta: R$ ${data.targetAmount || 'Indefinido'}
+📅 Prazo: ${data.deadline ? new Date(data.deadline).toLocaleDateString('pt-BR') : 'Sem prazo'}`;
+                break;
+            }
+
+            case 'INVESTMENT': {
+                const data = result.data as any;
+                // Cria uma simulação simples
+                const inv = await prisma.investmentProjection.create({
+                    data: {
+                        name: data.description || "Simulação Rápida",
+                        initialBalance: data.amount,
+                        monthlyContribution: 0, // Default simples
+                        annualReturnRate: 10, // Default 10% a.a.
+                        adminFeeRate: 0,
+                        years: 1,
+                    }
+                });
+                savedId = inv.id;
+                replyText = `📈 *Simulação de Investimento Criada!*
+💼 ${data.description}
+💰 Aporte Inicial: R$ ${data.amount}
+📊 Cenário padrão (10% a.a) aplicado.`;
+                break;
+            }
+
+            case 'PAYABLE': {
+                const data = result.data as any;
+                const dueDate = new Date(data.dueDate || new Date());
+                const monthKey = dueDate.toISOString().slice(0, 7); // YYYY-MM
+
+                // Busca ou cria Janela de Pagamento para o mês
+                let window = await prisma.paymentWindow.findFirst({
+                    where: { month: monthKey }
+                });
+
+                if (!window) {
+                    window = await prisma.paymentWindow.create({
+                        data: {
+                            month: monthKey,
+                            windowDay: 30, // Default fim do mês
+                            receivedAmount: 0 // Ajuste para Decimal depois se precisar
+                        }
+                    });
                 }
-            });
-            if (i === 0) firstId = saved.id;
-        }
 
-        // Feedback de Sucesso
-        let replyText = `✅ *Lançamento Registrado!*
-💰 ${transaction.type === 'EXPENSE' ? 'Despesa' : 'Receita'}: R$ ${transaction.amount.toFixed(2)}
-🏷️ ${transaction.category}
-📝 ${transaction.description}`;
+                const payable = await prisma.payable.create({
+                    data: {
+                        name: data.description,
+                        amount: data.amount,
+                        dueDate: dueDate,
+                        paymentWindowId: window.id,
+                        isPaid: false
+                    }
+                });
+                savedId = payable.id;
+                replyText = `🧾 *Conta a Pagar Agendada!*
+📝 ${data.description}
+💲 Valor: R$ ${data.amount}
+📅 Vencimento: ${dueDate.toLocaleDateString('pt-BR')}`;
+                break;
+            }
 
-        if (count > 1) {
-            replyText += `\n🔄 Repetição: ${count} meses${isInstallment ? ' (Parcelado)' : ''}`;
+            case 'PLANNING': {
+                const data = result.data as any;
+                // Cria um envelope de orçamento
+                const env = await prisma.budgetEnvelope.create({
+                    data: {
+                        name: data.category || data.description, // Ex: "Lazer"
+                        targetPercentage: 0, // Placeholder
+                        month: data.month || new Date().toISOString().slice(0, 7)
+                    }
+                });
+                savedId = env.id;
+                replyText = `📊 *Item de Planejamento Criado*
+📂 Envelope: ${data.category}
+📅 Mês: ${data.month}`;
+                break;
+            }
+
+            default:
+                replyText = "❓ Entendi o texto, mas não soube em qual módulo salvar.";
         }
 
         await sendWhatsAppReply(remoteJid, replyText);
-
-        return NextResponse.json({ success: true, savedId: firstId });
+        return NextResponse.json({ success: true, savedId, intent: result.intent });
 
     } catch (error) {
         console.error("❌ ERRO WEBHOOK:", error);
@@ -143,7 +231,7 @@ export async function POST(request: Request) {
     }
 }
 
-// Helper Simples de Envio (Sem download)
+// Helper Simples de Envio
 async function sendWhatsAppReply(to: string, text: string) {
     let apiUrl = process.env.UAZAPI_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
@@ -184,12 +272,12 @@ async function sendWhatsAppReply(to: string, text: string) {
 
     for (const url of uniqueEndpoints) {
         try {
-            const res = await fetch(url, {
+            await fetch(url, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(payload)
             });
-            if (res.ok) return;
+            break;
         } catch (e) { /* silent */ }
     }
 }
