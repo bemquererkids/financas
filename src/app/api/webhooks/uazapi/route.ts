@@ -103,10 +103,20 @@ export async function POST(request: Request) {
                 base64Image = await fetchBase64FromUAZAPI(msgObject);
             }
 
+            // Fallback: Tenta usar o Thumbnail se o download falhou
+            // O thumbnail geralmente vem em messageInfo.imageMessage.JPEGThumbnail
+            if (!base64Image) {
+                const thumb = messageInfo.imageMessage?.JPEGThumbnail || msgObject.JPEGThumbnail;
+                if (thumb) {
+                    console.log("⚠️ Download Full HD falhou. Usando Thumbnail (Baixa Resolução) como fallback.");
+                    base64Image = thumb;
+                }
+            }
+
             if (base64Image) {
                 transaction = await analyzeImageTransaction(base64Image);
             } else {
-                console.log("⚠️ Falha ao obter Base64 da imagem.");
+                console.log("⚠️ Falha ao obter Base64 da imagem (nem thumbnail disponível).");
             }
         }
 
