@@ -8,7 +8,10 @@ export default withAuth({
 
 export const config = {
     matcher: [
-        // Proteger todas as rotas, exceto arquivos estáticos do Next.js, imagens e a própria rota de API de auth
-        "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg).*)",
+        // Proteger todas as rotas, EXCETO:
+        // - api/auth (login/logout)
+        // - api/webhooks (integrações externas como UAZAPI)
+        // - arquivos estáticos (_next, imagens)
+        "/((?!api/auth|api/webhooks|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg).*)",
     ],
 };
