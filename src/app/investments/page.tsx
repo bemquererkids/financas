@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Save } from 'lucide-react';
+import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
 
 export default function InvestmentsPage() {
     const [inputs, setInputs] = useState({
@@ -78,12 +79,10 @@ export default function InvestmentsPage() {
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2 mb-8">
-                <div>
-                    <h2 className="text-4xl font-bold tracking-tight text-white mb-1">Módulo D: Investimentos</h2>
-                    <p className="text-slate-400">Projeção de crescimento patrimonial e renda passiva.</p>
-                </div>
-            </div>
+            <ModuleHeader
+                title="Investimentos"
+                subtitle="Projeção de crescimento patrimonial e renda passiva"
+            />
 
             <div className="grid gap-6 md:grid-cols-12">
                 {/* Controles */}

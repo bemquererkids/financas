@@ -10,8 +10,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ExpensesPieChart } from "@/components/dashboard/ExpensesPieChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
-import { UserGreeting } from "@/components/profile/UserGreeting";
-import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { ModuleHeader } from "@/components/dashboard/ModuleHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,24 +32,16 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex-1 p-4 md:p-6 space-y-4">
-            {/* Header com Avatar, Título e Alertas */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-4">
-                    <div className="hidden md:block">
-                        <UserGreeting />
-                    </div>
-                    <div className="hidden lg:block border-l border-white/10 pl-4 mr-2">
-                        <h2 className="text-xl font-bold text-white">Visão Geral</h2>
-                        <p className="text-xs text-slate-400">Acompanhe sua saúde financeira</p>
-                    </div>
-                    <NotificationBell />
-                </div>
+            <ModuleHeader
+                title="Visão Geral"
+                subtitle="Acompanhe sua saúde financeira"
+            >
                 <FinancialAlerts
                     balance={summary.balance}
                     savingsRate={summary.savingsRate}
                     expensesVsIncome={expensesVsIncome}
                 />
-            </div>
+            </ModuleHeader>
 
             {/* Quick Actions */}
             <QuickActions />
