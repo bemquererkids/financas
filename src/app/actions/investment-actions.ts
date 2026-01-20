@@ -3,11 +3,24 @@
 import { PrismaClient } from '@prisma/client';
 import { FinancialEngine } from '@/lib/engine';
 import { revalidatePath } from 'next/cache';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
+
 export async function getProjections() {
+    const userId = await getUserId();
+
     const projections = await prisma.investmentProjection.findMany({
+        where: { userId },
         orderBy: { createdAt: 'desc' }
     });
 
@@ -22,6 +35,8 @@ export async function getProjections() {
 }
 
 export async function createProjection(formData: FormData) {
+    const userId = await getUserId();
+
     const name = formData.get('name') as string;
     const initialBalance = parseFloat(formData.get('initialBalance') as string);
     const monthlyContribution = parseFloat(formData.get('monthlyContribution') as string);
@@ -34,11 +49,12 @@ export async function createProjection(formData: FormData) {
 
     await prisma.investmentProjection.create({
         data: {
+            userId,
             name,
             initialBalance,
             monthlyContribution,
-            annualReturnRate, // Taxa Bruta
-            adminFeeRate: 0, // Simplificação inicial
+            annualReturnRate,
+            adminFeeRate: 0,
             years
         }
     });
@@ -48,6 +64,6 @@ export async function createProjection(formData: FormData) {
 }
 
 export async function calculateProjectionData(data: { initial: number, monthly: number, rate: number, years: number }) {
-    // Wrapper para o Engine estático para uso client-side (via server action se preferir não expor lógica)
+    // This is a pure calculation function, no user data involved
     return FinancialEngine.projectInvestment(data.initial, data.monthly, data.rate, data.years);
 }

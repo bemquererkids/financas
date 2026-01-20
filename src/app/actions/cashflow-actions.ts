@@ -1,8 +1,18 @@
 'use server';
 
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
+
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
 
 export interface DayTransactions {
     date: string;
@@ -27,11 +37,14 @@ export interface CashFlowData {
 }
 
 export async function getCashFlow(year: number, month: number): Promise<CashFlowData> {
+    const userId = await getUserId();
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
     const transactions = await prisma.transaction.findMany({
         where: {
+            userId,
             date: { gte: firstDay, lte: lastDay }
         },
         orderBy: { date: 'desc' }
@@ -43,9 +56,8 @@ export async function getCashFlow(year: number, month: number): Promise<CashFlow
     today.setHours(0, 0, 0, 0);
 
     transactions.forEach(t => {
-        const dateKey = t.date.toISOString().split('T')[0]; // "2026-01-15"
+        const dateKey = t.date.toISOString().split('T')[0];
 
-        // Determine label using date strings (avoids timezone issues)
         let label: string;
         const todayStr = today.toISOString().split('T')[0];
         const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
@@ -55,7 +67,6 @@ export async function getCashFlow(year: number, month: number): Promise<CashFlow
         } else if (dateKey === yesterdayStr) {
             label = 'Ontem';
         } else {
-            // Format as "15 de janeiro" without timezone issues
             const [year, month, day] = dateKey.split('-');
             const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
                 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];

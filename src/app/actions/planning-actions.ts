@@ -3,14 +3,26 @@
 import { PlanningEngine, MonthData } from "@/lib/planning-engine";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
 
 export async function getPlanningData(): Promise<MonthData[]> {
+    const userId = await getUserId();
+
     const today = new Date();
     // Start from current month
     const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Get next 12 months
-    return await PlanningEngine.getPlanningGrid(startMonth, 12);
+    return await PlanningEngine.getPlanningGrid(startMonth, 12, userId);
 }
 
 export async function addPlanningItem(
@@ -20,12 +32,15 @@ export async function addPlanningItem(
     type: 'INCOME' | 'EXPENSE',
     category: string
 ) {
+    const userId = await getUserId();
+
     // Construct a date: 1st day of the target month
     const [year, m] = month.split('-');
     const date = new Date(parseInt(year), parseInt(m) - 1, 15); // Middle of month to be safe from timezone shifts
 
     await prisma.transaction.create({
         data: {
+            userId,
             amount,
             description,
             type,
@@ -43,6 +58,8 @@ export async function replicateMonthToFuture(
     sourceMonth: string, // YYYY-MM
     targetMonthsCount: number = 11
 ) {
+    const userId = await getUserId();
+
     // 1. Fetch all transactions from source month
     const [year, m] = sourceMonth.split('-');
     const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
@@ -50,6 +67,7 @@ export async function replicateMonthToFuture(
 
     const transactions = await prisma.transaction.findMany({
         where: {
+            userId,
             date: {
                 gte: startDate,
                 lt: endDate
@@ -63,6 +81,7 @@ export async function replicateMonthToFuture(
 
         // Simple Bulk Insert
         const copies = transactions.map(t => ({
+            userId,
             amount: t.amount,
             description: t.description,
             category: t.category,
@@ -84,6 +103,18 @@ export async function replicateMonthToFuture(
 }
 
 export async function updatePlanningItem(id: string, amount: number) {
+    const userId = await getUserId();
+
+    // Verify ownership before updating
+    const item = await prisma.transaction.findUnique({
+        where: { id },
+        select: { userId: true }
+    });
+
+    if (!item || item.userId !== userId) {
+        throw new Error('Unauthorized');
+    }
+
     await prisma.transaction.update({
         where: { id },
         data: { amount, updatedAt: new Date() }
@@ -94,6 +125,18 @@ export async function updatePlanningItem(id: string, amount: number) {
 }
 
 export async function deletePlanningItem(id: string) {
+    const userId = await getUserId();
+
+    // Verify ownership before deleting
+    const item = await prisma.transaction.findUnique({
+        where: { id },
+        select: { userId: true }
+    });
+
+    if (!item || item.userId !== userId) {
+        throw new Error('Unauthorized');
+    }
+
     await prisma.transaction.delete({
         where: { id }
     });
@@ -103,6 +146,8 @@ export async function deletePlanningItem(id: string) {
 }
 
 export async function consolidateMonth(month: string) {
+    const userId = await getUserId();
+
     // Mark all transactions in this month as "consolidated" by updating description
     const [year, m] = month.split('-');
     const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
@@ -111,6 +156,7 @@ export async function consolidateMonth(month: string) {
     // Get all recurring (planned) transactions for this month
     const transactions = await prisma.transaction.findMany({
         where: {
+            userId,
             date: { gte: startDate, lt: endDate },
             isRecurring: true
         }
@@ -126,6 +172,6 @@ export async function consolidateMonth(month: string) {
 
     revalidatePath('/planning');
     revalidatePath('/');
-    
+
     return { consolidated: transactions.length };
 }

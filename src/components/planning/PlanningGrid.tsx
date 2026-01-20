@@ -178,29 +178,29 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
 
     return (
         <div className="flex flex-col h-full space-y-4">
-            {/* Controls & Pagination */}
-            <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10">
-                <Button
-                    variant="ghost"
+            {/* Minimalist Pagination Controls */}
+            <div className="flex items-center justify-center gap-6 py-1">
+                <button
                     onClick={prevPage}
                     disabled={!canPrev}
-                    className="text-white hover:bg-emerald-500/20 disabled:opacity-30"
+                    className="p-2 rounded-full hover:bg-white/10 text-emerald-400 disabled:text-slate-700 disabled:hover:bg-transparent transition-all"
+                    title="Anterior"
                 >
-                    <ChevronLeft className="h-5 w-5 mr-2" /> Anterior
-                </Button>
+                    <ChevronLeft className="h-6 w-6" />
+                </button>
 
-                <span className="text-sm font-medium text-slate-400">
-                    Página {page + 1} de {totalPages}
+                <span className="text-xs font-medium text-slate-500 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                    {page + 1} / {totalPages}
                 </span>
 
-                <Button
-                    variant="ghost"
+                <button
                     onClick={nextPage}
                     disabled={!canNext}
-                    className="text-white hover:bg-emerald-500/20 disabled:opacity-30"
+                    className="p-2 rounded-full hover:bg-white/10 text-emerald-400 disabled:text-slate-700 disabled:hover:bg-transparent transition-all"
+                    title="Próximo"
                 >
-                    Próximo <ChevronRight className="h-5 w-5 ml-2" />
-                </Button>
+                    <ChevronRight className="h-6 w-6" />
+                </button>
             </div>
 
             {/* Grid View - No Scrollbar */}

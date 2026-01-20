@@ -2,11 +2,23 @@
 
 import { PrismaClient } from '@prisma/client';
 import { FinancialEngine } from '@/lib/engine';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Singleton prisma client to avoid too many connections in dev
 const prisma = new PrismaClient();
 
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
+
 export async function getFinancialSummary() {
+    const userId = await getUserId();
+
     // Busca transações do mês atual
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -14,6 +26,7 @@ export async function getFinancialSummary() {
 
     const transactions = await prisma.transaction.findMany({
         where: {
+            userId,
             date: {
                 gte: firstDay,
                 lte: lastDay,
@@ -36,7 +49,10 @@ export async function getFinancialSummary() {
 }
 
 export async function getRecentTransactions() {
+    const userId = await getUserId();
+
     const transactions = await prisma.transaction.findMany({
+        where: { userId },
         take: 10,
         orderBy: {
             date: 'desc'
@@ -55,12 +71,15 @@ export async function getRecentTransactions() {
 }
 
 export async function getExpensesByCategory() {
+    const userId = await getUserId();
+
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     const transactions = await prisma.transaction.findMany({
         where: {
+            userId,
             date: { gte: firstDay, lte: lastDay },
             type: 'EXPENSE'
         }
@@ -81,6 +100,8 @@ export async function getExpensesByCategory() {
 }
 
 export async function getMonthlyTrend() {
+    const userId = await getUserId();
+
     const today = new Date();
     const months: { month: string; income: number; expense: number }[] = [];
 
@@ -92,6 +113,7 @@ export async function getMonthlyTrend() {
 
         const transactions = await prisma.transaction.findMany({
             where: {
+                userId,
                 date: { gte: firstDay, lte: lastDay }
             }
         });
@@ -118,6 +140,7 @@ export async function getMonthlyTrend() {
 
 // Função agregadora de notificações para o Sino
 export async function getNotifications() {
+    const userId = await getUserId();
 
     const today = new Date();
     const nextWeek = new Date();
@@ -125,15 +148,17 @@ export async function getNotifications() {
 
     // 1. Últimas 5 Transações
     const recentTx = await prisma.transaction.findMany({
+        where: { userId },
         take: 5,
-        orderBy: { createdAt: 'desc' } // Pela data de criação (insert), não pela data da despesa
+        orderBy: { createdAt: 'desc' }
     });
 
     // 2. Contas a Pagar Próximas (vencimento hoje ou futuro próximo)
-    // Note: Precisamos verificar se o model Payable existe e está acessível.
-    // O schema.prisma mostrou que Payable existe.
     const upcomingPayables = await prisma.payable.findMany({
         where: {
+            paymentWindow: {
+                userId
+            },
             dueDate: {
                 gte: today,
                 lte: nextWeek

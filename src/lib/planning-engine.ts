@@ -57,7 +57,7 @@ export class PlanningEngine {
     /**
      * Get planning grid for the next N months
      */
-    public static async getPlanningGrid(startMonth: Date, monthsCount: number = 12): Promise<MonthData[]> {
+    public static async getPlanningGrid(startMonth: Date, monthsCount: number = 12, userId: string): Promise<MonthData[]> {
         const grid: MonthData[] = [];
 
         for (let i = 0; i < monthsCount; i++) {
@@ -69,6 +69,7 @@ export class PlanningEngine {
             // Fetch transactions for this specific month range
             const transactions = await prisma.transaction.findMany({
                 where: {
+                    userId,
                     date: {
                         gte: currentMonthDate,
                         lt: nextMonthDate,
