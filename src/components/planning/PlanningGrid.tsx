@@ -250,8 +250,8 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
                         key={idx}
                         onClick={() => scrollToMonth(idx)}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${currentIndex === idx
-                                ? 'bg-emerald-400 w-6'
-                                : 'bg-white/20 hover:bg-white/40'
+                            ? 'bg-emerald-400 w-6'
+                            : 'bg-white/20 hover:bg-white/40'
                             }`}
                     />
                 ))}
@@ -264,7 +264,7 @@ export function PlanningGrid({ initialData }: PlanningGridProps) {
             <div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                className="overflow-x-auto pb-6 hide-scrollbar snap-x snap-mandatory scroll-smooth"
+                className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
             >
                 <div className="flex gap-4 min-w-max px-4">
                     {initialData.map((data, idx) => (

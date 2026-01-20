@@ -6,7 +6,7 @@ import { calculateProjectionData, createProjection, getProjections } from '@/app
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Save } from 'lucide-react';
+import { TrendingUp, Save, Clock, DollarSign, Percent } from 'lucide-react';
 import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
 
 export default function InvestmentsPage() {
@@ -62,7 +62,7 @@ export default function InvestmentsPage() {
 
     const handleSave = async () => {
         const formData = new FormData();
-        formData.append('name', `Cenário ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()}`);
+        formData.append('name', `Cenário ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString().slice(0, 5)}`);
         formData.append('initialBalance', inputs.initialBalance.toString());
         formData.append('monthlyContribution', inputs.monthlyContribution.toString());
         formData.append('annualReturnRate', inputs.annualReturnRate.toString());
@@ -78,116 +78,129 @@ export default function InvestmentsPage() {
     };
 
     return (
-        <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex-1 space-y-4 p-4 md:p-6 lg:h-[calc(100vh-80px)] overflow-hidden flex flex-col">
             <ModuleHeader
                 title="Investimentos"
-                subtitle="Projeção de crescimento patrimonial e renda passiva"
+                subtitle="Projeção de crescimento patrimonial"
             />
 
-            <div className="grid gap-6 md:grid-cols-12">
-                {/* Controles */}
-                <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-6">
+            <div className="grid gap-4 md:grid-cols-12 flex-1 min-h-0">
+                {/* Lateral Esquerda - Controles Compactados */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 flex flex-col gap-4 overflow-y-auto pr-1">
+                    {/* Card Unificado: Parâmetros + Resultado */}
                     <Card className="glass-card border-white/10 bg-white/5">
-                        <CardHeader>
-                            <CardTitle className="text-white flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-emerald-400" /> Parâmetros
+                        <CardHeader className="pb-2 pt-4 px-4">
+                            <CardTitle className="text-white flex items-center gap-2 text-sm uppercase tracking-wider text-emerald-400">
+                                <TrendingUp className="h-4 w-4" /> Simulador
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Saldo Inicial (R$)</label>
-                                <Input
-                                    type="number"
-                                    name="initialBalance"
-                                    value={inputs.initialBalance}
-                                    onChange={handleChange}
-                                    className="glass-input text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Aporte Mensal (R$)</label>
-                                <Input
-                                    type="number"
-                                    name="monthlyContribution"
-                                    value={inputs.monthlyContribution}
-                                    onChange={handleChange}
-                                    className="glass-input text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Rentabilidade Anual (%)</label>
-                                <Input
-                                    type="number"
-                                    name="annualReturnRate"
-                                    value={inputs.annualReturnRate}
-                                    onChange={handleChange}
-                                    className="glass-input text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Prazo (Anos)</label>
-                                <Input
-                                    type="number"
-                                    name="years"
-                                    value={inputs.years}
-                                    onChange={handleChange}
-                                    className="glass-input text-white"
-                                />
+                        <CardContent className="space-y-4 px-4 pb-4">
+                            {/* Inputs em Grid 2x2 para economizar altura */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                                        <DollarSign className="h-3 w-3" /> Inicial
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        name="initialBalance"
+                                        value={inputs.initialBalance}
+                                        onChange={handleChange}
+                                        className="h-8 text-xs glass-input text-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                                        <DollarSign className="h-3 w-3" /> Mensal
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        name="monthlyContribution"
+                                        value={inputs.monthlyContribution}
+                                        onChange={handleChange}
+                                        className="h-8 text-xs glass-input text-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                                        <Percent className="h-3 w-3" /> Taxa a.a.
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        name="annualReturnRate"
+                                        value={inputs.annualReturnRate}
+                                        onChange={handleChange}
+                                        className="h-8 text-xs glass-input text-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" /> Anos
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        name="years"
+                                        value={inputs.years}
+                                        onChange={handleChange}
+                                        className="h-8 text-xs glass-input text-white"
+                                    />
+                                </div>
                             </div>
 
-                            <Button onClick={handleSave} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-4">
-                                <Save className="h-4 w-4 mr-2" /> Salvar Cenário
+                            {/* Resultado Integrado */}
+                            <div className="mt-4 pt-3 border-t border-white/10 text-center bg-white/5 rounded-lg py-2">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Patrimônio Projetado</p>
+                                <div className="text-2xl font-bold text-emerald-400">
+                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
+                                </div>
+                            </div>
+
+                            <Button onClick={handleSave} size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs">
+                                <Save className="h-3 w-3 mr-2" /> Salvar Cenário
                             </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="glass-card border-white/10 bg-emerald-950/30">
-                        <CardHeader>
-                            <CardTitle className="text-emerald-400 text-lg">Resultado em {inputs.years} anos</CardTitle>
+                    {/* Lista de Cenários - Mais compacta */}
+                    <Card className="glass-card border-white/10 bg-white/5 flex-1 min-h-[200px] flex flex-col">
+                        <CardHeader className="py-3 px-4 border-b border-white/5">
+                            <CardTitle className="text-slate-300 text-sm">Cenários Salvos</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-white mb-2">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
-                            </div>
-                            <p className="text-xs text-emerald-200/60">
-                                *Valores projetados brutos.
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* LISTA DE CENÁRIOS SALVOS */}
-                    <Card className="glass-card border-white/10 bg-white/5">
-                        <CardHeader>
-                            <CardTitle className="text-white text-base">Cenários Salvos</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 max-h-60 overflow-y-auto">
+                        <CardContent className="p-0 overflow-y-auto flex-1">
                             {savedProjections.length === 0 && (
-                                <p className="text-xs text-slate-500">Nenhum cenário salvo ainda.</p>
+                                <p className="text-xs text-slate-500 p-4 text-center">Nenhum cenário salvo.</p>
                             )}
-                            {savedProjections.map((proj) => (
-                                <div
-                                    key={proj.id}
-                                    onClick={() => handleLoadProjection(proj)}
-                                    className="p-3 rounded bg-white/5 hover:bg-emerald-500/20 cursor-pointer transition-colors border border-white/5"
-                                >
-                                    <div className="text-sm font-medium text-white mb-1">{proj.name}</div>
-                                    <div className="text-xs text-slate-400 flex justify-between">
-                                        <span>R$ {proj.initialBalance} + R$ {proj.monthlyContribution}/mês</span>
+                            <div className="divide-y divide-white/5">
+                                {savedProjections.map((proj) => (
+                                    <div
+                                        key={proj.id}
+                                        onClick={() => handleLoadProjection(proj)}
+                                        className="p-3 hover:bg-emerald-500/10 cursor-pointer transition-colors group"
+                                    >
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-xs font-medium text-white group-hover:text-emerald-300 truncate max-w-[150px]">{proj.name}</span>
+                                            <span className="text-[10px] text-slate-500">{new Date(proj.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400">
+                                            R$ {proj.initialBalance} + R$ {proj.monthlyContribution}/mês ({proj.years} anos)
+                                        </div>
                                     </div>
-                                    <div className="text-[10px] text-slate-500 mt-1 text-right">
-                                        {new Date(proj.createdAt).toLocaleDateString()}
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Gráfico */}
-                <div className="col-span-12 md:col-span-8 lg:col-span-9">
-                    <div className="rounded-3xl glass-card p-8 h-[600px] flex flex-col">
-                        <h3 className="text-xl font-bold text-white mb-6">Evolução do Patrimônio</h3>
-                        <div className="flex-1 min-h-0">
+                {/* Área Principal - Gráfico */}
+                <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full">
+                    <div className="rounded-3xl glass-card p-6 h-full flex flex-col bg-[#0f172a]/50 border border-white/5">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Evolução Patrimonial</h3>
+                            <div className="text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-full">
+                                Projeção Linear
+                            </div>
+                        </div>
+                        <div className="flex-1 min-h-0 w-full">
                             <InvestmentChart data={chartData} />
                         </div>
                     </div>
