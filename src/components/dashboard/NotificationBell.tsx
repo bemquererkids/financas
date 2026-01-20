@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, ArrowUp, ArrowDown, AlertTriangle, X } from 'lucide-react';
+import { Bell, ArrowUp, ArrowDown, AlertTriangle, X, CheckCircle } from 'lucide-react';
 import { getNotifications } from '@/app/actions/financial-actions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,16 @@ interface NotificationItem {
 export function NotificationBell() {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [hasUnread, setHasUnread] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const updateUnreadCount = (items: NotificationItem[]) => {
+        const lastRead = localStorage.getItem('lastReadTime');
+        const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+
+        const count = items.filter(item => new Date(item.date).getTime() > lastReadTime).length;
+        setUnreadCount(count);
+    };
 
     // Fetch notifications
     useEffect(() => {
@@ -27,16 +35,13 @@ export function NotificationBell() {
             try {
                 const data = await getNotifications();
                 setNotifications(data as NotificationItem[]);
-                // Simulação simples: se tem dados, marca como "tem não lidas" na primeira vez
-                // Num app real, usaríamos localStorage ou DB para saber o que foi lido
-                if (data.length > 0) setHasUnread(true);
+                updateUnreadCount(data as NotificationItem[]);
             } catch (e) {
                 console.error("Failed to fetch notifications", e);
             }
         };
         fetchNotes();
 
-        // Refresh every 60s
         const interval = setInterval(fetchNotes, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -52,11 +57,17 @@ export function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const markAllAsRead = () => {
+        const now = new Date().toISOString();
+        localStorage.setItem('lastReadTime', now);
+        setUnreadCount(0);
+    };
+
     const toggleOpen = () => {
-        setIsOpen(!isOpen);
-        if (!isOpen) {
-            setHasUnread(false); // Mark as read when opening
+        if (!isOpen && unreadCount > 0) {
+            markAllAsRead();
         }
+        setIsOpen(!isOpen);
     };
 
     const getIcon = (type: string) => {
@@ -89,7 +100,7 @@ export function NotificationBell() {
                 onClick={toggleOpen}
             >
                 <Bell className="h-5 w-5" />
-                {hasUnread && (
+                {unreadCount > 0 && (
                     <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 border-2 border-[#09090b] rounded-full animate-pulse" />
                 )}
             </Button>
@@ -98,9 +109,14 @@ export function NotificationBell() {
                 <div className="absolute right-0 mt-2 w-80 md:w-96 rounded-xl glass-card border border-white/10 bg-[#09090b]/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex items-center justify-between p-4 border-b border-white/5">
                         <h4 className="font-semibold text-white text-sm">Notificações</h4>
-                        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white">
-                            <X className="h-4 w-4" />
-                        </button>
+                        <div className="flex gap-2">
+                            <button onClick={markAllAsRead} className="text-xs text-slate-400 hover:text-emerald-400 transition-colors" title="Marcar todas como lidas">
+                                <CheckCircle className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="max-h-[60vh] overflow-y-auto">
