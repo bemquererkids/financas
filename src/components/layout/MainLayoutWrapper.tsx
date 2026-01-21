@@ -7,7 +7,7 @@ import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
-import { PiggyBank, MessageCircle } from 'lucide-react';
+import { PiggyBank, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -49,7 +49,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                         className="relative text-slate-400 hover:text-white hover:bg-white/10 rounded-full"
                         onClick={() => setIsChatOpen(!isChatOpen)}
                     >
-                        <MessageCircle className="h-5 w-5" />
+                        <Sparkles className="h-5 w-5" />
                     </Button>
                     <NotificationBell />
                     <UserGreeting />

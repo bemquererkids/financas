@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, ArrowUp, ArrowDown, AlertTriangle, X, CheckCircle } from 'lucide-react';
+import { Bell, ArrowUp, ArrowDown, AlertTriangle, X, CheckCircle, Trash2 } from 'lucide-react';
 import { getNotifications } from '@/app/actions/financial-actions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -78,16 +78,27 @@ export function NotificationBell() {
         localStorage.setItem('readItemIds', JSON.stringify([]));
     };
 
-    // Close on click outside
+    // Close on click outside and prevent body scroll when open
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
+
+        // Prevent body scroll when dropdown is open
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
 
     const toggleOpen = () => setIsOpen(!isOpen);
 
@@ -127,7 +138,7 @@ export function NotificationBell() {
             </Button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 md:w-96 rounded-xl glass-card border border-white/10 bg-[#09090b]/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute right-0 mt-2 w-80 md:w-96 rounded-xl glass-card border border-white/10 bg-[#09090b]/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 overscroll-contain">
                     <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
                         <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-white text-sm">Notificações</h4>
@@ -158,7 +169,7 @@ export function NotificationBell() {
                                     className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-rose-400 transition-colors"
                                     title="Limpar todas"
                                 >
-                                    <X className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" />
                                 </button>
                             )}
                             <button
