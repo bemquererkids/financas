@@ -161,3 +161,55 @@ export async function togglePayableStatus(id: string, currentStatus: boolean) {
         console.error('Erro ao atualizar status do pagamento:', error);
     }
 }
+
+export async function importPayables(csvData: { name: string, amount: number, dueDate: string, windowDay: number }[]) {
+    const userId = await getUserId();
+    if (!userId) return { error: 'Não autorizado' };
+
+    let count = 0;
+
+    try {
+        for (const item of csvData) {
+            const date = new Date(item.dueDate);
+            if (isNaN(date.getTime())) continue; // Pula datas inválidas
+
+            const monthStr = date.toISOString().slice(0, 7);
+
+            // Find or Create Payment Window
+            let window = await prisma.paymentWindow.findFirst({
+                where: {
+                    month: monthStr,
+                    windowDay: item.windowDay,
+                    user: { id: userId }
+                }
+            });
+
+            if (!window) {
+                window = await prisma.paymentWindow.create({
+                    data: {
+                        month: monthStr,
+                        windowDay: item.windowDay,
+                        receivedAmount: 0,
+                        user: { connect: { id: userId } }
+                    }
+                });
+            }
+
+            await prisma.payable.create({
+                data: {
+                    name: item.name,
+                    amount: item.amount,
+                    dueDate: date,
+                    paymentWindowId: window.id
+                }
+            });
+            count++;
+        }
+
+        revalidatePath('/payments');
+        return { success: true, count };
+    } catch (e) {
+        console.error("Erro na importação:", e);
+        return { error: 'Erro ao processar importação.' };
+    }
+}
