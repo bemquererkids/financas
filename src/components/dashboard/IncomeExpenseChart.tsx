@@ -59,7 +59,7 @@ export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
                         axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                         tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Legend
                         wrapperStyle={{ paddingTop: 10 }}
                         formatter={(value) => (

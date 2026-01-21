@@ -29,13 +29,30 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
     };
 
+    const formatCategoryLabel = (cat: string) => {
+        const dict: Record<string, string> = {
+            'CREDIT_CARD_BILL': 'Fatura Cartão',
+            'INCOME': 'Receita',
+            'EXPENSE': 'Despesa',
+            'SALARY': 'Salário',
+            'INVESTMENT': 'Investimento',
+            // Adicione outros conforme necessário
+        };
+        if (dict[cat]) return dict[cat];
+        // Title Case fallback
+        if (cat === cat.toUpperCase() || cat === cat.toLowerCase()) {
+            return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase().replace(/_/g, ' ');
+        }
+        return cat;
+    };
+
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const item = payload[0].payload;
             const percentage = ((item.amount / total) * 100).toFixed(1);
             return (
                 <div className="bg-slate-900/95 border border-white/10 rounded-lg p-3 shadow-xl">
-                    <p className="text-white font-medium">{item.category}</p>
+                    <p className="text-white font-medium">{formatCategoryLabel(item.category)}</p>
                     <p className="text-emerald-400 font-mono">{formatCurrency(item.amount)}</p>
                     <p className="text-slate-400 text-sm">{percentage}% do total</p>
                 </div>
@@ -80,7 +97,7 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
                         verticalAlign="bottom"
                         align="center"
                         wrapperStyle={{ paddingTop: 20 }}
-                        formatter={(value) => <span className="text-slate-300 text-xs">{value}</span>}
+                        formatter={(value) => <span className="text-slate-300 text-xs">{formatCategoryLabel(value)}</span>}
                     />
                 </PieChart>
             </ResponsiveContainer>
