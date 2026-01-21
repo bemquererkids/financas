@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PiggyBank, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { OAuthErrorAlert } from '@/components/auth/OAuthErrorAlert';
 
 export default function SignInPage() {
     const router = useRouter();
@@ -63,6 +64,9 @@ export default function SignInPage() {
                     <h1 className="text-3xl font-bold text-white mb-2">Entrar na Conta</h1>
                     <p className="text-slate-400">Acesse sua conta MyWallet</p>
                 </div>
+
+                {/* OAuth Error Alert */}
+                <OAuthErrorAlert />
 
                 {/* Form Card */}
                 <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
