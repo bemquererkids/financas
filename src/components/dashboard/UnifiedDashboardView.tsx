@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { List, PieChart, BarChart3, ArrowRightLeft } from "lucide-react";
 import { TransactionList } from "@/components/transactions/TransactionList";
-import { ExpensesPieChart } from "@/components/dashboard/ExpensesPieChart";
+import { ExpensesCategoryChart } from "@/components/dashboard/ExpensesCategoryChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { CashFlowView } from "@/components/dashboard/CashFlowView";
 import { CashFlowData } from "@/app/actions/cashflow-actions";
@@ -101,7 +101,7 @@ export function UnifiedDashboardView({ transactions, expensesByCategory, monthly
 
                 {activeTab === 'categories' && (
                     <div className="h-full w-full animate-in fade-in zoom-in-95 duration-300">
-                        <ExpensesPieChart data={expensesByCategory} />
+                        <ExpensesCategoryChart data={expensesByCategory} />
                     </div>
                 )}
 
