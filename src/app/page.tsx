@@ -40,8 +40,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
     return (
         <div className="flex-1 h-screen overflow-hidden flex flex-col p-4 md:p-6 gap-3">
-            {/* Header */}
-            <div className="flex-shrink-0">
+            {/* Header - Desktop Only (Mobile usa o título do card) */}
+            <div className="flex-shrink-0 hidden md:block">
                 <ModuleHeader
                     title="Visão Geral"
                     subtitle="Acompanhe sua saúde financeira"
