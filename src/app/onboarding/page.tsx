@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ interface ProfileAnalysis {
 
 export default function OnboardingPage() {
     const router = useRouter();
+    const { data: session } = useSession();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -49,6 +51,9 @@ export default function OnboardingPage() {
         // Simular análise da IA (você pode integrar com OpenAI depois)
         await new Promise(resolve => setTimeout(resolve, 2000));
 
+        // Pegar primeiro nome do usuário
+        const firstName = session?.user?.name?.split(' ')[0] || 'usuário';
+
         let profile = '';
         let message = '';
         let recommendations: string[] = [];
@@ -56,7 +61,7 @@ export default function OnboardingPage() {
         // Lógica de identificação de perfil
         if (financialSituation === 'endividado' || hasDebts) {
             profile = 'Perfil Recuperação';
-            message = `Identificamos que você está em um momento de reorganização financeira. Não se preocupe, estamos aqui para te ajudar a sair dessa situação de forma estratégica e sustentável.`;
+            message = `${firstName}, identificamos que você está em um momento de reorganização financeira. Não se preocupe, estamos aqui para te ajudar a sair dessa situação de forma estratégica e sustentável.`;
             recommendations = [
                 'Priorize o pagamento das dívidas com maiores juros',
                 'Crie um orçamento realista para controlar gastos',
@@ -65,7 +70,7 @@ export default function OnboardingPage() {
             ];
         } else if (financialSituation === 'equilibrado' && (savingsPercentage === null || savingsPercentage < 10)) {
             profile = 'Perfil Construtor';
-            message = `Você está no caminho certo! Suas contas estão em dia, agora é hora de construir uma base financeira sólida e começar a poupar de forma consistente.`;
+            message = `${firstName}, você está no caminho certo! Suas contas estão em dia, agora é hora de construir uma base financeira sólida e começar a poupar de forma consistente.`;
             recommendations = [
                 'Estabeleça uma meta de poupar 10-20% da renda mensal',
                 'Crie uma reserva de emergência (3-6 meses de despesas)',
@@ -74,7 +79,7 @@ export default function OnboardingPage() {
             ];
         } else if (financialSituation === 'poupando' || (savingsPercentage && savingsPercentage >= 10)) {
             profile = 'Perfil Investidor';
-            message = `Parabéns! Você já possui disciplina financeira e consegue poupar regularmente. Agora é o momento de fazer seu dinheiro trabalhar para você através de investimentos inteligentes.`;
+            message = `Parabéns, ${firstName}! Você já possui disciplina financeira e consegue poupar regularmente. Agora é o momento de fazer seu dinheiro trabalhar para você através de investimentos inteligentes.`;
             recommendations = [
                 'Diversifique seus investimentos (renda fixa e variável)',
                 'Mantenha sua reserva de emergência sempre atualizada',
@@ -83,7 +88,7 @@ export default function OnboardingPage() {
             ];
         } else {
             profile = 'Perfil Iniciante';
-            message = `Bem-vindo ao mundo da organização financeira! Você está dando o primeiro passo para transformar sua relação com o dinheiro. Vamos juntos nessa jornada.`;
+            message = `Bem-vindo, ${firstName}! Você está dando o primeiro passo para transformar sua relação com o dinheiro. Vamos juntos nessa jornada de organização financeira.`;
             recommendations = [
                 'Comece registrando todas as suas despesas',
                 'Identifique gastos desnecessários que podem ser cortados',
@@ -204,8 +209,8 @@ export default function OnboardingPage() {
                                         key={option.value}
                                         onClick={() => setFinancialSituation(option.value as FinancialSituation)}
                                         className={`w-full p-5 rounded-xl border-2 transition-all text-left ${financialSituation === option.value
-                                                ? `border-${option.color}-500 bg-${option.color}-500/10`
-                                                : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
+                                            ? `border-${option.color}-500 bg-${option.color}-500/10`
+                                            : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
                                             }`}
                                     >
                                         <p className="text-white font-medium">{option.label}</p>
@@ -227,8 +232,8 @@ export default function OnboardingPage() {
                                 <button
                                     onClick={() => setHasDebts(true)}
                                     className={`p-8 rounded-xl border-2 transition-all ${hasDebts === true
-                                            ? 'border-emerald-500 bg-emerald-500/10'
-                                            : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
+                                        ? 'border-emerald-500 bg-emerald-500/10'
+                                        : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
                                         }`}
                                 >
                                     <p className="text-white font-bold text-lg">Sim</p>
@@ -237,8 +242,8 @@ export default function OnboardingPage() {
                                 <button
                                     onClick={() => setHasDebts(false)}
                                     className={`p-8 rounded-xl border-2 transition-all ${hasDebts === false
-                                            ? 'border-emerald-500 bg-emerald-500/10'
-                                            : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
+                                        ? 'border-emerald-500 bg-emerald-500/10'
+                                        : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
                                         }`}
                                 >
                                     <p className="text-white font-bold text-lg">Não</p>
@@ -266,8 +271,8 @@ export default function OnboardingPage() {
                                         key={option.value}
                                         onClick={() => setSavingsPercentage(option.value)}
                                         className={`w-full p-5 rounded-xl border-2 transition-all text-left ${savingsPercentage === option.value
-                                                ? 'border-emerald-500 bg-emerald-500/10'
-                                                : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
+                                            ? 'border-emerald-500 bg-emerald-500/10'
+                                            : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
                                             }`}
                                     >
                                         <p className="text-white font-medium">{option.label}</p>
@@ -296,8 +301,8 @@ export default function OnboardingPage() {
                                         key={option.value}
                                         onClick={() => setMainGoal(option.value as MainGoal)}
                                         className={`w-full p-5 rounded-xl border-2 transition-all text-left ${mainGoal === option.value
-                                                ? 'border-emerald-500 bg-emerald-500/10'
-                                                : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
+                                            ? 'border-emerald-500 bg-emerald-500/10'
+                                            : 'border-slate-700 hover:border-slate-600 hover:bg-slate-800/50'
                                             }`}
                                     >
                                         <p className="text-white font-medium">{option.label}</p>
