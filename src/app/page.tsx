@@ -114,21 +114,21 @@ export default async function DashboardPage() {
             <div className="flex-1 min-h-0 grid lg:grid-cols-3 gap-3">
                 {/* Coluna Esquerda: 2/3 */}
                 <div className="lg:col-span-2 flex flex-col gap-3 min-h-0">
-                    {/* Transações - 60% */}
-                    <div className="flex-[3] min-h-0 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
+                    {/* Transações - 50% */}
+                    <div className="flex-1 min-h-0 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
                         <TransactionList transactions={recentTransactions} />
                     </div>
 
-                    {/* Gráficos lado a lado - 40% */}
-                    <div className="flex-[2] grid md:grid-cols-2 gap-3 min-h-0">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 flex flex-col">
-                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide flex-shrink-0">Despesas por Categoria</h4>
+                    {/* Gráficos lado a lado - 50% com altura mínima */}
+                    <div className="flex-1 min-h-[300px] grid md:grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4 flex flex-col">
+                            <h4 className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wide flex-shrink-0">Despesas por Categoria</h4>
                             <div className="flex-1 min-h-0">
                                 <ExpensesPieChart data={expensesByCategory} />
                             </div>
                         </div>
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 flex flex-col">
-                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide flex-shrink-0">Receita vs Despesa</h4>
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4 flex flex-col">
+                            <h4 className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wide flex-shrink-0">Receita vs Despesa</h4>
                             <div className="flex-1 min-h-0">
                                 <IncomeExpenseChart data={monthlyTrend} />
                             </div>
@@ -137,8 +137,10 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Coluna Direita: 1/3 - Cash Flow */}
-                <div className="lg:col-span-1 min-h-0">
-                    <CashFlowView initialData={cashFlowData} />
+                <div className="lg:col-span-1 min-h-0 flex">
+                    <div className="flex-1">
+                        <CashFlowView initialData={cashFlowData} />
+                    </div>
                 </div>
             </div>
 
