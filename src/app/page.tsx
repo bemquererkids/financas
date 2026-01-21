@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { TrendingDown, TrendingUp, Wallet, PiggyBank } from "lucide-react";
 import { FloatingTransactionButton } from "@/components/transactions/FloatingTransactionButton";
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
-import { ModuleHeader } from "@/components/dashboard/ModuleHeader";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardView";
 import { MobileTutorialBanner } from "@/components/dashboard/MobileTutorialBanner";
 
@@ -42,7 +42,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <div className="flex-1 h-full md:h-screen flex flex-col p-4 md:p-6 gap-3 overflow-y-auto md:overflow-hidden">
             {/* Header - Desktop Only (Mobile usa o título do card) */}
             <div className="flex-shrink-0 hidden md:block">
-                <ModuleHeader
+                <DashboardHeader
                     title="Visão Geral"
                     subtitle="Acompanhe sua saúde financeira"
                 />
