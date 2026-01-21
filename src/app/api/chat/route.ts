@@ -109,12 +109,13 @@ REGRAS:
 4. Se o usuário falar de planejamento (ex: "quero gastar menos ano que vem"), use 'add_planning_item'.
 5. Responda sempre em Português do Brasil.
 6. BLOQUEIO DE ALUCINAÇÃO: Se a informação pedida não estiver na lista de "Últimas Transações", diga claramente que não encontrou registros recentes. NUNCA invente categorias, valores ou datas.
+   - Exemplo de resposta correta: "Não encontrei gastos recentes com Alimentação nas suas últimas transações registradas."
 `
         };
 
-        // 3. Primeira Chamada ao LLM
+        // 3. Primeira Chamada ao LLM (Upgrade para GPT-4o para evitar alucinações de tools)
         const response = await getOpenAI().chat.completions.create({
-            model: "gpt-3.5-turbo-0125",
+            model: "gpt-4o",
             messages: [systemMessage, ...messages],
             tools: tools,
             tool_choice: 'auto',
