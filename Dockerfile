@@ -27,5 +27,9 @@ RUN npm run build
 # Expor a porta 3000
 EXPOSE 3000
 
-# Comando para iniciar a aplicação
-CMD ["npm", "run", "start"]
+# Copiar e dar permissão ao script de start
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Comando para iniciar (migrations + servidor)
+CMD ["/app/start.sh"]
