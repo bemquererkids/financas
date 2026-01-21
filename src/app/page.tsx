@@ -44,8 +44,8 @@ export default async function DashboardPage() {
                 </ModuleHeader>
             </div>
 
-            {/* Summary Cards */}
-            <div className="flex-shrink-0 grid gap-2 grid-cols-2 lg:grid-cols-4">
+            {/* Summary Cards Row */}
+            <div className="flex-shrink-0 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 <SummaryCard
                     title="Receita Total"
                     amount={formatCurrency(summary.income)}
@@ -74,38 +74,38 @@ export default async function DashboardPage() {
                     subtext="Meta: 20%"
                     variant={(summary.savingsRate ?? 0) >= 20 ? "success" : "warning"}
                 />
-            </div>
 
-            {/* Análise 50/30/20 compacta */}
-            <div className="flex-shrink-0 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3">
-                <h3 className="text-xs font-semibold text-white mb-2 uppercase tracking-wide">Análise 50/30/20</h3>
-                <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Necessidades</span>
-                            <span className="text-white font-medium text-xs">
-                                {summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%
-                            </span>
+                {/* Card 5: Análise 50/30/20 (Integrado) */}
+                <div className="glass-card border border-white/5 rounded-xl p-3 flex flex-col justify-between hover:bg-white/5 transition-colors duration-300">
+                    <h3 className="text-xs font-medium text-slate-200 uppercase tracking-wider mb-2">Regra 50/30/20</h3>
+                    <div className="space-y-2 flex-1 flex flex-col justify-center">
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-slate-400">Nec. (50%)</span>
+                                <span className="text-white font-mono">
+                                    {summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%
+                                </span>
+                            </div>
+                            <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-blue-500" />
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-blue-500" />
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Desejos</span>
-                            <span className="text-white font-medium text-xs">
-                                {summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%
-                            </span>
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-slate-400">Des. (30%)</span>
+                                <span className="text-white font-mono">
+                                    {summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%
+                                </span>
+                            </div>
+                            <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-purple-500" />
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-purple-500" />
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Investimentos</span>
-                            <span className="text-white font-medium text-xs">
-                                {summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%
-                            </span>
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-slate-400">Inv. (20%)</span>
+                                <span className="text-white font-mono">
+                                    {summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%
+                                </span>
+                            </div>
+                            <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-emerald-500" />
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-emerald-500" />
                     </div>
                 </div>
             </div>
