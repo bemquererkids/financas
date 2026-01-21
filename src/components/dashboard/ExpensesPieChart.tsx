@@ -53,8 +53,8 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
     }
 
     return (
-        <div className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                     <Pie
                         data={data}
