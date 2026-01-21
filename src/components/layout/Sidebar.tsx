@@ -15,7 +15,8 @@ import {
     ChevronLeft,
     ChevronRight,
     PanelLeftClose,
-    PanelLeftOpen
+    PanelLeftOpen,
+    BookOpen
 } from 'lucide-react';
 
 const routes = [
@@ -60,6 +61,12 @@ const routes = [
         icon: PiggyBank,
         href: '/goals',
         color: 'text-yellow-500',
+    },
+    {
+        label: 'Como Começar',
+        icon: BookOpen,
+        href: '/tutorial',
+        color: 'text-white',
     },
 ];
 
