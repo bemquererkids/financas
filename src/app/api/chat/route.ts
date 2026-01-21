@@ -1,6 +1,6 @@
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import OpenAI from 'openai';
-import { getFinancialSummary } from '@/app/actions/financial-actions';
+import { getFinancialSummary, getRecentTransactions } from '@/app/actions/financial-actions';
 import { addPlanningItem } from '@/app/actions/planning-actions';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
@@ -8,7 +8,7 @@ import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// Lazy initialization to avoid build-time errors
+// Lazy initialization
 let openaiInstance: OpenAI | null = null;
 function getOpenAI() {
     if (!openaiInstance) {
@@ -19,21 +19,21 @@ function getOpenAI() {
     return openaiInstance;
 }
 
-// Definição das Ferramentas (Skills)
+// 🛠️ Definição das Ferramentas (Skills)
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     {
         type: 'function',
         function: {
             name: 'add_transaction',
-            description: 'Registrar uma nova transação financeira (gasto ou receita) AGORA (Histórico/Extrato Real).',
+            description: 'Registrar uma nova transação financeira AGORA (Histórico/Extrato Real).',
             parameters: {
                 type: 'object',
                 properties: {
-                    description: { type: 'string', description: 'Descrição do gasto presencial' },
-                    amount: { type: 'number', description: 'Valor em reais (ex: 50.00)' },
+                    description: { type: 'string', description: 'Descrição (ex: Almoço, Uber)' },
+                    amount: { type: 'number', description: 'Valor (ex: 50.00)' },
                     type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
-                    category: { type: 'string', description: 'Categoria (Moradia, Lazer, etc)' },
-                    date: { type: 'string', description: 'Data YYYY-MM-DD. Se for hoje, use a data atual.' }
+                    category: { type: 'string' },
+                    date: { type: 'string', description: 'YYYY-MM-DD' }
                 },
                 required: ['description', 'amount', 'type', 'category']
             }
@@ -43,11 +43,11 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         type: 'function',
         function: {
             name: 'add_planning_item',
-            description: 'Adicionar um item ao PLANEJAMENTO FUTURO (Orçamento, Previsão). Use quando o usuário falar de "mês que vem", "ano que vem", "planejar", "previsão".',
+            description: 'Adicionar item ao PLANEJAMENTO FUTURO (Orçamento/Meta).',
             parameters: {
                 type: 'object',
                 properties: {
-                    month: { type: 'string', description: 'Mês do planejamento no formato YYYY-MM' },
+                    month: { type: 'string', description: 'YYYY-MM' },
                     description: { type: 'string' },
                     amount: { type: 'number' },
                     type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
@@ -66,42 +66,52 @@ export async function POST(req: Request) {
             return new Response("Unauthorized", { status: 401 });
         }
         const userId = session.user.id;
+        const userName = session.user.name ? session.user.name.split(' ')[0] : "Usuário"; // Primeiro nome
 
         const { messages } = await req.json();
 
-        // 1. Contexto Financeiro
+        // 📊 1. Coletar Contexto Financeiro Real
         const summary = await getFinancialSummary();
-        const contextData = `
-      DADOS FINANCEIROS ATUAIS:
-      - Saldo: R$ ${summary.balance.toFixed(2)}
-      - Receitas/Mês: R$ ${summary.income.toFixed(2)}
-      - Despesas/Mês: R$ ${summary.expenses.toFixed(2)}
-      - Poupança: ${summary.savingsRate}%
-      Data de Hoje: ${new Date().toLocaleDateString('pt-BR')}
-    `;
+        const recentTransactions = await getRecentTransactions(); // Pega as últimas transações reais
 
-        // 2. Chamar OpenAI
+        // Formatar transações para o prompt
+        const txList = recentTransactions.map(t =>
+            `- ${new Date(t.date).toLocaleDateString('pt-BR')} | ${t.description} | R$ ${Number(t.amount).toFixed(2)} (${t.type}) | ${t.category}`
+        ).join('\n');
+
+        const contextData = `
+DADOS DO USUÁRIO (${userName}):
+- Data Hoje: ${new Date().toLocaleDateString('pt-BR')}
+- Saldo Atual: R$ ${summary.balance.toFixed(2)}
+- Receitas (Mês): R$ ${summary.income.toFixed(2)}
+- Despesas (Mês): R$ ${summary.expenses.toFixed(2)}
+
+ÚLTIMAS TRANSAÇÕES REGISTRADAS:
+${txList.length > 0 ? txList : "Nenhuma transação recente."}
+`;
+
+        // 🤖 2. Configurar System Message com Contexto Injetado
         const systemMessage = {
             role: "system",
-            content: `Você é um assistente financeiro pessoal inteligente e proativo chamado 'Antigravity'.
-Seu objetivo é ajudar o usuário a controlar suas finanças, analisar gastos e planejar o futuro.
-Você tem permissão para gerenciar as finanças do usuário.
+            content: `Você é o 'Agente Financeiro', o assistente pessoal inteligente de ${userName}.
+Seu objetivo é ajudar a controlar finanças, dar insights sobre gastos e planejar o futuro.
 
-FERRAMENTAS DISPONÍVEIS:
-1. 'add_transaction': Registra uma nova despesa ou receita. Use para "Comprei um café por 15 reais" ou "Recebi meu salário".
-   - Argumentos: description (string), amount (number), type ('INCOME' | 'EXPENSE'), category (string), date (string ISO).
-2. 'add_planning_item': Adiciona um item ao *Planejamento Futuro*. Use quando o usuário falar sobre o futuro, ex: "Quero planejar gastar 500 em mercado mês que vem".
-   - Argumentos: month (string YYYY-MM), amount (number), description (string), type ('INCOME'|'EXPENSE'), category (string).
+CRÍTICO: Você TEM acesso aos dados financeiros do usuário listados abaixo. Use-os para responder perguntas sobre gastos maiores, saldo, etc. NÃO DIGA QUE PRECISA DE ACESSO, VOCÊ JÁ TEM.
+
+---
+${contextData}
+---
 
 REGRAS:
-- Seja direto e útil.
-- Se o usuário pedir para registrar algo, use a ferramenta apropriada. Não pergunte "quer que eu registre?", apenas registre e confirme.
-- Para categorias, tente inferir. Ex: "Sushi" -> "Alimentação".
-- Sempre responda em português do Brasil 🇧🇷.
+1. Responda de forma cordial, chamando ${userName} pelo nome.
+2. Se perguntarem "qual meu maior gasto", analise a lista de transações acima.
+3. Se o usuário pedir para adicionar algo (ex: "gastei 50 no almoço"), use a tool 'add_transaction'.
+4. Se o usuário falar de planejamento (ex: "quero gastar menos ano que vem"), use 'add_planning_item'.
+5. Responda sempre em Português do Brasil.
 `
         };
 
-        // 2. Primeira Chamada ao GPT (Pode retornar texto ou tool_calls)
+        // 3. Primeira Chamada ao LLM
         const response = await getOpenAI().chat.completions.create({
             model: "gpt-3.5-turbo-0125",
             messages: [systemMessage, ...messages],
@@ -111,11 +121,9 @@ REGRAS:
 
         const responseMessage = response.choices[0].message;
 
-        // 3. Se houver Tool Calls (O GPT quer executar algo)
+        // 4. Executar Tool Calls se houver
         if (responseMessage.tool_calls) {
             const toolCalls = responseMessage.tool_calls;
-
-            // Prepara array de mensagens para a segunda volta (inclui a decisão do assistente)
             const newMessages = [systemMessage, ...messages, responseMessage];
 
             for (const toolCall of toolCalls) {
@@ -124,23 +132,19 @@ REGRAS:
                 let toolResult = "";
 
                 try {
-                    console.log(`🛠️ Executing tool: ${functionName}`, args);
-
                     if (functionName === 'add_transaction') {
-                        // Converter date string para Date object
                         const dateObj = args.date ? new Date(args.date) : new Date();
-
                         await prisma.transaction.create({
                             data: {
+                                userId: userId,
                                 description: args.description,
                                 amount: args.amount,
                                 type: args.type,
                                 category: args.category,
                                 date: dateObj,
-                                userId: userId // Adicionando userId obrigatório
-                            }
+                            } as any
                         });
-                        toolResult = JSON.stringify({ success: true, message: "Transação salva com sucesso no histórico." });
+                        toolResult = JSON.stringify({ success: true, message: `Transação '${args.description}' registrada com sucesso.` });
                     }
                     else if (functionName === 'add_planning_item') {
                         await addPlanningItem(
@@ -150,14 +154,12 @@ REGRAS:
                             args.type,
                             args.category
                         );
-                        toolResult = JSON.stringify({ success: true, message: `Item adicionado ao planejamento de ${args.month}.` });
+                        toolResult = JSON.stringify({ success: true, message: `Adicionado ao planejamento de ${args.month}.` });
                     }
                 } catch (e: any) {
-                    console.error("Tool execution error:", e);
                     toolResult = JSON.stringify({ success: false, error: e.message });
                 }
 
-                // Adiciona o resultado da tool à conversa
                 newMessages.push({
                     role: 'tool',
                     tool_call_id: toolCall.id,
@@ -165,7 +167,7 @@ REGRAS:
                 } as any);
             }
 
-            // 4. Segunda Chamada (Gera a resposta final em texto para o usuário)
+            // 5. Segunda Chamada (Resposta Final)
             const secondResponse = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o',
                 stream: true,
@@ -175,22 +177,17 @@ REGRAS:
             return new StreamingTextResponse(OpenAIStream(secondResponse as any));
         }
 
-        // Se NÃO houve tool calls (apenas conversa)
-        const content = responseMessage.content || "";
-
-        // Simplesmente reencaminha a resposta como stream (re-request as stream)
-        // Isso é necessário porque StreamingTextResponse precisa de stream real.
+        // Sem tools -> Stream direto
         const streamResponse = await getOpenAI().chat.completions.create({
             model: 'gpt-4o',
             stream: true,
             messages: [systemMessage, ...messages],
-            // Sem tools aqui para garantir texto direto (embora pudesse manter, assume-se que se a primeira não chamou, a segunda igual não chamaria com temp 0.7 talvez chame, mas ok)
         });
 
         return new StreamingTextResponse(OpenAIStream(streamResponse as any));
 
     } catch (error: any) {
-        console.error('❌ Chat API Error:', error);
+        console.error('Chat API Error:', error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }

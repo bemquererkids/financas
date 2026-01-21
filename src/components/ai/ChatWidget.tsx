@@ -37,8 +37,8 @@ export function ChatWidget() {
                                 <Bot className="h-4 w-4 text-white" />
                             </div>
                             <div>
-                                <CardTitle className="text-sm font-bold text-white">Consultor IA</CardTitle>
-                                <p className="text-xs text-zinc-400">Contexto Financeiro Ativo</p>
+                                <CardTitle className="text-sm font-bold text-white">Agente Financeiro</CardTitle>
+                                <p className="text-xs text-zinc-400">Seu assistente pessoal</p>
                             </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-white" onClick={() => setIsOpen(false)}>
