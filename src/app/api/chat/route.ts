@@ -93,29 +93,31 @@ ${txList.length > 0 ? txList : "Nenhuma transação recente."}
         // 🤖 2. Configurar System Message com Contexto Injetado
         const systemMessage = {
             role: "system",
-            content: `Você é o 'Agente Financeiro', o assistente pessoal inteligente de ${userName}.
-Seu objetivo é ajudar a controlar finanças, dar insights sobre gastos e planejar o futuro.
+            content: `Você é o 'Agente Financeiro', um consultor pessoal experiente e ponderado de ${userName}.
+Seu papel é ORIENTAR e dar clareza sobre a vida financeira do usuário, baseando-se estritamente nos dados reais.
 
-CRÍTICO: Você TEM acesso aos dados financeiros do usuário listados abaixo. Use-os para responder perguntas sobre gastos maiores, saldo, etc. NÃO DIGA QUE PRECISA DE ACESSO, VOCÊ JÁ TEM.
+CRÍTICO:
+- Você TEM acesso aos dados abaixo.
+- Aja como um mentor: explique o que os números significam, não apenas jogue valores.
+- NÃO tome decisões pelo usuário, apenas execute comandos se for explicitamente solicitado (ex: "registre isso").
+- Se não tiver certeza ou os dados não existirem, diga "Não tenho essa informação". NÃO TENTE ADIVINHAR.
 
 ---
 ${contextData}
 ---
 
 REGRAS:
-1. Responda de forma cordial, chamando ${userName} pelo nome.
-2. Se perguntarem "qual meu maior gasto", analise a lista de transações acima.
-3. Se o usuário pedir para adicionar algo (ex: "gastei 50 no almoço"), use a tool 'add_transaction'.
-4. Se o usuário falar de planejamento (ex: "quero gastar menos ano que vem"), use 'add_planning_item'.
-5. Responda sempre em Português do Brasil.
-6. BLOQUEIO DE ALUCINAÇÃO: Se a informação pedida não estiver na lista de "Últimas Transações", diga claramente que não encontrou registros recentes. NUNCA invente categorias, valores ou datas.
-   - Exemplo de resposta correta: "Não encontrei gastos recentes com Alimentação nas suas últimas transações registradas."
+1. Responda de forma cordial e profissional.
+2. Use os dados acima para responder perguntas. Se não estiver na lista, DIGA QUE NÃO SABE.
+3. Use tools apenas quando solicitado claramente.
+4. Responda sempre em Português do Brasil.
 `
         };
 
         // 3. Primeira Chamada ao LLM (Upgrade para GPT-4o para evitar alucinações de tools)
         const response = await getOpenAI().chat.completions.create({
             model: "gpt-4o",
+            temperature: 0.2, // Baixa criatividade para garantir precisão factual
             messages: [systemMessage, ...messages],
             tools: tools,
             tool_choice: 'auto',
@@ -172,6 +174,7 @@ REGRAS:
             // 5. Segunda Chamada (Resposta Final)
             const secondResponse = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o',
+                temperature: 0.2,
                 stream: true,
                 messages: newMessages as any,
             });
@@ -182,6 +185,7 @@ REGRAS:
         // Sem tools -> Stream direto
         const streamResponse = await getOpenAI().chat.completions.create({
             model: 'gpt-4o',
+            temperature: 0.2,
             stream: true,
             messages: [systemMessage, ...messages],
         });
