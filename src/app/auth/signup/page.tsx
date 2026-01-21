@@ -210,7 +210,11 @@ export default function SignUpPage() {
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => signIn('google', { callbackUrl: '/' })}
+                        onClick={() => {
+                            signIn('google', { callbackUrl: '/' }).catch(() => {
+                                setError('Google OAuth não configurado no momento. Use email/senha.');
+                            });
+                        }}
                         className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white"
                     >
                         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">

@@ -35,7 +35,11 @@ export default function SignInPage() {
             });
 
             if (result?.error) {
-                setError('Email ou senha incorretos');
+                if (formData.email.includes('@gmail.com')) {
+                    setError('Usuário do Gmail? Use o botão "Continuar com Google" abaixo');
+                } else {
+                    setError('Email ou senha incorretos');
+                }
                 return;
             }
 
@@ -56,8 +60,8 @@ export default function SignInPage() {
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400 shadow-lg shadow-emerald-500/20 mb-4">
                         <PiggyBank className="h-8 w-8 text-slate-900" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo de Volta</h1>
-                    <p className="text-slate-400">Entre para continuar</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Entrar na Conta</h1>
+                    <p className="text-slate-400">Acesse sua conta MyWallet</p>
                 </div>
 
                 {/* Form Card */}
