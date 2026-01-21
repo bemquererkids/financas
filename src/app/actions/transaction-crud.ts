@@ -1,11 +1,10 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
 
 async function getUserId() {
     const session = await getServerSession(authOptions);
@@ -22,10 +21,10 @@ export async function deleteTransaction(id: string) {
         // Verify ownership
         const transaction = await prisma.transaction.findUnique({
             where: { id },
-            select: { userId: true }
+            select: { user: { select: { id: true } } }
         });
 
-        if (!transaction || transaction.userId !== userId) {
+        if (!transaction || transaction.user.id !== userId) {
             return { error: 'Unauthorized' };
         }
 
@@ -47,14 +46,24 @@ export async function updateTransaction(id: string, formData: FormData) {
         // Verify ownership
         const transaction = await prisma.transaction.findUnique({
             where: { id },
-            select: { userId: true }
+            select: { user: { select: { id: true } } }
         });
 
-        if (!transaction || transaction.userId !== userId) {
+        if (!transaction || transaction.user.id !== userId) {
             return { error: 'Unauthorized' };
         }
 
-        const amount = parseFloat(formData.get('amount') as string);
+        let amountRaw = formData.get('amount') as string;
+
+        // Se tem vírgula, assumimos formato BR (decimal com , e milhar opcional com .)
+        if (amountRaw.includes(',')) {
+            amountRaw = amountRaw.replace(/\./g, '').replace(',', '.');
+        }
+
+        const amount = parseFloat(amountRaw);
+
+        console.log('[UpdateTransaction] Amount parsed:', amount, 'from', formData.get('amount'));
+
         const description = formData.get('description') as string;
         const category = formData.get('category') as string;
         const rawType = formData.get('type') as string;

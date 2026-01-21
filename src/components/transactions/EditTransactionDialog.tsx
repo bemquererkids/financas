@@ -41,6 +41,13 @@ interface EditTransactionDialogProps {
 export function EditTransactionDialog({ transaction, open, onOpenChange }: EditTransactionDialogProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [amountStr, setAmountStr] = useState('');
+
+    useEffect(() => {
+        if (transaction) {
+            setAmountStr(transaction.amount.toString());
+        }
+    }, [transaction]);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -138,9 +145,11 @@ export function EditTransactionDialog({ transaction, open, onOpenChange }: EditT
                             <Input
                                 id="amount"
                                 name="amount"
-                                type="number"
-                                step="0.01"
-                                defaultValue={transaction.amount}
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0,00"
+                                value={amountStr}
+                                onChange={(e) => setAmountStr(e.target.value)}
                                 className="bg-white/5 border-white/10 text-white focus:ring-purple-500/50"
                                 required
                             />
