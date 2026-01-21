@@ -80,7 +80,7 @@ export function ExpensesCategoryChart({ data }: ExpensesCategoryChartProps) {
     const sortedData = [...data].sort((a, b) => b.amount - a.amount);
 
     return (
-        <div className="w-full h-full min-h-[300px] p-2">
+        <div className="w-full h-[300px] md:h-full min-h-[300px] p-2">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                     data={sortedData}

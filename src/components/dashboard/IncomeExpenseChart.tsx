@@ -43,7 +43,7 @@ export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
     }
 
     return (
-        <div className="w-full h-full">
+        <div className="w-full h-[300px] md:h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
