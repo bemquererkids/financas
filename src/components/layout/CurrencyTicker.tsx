@@ -25,7 +25,8 @@ export function CurrencyTicker({ collapsed }: { collapsed?: boolean }) {
 
     const fetchRates = async () => {
         try {
-            const res = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL');
+            // Adiciona timestamp para evitar cache do navegador e garantir dado real
+            const res = await fetch(`https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL?_=${Date.now()}`);
             if (!res.ok) throw new Error('API Error');
             const json = await res.json();
             setData(json);
@@ -39,7 +40,7 @@ export function CurrencyTicker({ collapsed }: { collapsed?: boolean }) {
 
     useEffect(() => {
         fetchRates();
-        const interval = setInterval(fetchRates, 60000); // Atualiza a cada 60s
+        const interval = setInterval(fetchRates, 30000); // Atualiza a cada 30s (Mais rápido)
         return () => clearInterval(interval);
     }, []);
 
@@ -60,6 +61,7 @@ export function CurrencyTicker({ collapsed }: { collapsed?: boolean }) {
                 symbol="USD"
                 price={data?.USDBRL?.bid}
                 change={data?.USDBRL?.pctChange}
+                updatedAt={data?.USDBRL?.create_date}
                 collapsed={collapsed}
             />
             <CurrencyItem
@@ -67,22 +69,26 @@ export function CurrencyTicker({ collapsed }: { collapsed?: boolean }) {
                 symbol="EUR"
                 price={data?.EURBRL?.bid}
                 change={data?.EURBRL?.pctChange}
+                updatedAt={data?.EURBRL?.create_date}
                 collapsed={collapsed}
             />
         </div>
     );
 }
 
-function CurrencyItem({ flag, symbol, price, change, collapsed }: { flag: string, symbol: string, price?: string, change?: string, collapsed?: boolean }) {
+function CurrencyItem({ flag, symbol, price, change, updatedAt, collapsed }: { flag: string, symbol: string, price?: string, change?: string, updatedAt?: string, collapsed?: boolean }) {
     const priceNum = Number(price);
     const changeNum = Number(change);
     const isPositive = changeNum >= 0;
 
     if (!price) return null;
 
+    // Formata hora
+    const timeStr = updatedAt ? updatedAt.split(' ')[1] : '';
+
     if (collapsed) {
         return (
-            <div className="flex flex-col items-center gap-0.5 group cursor-help" title={`${symbol}: R$ ${priceNum.toFixed(2)} (${isPositive ? '+' : ''}${changeNum}%)`}>
+            <div className="flex flex-col items-center gap-0.5 group cursor-help" title={`${symbol}: R$ ${priceNum.toFixed(2)} (${isPositive ? '+' : ''}${changeNum}%)\nAtualizado: ${timeStr}`}>
                 <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{flag}</span>
                 <span className="text-[9px] font-mono text-slate-400 group-hover:text-emerald-400">
                     {priceNum.toFixed(2)}
@@ -92,7 +98,7 @@ function CurrencyItem({ flag, symbol, price, change, collapsed }: { flag: string
     }
 
     return (
-        <div className="flex items-center justify-between bg-slate-900/40 p-2 rounded-lg border border-white/5 hover:bg-slate-900/60 transition-colors">
+        <div className="flex items-center justify-between bg-slate-900/40 p-2 rounded-lg border border-white/5 hover:bg-slate-900/60 transition-colors cursor-help" title={`Atualizado às ${timeStr}`}>
             <div className="flex items-center gap-2">
                 <span className="text-lg">{flag}</span>
                 <div className="flex flex-col">
