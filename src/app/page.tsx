@@ -115,17 +115,27 @@ export default async function DashboardPage() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid lg:grid-cols-5 gap-6">
+            <div className="grid lg:grid-cols-5 gap-4">
                 {/* Transaction History (Maior destaque - 60% width) */}
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-3 space-y-4">
                     <TransactionList transactions={recentTransactions} />
+
+                    {/* Gráficos lado a lado abaixo das transações */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                            <h3 className="text-sm font-medium text-slate-300 mb-3">Despesas por Categoria</h3>
+                            <ExpensesPieChart data={expensesByCategory} />
+                        </div>
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                            <h3 className="text-sm font-medium text-slate-300 mb-3">Receita vs Despesa</h3>
+                            <IncomeExpenseChart data={monthlyTrend} />
+                        </div>
+                    </div>
                 </div>
 
-                {/* Cash Flow e Gráficos (Lateral - 40% width) */}
-                <div className="lg:col-span-2 space-y-6">
+                {/* Cash Flow (Lateral - 40% width) */}
+                <div className="lg:col-span-2">
                     <CashFlowView initialData={cashFlowData} />
-                    <ExpensesPieChart data={expensesByCategory} />
-                    <IncomeExpenseChart data={monthlyTrend} />
                 </div>
             </div>
 
