@@ -154,6 +154,17 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Perfil Financeiro (Onboarding)
+  onboardingCompleted Boolean  @default(false)
+  financialSituation  String?  // "endividado", "equilibrado", "poupando"
+  monthlyIncome       Float?   // Renda mensal média
+  hasCreditCard       Boolean  @default(false)
+  creditCardCount     Int      @default(0)
+  hasInvestments      Boolean  @default(false)
+  investmentTypes     String?  // JSON array: ["renda_fixa", "acoes", "fundos"]
+  mainGoal            String?  // "quitar_dividas", "poupar", "investir", "controlar_gastos"
+  userProfile         String?  // "endividado", "iniciante", "poupador", "investidor"
+
   // Relations
   transactions      Transaction[]
   paymentWindows    PaymentWindow[]

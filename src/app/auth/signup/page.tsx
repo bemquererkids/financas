@@ -63,7 +63,7 @@ export default function SignUpPage() {
                 throw new Error('Conta criada, mas erro ao fazer login');
             }
 
-            router.push('/');
+            router.push('/onboarding');
             router.refresh();
         } catch (err: any) {
             setError(err.message);
