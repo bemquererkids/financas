@@ -16,13 +16,15 @@ async function getUserId() {
     return session.user.id;
 }
 
-export async function getFinancialSummary() {
+export async function getFinancialSummary(month?: number, year?: number) {
     const userId = await getUserId();
 
-    // Busca transações do mês atual
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const targetMonth = month ?? today.getMonth();
+    const targetYear = year ?? today.getFullYear();
+
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const lastDay = new Date(targetYear, targetMonth + 1, 0);
 
     const transactions = await prisma.transaction.findMany({
         where: {
@@ -38,8 +40,11 @@ export async function getFinancialSummary() {
     const ledger = engine.calculateLedger();
     const rule503020 = engine.calculateRule503020(ledger);
 
+    // Formatar o período para exibição
+    const displayDate = new Date(targetYear, targetMonth, 1);
+
     return {
-        period: `${today.toLocaleString('pt-BR', { month: 'long' })} / ${today.getFullYear()}`,
+        period: `${displayDate.toLocaleString('pt-BR', { month: 'long' })} / ${targetYear}`,
         income: ledger.totalIncome,
         expenses: ledger.totalExpense,
         balance: ledger.balance,
@@ -48,12 +53,37 @@ export async function getFinancialSummary() {
     };
 }
 
-export async function getRecentTransactions() {
+export async function getRecentTransactions(month?: number, year?: number) {
     const userId = await getUserId();
 
+    let dateFilter = {};
+    if (month !== undefined && year !== undefined) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        dateFilter = {
+            date: {
+                gte: firstDay,
+                lte: lastDay,
+            }
+        };
+    } else {
+        // Se não filtrar por data, pega as do mês atual por padrão na visualização de lista da dashboard?
+        // O comportamento original era "últimas 25 globais".
+        // Mas se o usuário quer "ver o mês", ele quer ver TODAS do mês.
+        // Vamos manter o comportamento: Se passar data, filtra data. Se não passar, pega as top 25 globais (comportamento de 'Recentes').
+        // EDIT: Na Dashboard, se não tem filtro, é o mês atual. 
+        // Então vamos padronizar: Dashboard sempre chama com mês atual se não tiver query params.
+
+        // Mantendo compatibilidade com chat (sem args):
+        // Se sem args -> take 25 global.
+    }
+
     const transactions = await prisma.transaction.findMany({
-        where: { userId },
-        take: 25,
+        where: {
+            userId,
+            ...dateFilter
+        },
+        take: (month !== undefined && year !== undefined) ? undefined : 25, // Se tem filtro de mês, traz todas do mês. Se não, traz 25.
         orderBy: {
             date: 'desc'
         }
@@ -70,12 +100,15 @@ export async function getRecentTransactions() {
     }));
 }
 
-export async function getExpensesByCategory() {
+export async function getExpensesByCategory(month?: number, year?: number) {
     const userId = await getUserId();
 
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const targetMonth = month ?? today.getMonth();
+    const targetYear = year ?? today.getFullYear();
+
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const lastDay = new Date(targetYear, targetMonth + 1, 0);
 
     const transactions = await prisma.transaction.findMany({
         where: {

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { History as HistoryIcon, PieChart, LineChart, Activity } from "lucide-react";
+import { History as HistoryIcon, PieChart, LineChart, Activity, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { TransactionList } from "@/components/transactions/TransactionList";
 import { ExpensesCategoryChart } from "@/components/dashboard/ExpensesCategoryChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
@@ -14,20 +15,47 @@ interface UnifiedDashboardViewProps {
     expensesByCategory: any[];
     monthlyTrend: any[];
     cashFlowData: CashFlowData;
+    currentMonth: number;
+    currentYear: number;
 }
 
-export function UnifiedDashboardView({ transactions, expensesByCategory, monthlyTrend, cashFlowData }: UnifiedDashboardViewProps) {
+export function UnifiedDashboardView({ transactions, expensesByCategory, monthlyTrend, cashFlowData, currentMonth, currentYear }: UnifiedDashboardViewProps) {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'cashflow' | 'transactions' | 'categories' | 'trend'>('transactions');
+
+    const handleMonthChange = (increment: number) => {
+        const newDate = new Date(currentYear, currentMonth + increment, 1);
+        router.push(`/?month=${newDate.getMonth()}&year=${newDate.getFullYear()}`);
+    };
+
+    const periodLabel = new Date(currentYear, currentMonth, 1)
+        .toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+    const capitalizedPeriod = periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1);
 
     return (
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-2xl p-4 flex flex-col h-full transition-all duration-300 relative overflow-hidden">
             {/* Header com Abas */}
             <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3 flex-shrink-0">
-                <div className="hidden sm:block">
-                    <h3 className="text-lg font-bold text-white tracking-tight">Visão Geral</h3>
-                    <p className="text-xs text-slate-400">
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                    <div className="flex items-center justify-between sm:justify-start gap-3">
+                        <h3 className="text-lg font-bold text-white tracking-tight">Visão Geral</h3>
+
+                        <div className="flex items-center gap-0.5 bg-slate-950/30 rounded-lg p-0.5 border border-white/5">
+                            <button onClick={() => handleMonthChange(-1)} className="p-1 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-colors">
+                                <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <div className="flex items-center gap-1.5 px-2 min-w-[110px] justify-center">
+                                <Calendar className="h-3 w-3 text-emerald-500/70" />
+                                <span className="text-xs font-semibold text-zinc-200">{capitalizedPeriod}</span>
+                            </div>
+                            <button onClick={() => handleMonthChange(1)} className="p-1 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-colors">
+                                <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                    <p className="text-xs text-slate-400 hidden sm:block">
                         {activeTab === 'cashflow' && 'Previsão de entradas e saídas do mês'}
-                        {activeTab === 'transactions' && 'Últimas movimentações'}
+                        {activeTab === 'transactions' && 'Movimentações do período selecionado'}
                         {activeTab === 'categories' && 'Analise suas despesas por grupo'}
                         {activeTab === 'trend' && 'Evolução mensal de receita vs despesa'}
                     </p>

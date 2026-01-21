@@ -10,14 +10,26 @@ import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardVie
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
-    const summary = await getFinancialSummary();
-    const recentTransactions = await getRecentTransactions();
-    const expensesByCategory = await getExpensesByCategory();
-    const monthlyTrend = await getMonthlyTrend();
+interface DashboardPageProps {
+    searchParams: {
+        month?: string;
+        year?: string;
+    }
+}
 
-    const now = new Date();
-    const cashFlowData = await getCashFlow(now.getFullYear(), now.getMonth());
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+    const today = new Date();
+    const currentMonth = searchParams?.month ? parseInt(searchParams.month) : today.getMonth();
+    const currentYear = searchParams?.year ? parseInt(searchParams.year) : today.getFullYear();
+
+    const summary = await getFinancialSummary(currentMonth, currentYear);
+    // Para ver as transações antigas, precisamos passar o filtro de data também para getRecentTransactions
+    const recentTransactions = await getRecentTransactions(currentMonth, currentYear);
+    const expensesByCategory = await getExpensesByCategory(currentMonth, currentYear);
+    const monthlyTrend = await getMonthlyTrend(); // Trend ignora filtro, mostra últimos 6 meses
+
+    // CashFlowView precisa saber onde estamos
+    const cashFlowData = await getCashFlow(currentYear, currentMonth);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -115,6 +127,8 @@ export default async function DashboardPage() {
                     expensesByCategory={expensesByCategory}
                     monthlyTrend={monthlyTrend}
                     cashFlowData={cashFlowData}
+                    currentMonth={currentMonth}
+                    currentYear={currentYear}
                 />
             </div>
 
