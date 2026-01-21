@@ -7,8 +7,8 @@ import type { Adapter } from "next-auth/adapters";
 import { compare } from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-    // Adapter ativado para persistência no banco
-    adapter: PrismaAdapter(prisma) as Adapter,
+    // Adapter REMOVIDO - não é compatível com CredentialsProvider
+    // O Google OAuth ainda funciona sem adapter, mas não persiste automaticamente
     session: {
         strategy: "jwt",
     },
@@ -52,6 +52,26 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
+        async signIn({ user, account, profile }) {
+            // Persistir usuário do Google manualmente
+            if (account?.provider === "google" && profile?.email) {
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: profile.email }
+                });
+
+                if (!existingUser) {
+                    await prisma.user.create({
+                        data: {
+                            email: profile.email,
+                            name: profile.name || null,
+                            image: (profile as any).picture || null,
+                            emailVerified: new Date(),
+                        }
+                    });
+                }
+            }
+            return true;
+        },
         session: async ({ session, token }) => {
             if (session?.user && token?.sub) {
                 // @ts-ignore
