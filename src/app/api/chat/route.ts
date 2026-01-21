@@ -108,6 +108,7 @@ REGRAS:
 3. Se o usuário pedir para adicionar algo (ex: "gastei 50 no almoço"), use a tool 'add_transaction'.
 4. Se o usuário falar de planejamento (ex: "quero gastar menos ano que vem"), use 'add_planning_item'.
 5. Responda sempre em Português do Brasil.
+6. BLOQUEIO DE ALUCINAÇÃO: Se a informação pedida não estiver na lista de "Últimas Transações", diga claramente que não encontrou registros recentes. NUNCA invente categorias, valores ou datas.
 `
         };
 

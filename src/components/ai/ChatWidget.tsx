@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, Wallet, PieChart, Utensils, TrendingUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 
@@ -57,17 +57,18 @@ export function ChatWidget() {
                                 <div className="grid grid-cols-1 gap-2 w-full px-4">
                                     <p className="text-xs text-zinc-500 font-medium uppercase text-center mb-1">Sugestões Rápidas</p>
                                     {[
-                                        "💰 Qual é o meu saldo atual?",
-                                        "📊 Faça um resumo dos meus gastos",
-                                        "🍔 Quanto gastei com Alimentação?",
-                                        "🔮 Qual a previsão para o próximo mês?"
-                                    ].map((suggestion, index) => (
+                                        { label: "Qual é o meu saldo atual?", icon: Wallet },
+                                        { label: "Faça um resumo dos meus gastos", icon: PieChart },
+                                        { label: "Quanto gastei com Alimentação?", icon: Utensils },
+                                        { label: "Qual a previsão para o próximo mês?", icon: TrendingUp }
+                                    ].map((item, index) => (
                                         <button
                                             key={index}
-                                            onClick={() => append({ role: 'user', content: suggestion })}
-                                            className="text-xs text-left text-zinc-300 bg-zinc-800/50 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/30 border border-white/5 p-3 rounded-lg transition-all"
+                                            onClick={() => append({ role: 'user', content: item.label })}
+                                            className="flex items-center gap-3 text-xs text-left text-zinc-300 bg-zinc-800/50 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/30 border border-white/5 p-3 rounded-lg transition-all"
                                         >
-                                            {suggestion}
+                                            <item.icon className="h-4 w-4 shrink-0 opacity-70" />
+                                            <span>{item.label}</span>
                                         </button>
                                     ))}
                                 </div>

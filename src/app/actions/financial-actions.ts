@@ -53,7 +53,7 @@ export async function getRecentTransactions() {
 
     const transactions = await prisma.transaction.findMany({
         where: { userId },
-        take: 10,
+        take: 25,
         orderBy: {
             date: 'desc'
         }
