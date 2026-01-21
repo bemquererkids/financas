@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ExpensesPieChart } from './ExpensesPieChart';
+import { ExpensesCategoryChart } from './ExpensesCategoryChart';
 import { IncomeExpenseChart } from './IncomeExpenseChart';
 import { cn } from '@/lib/utils';
 import { PieChart, BarChart3 } from 'lucide-react';
@@ -53,7 +53,7 @@ export function UnifiedChartCard({ expensesByCategory, monthlyTrend }: UnifiedCh
                 {/* Usando absolute positioning para transições suaves se quiséssemos, mas por enquanto renderização condicional simples é mais segura para resize */}
                 {activeTab === 'categories' ? (
                     <div className="h-full w-full animate-in fade-in zoom-in-95 duration-300">
-                        <ExpensesPieChart data={expensesByCategory} />
+                        <ExpensesCategoryChart data={expensesByCategory} />
                     </div>
                 ) : (
                     <div className="h-full w-full animate-in fade-in zoom-in-95 duration-300">
