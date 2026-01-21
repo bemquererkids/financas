@@ -1,31 +1,39 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const prisma = new PrismaClient();
-
 async function getUserId() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        throw new Error('Unauthorized - Please sign in');
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            console.error('getUserId: Session not found or no user ID in Payment Actions');
+            return null;
+        }
+        return session.user.id;
+    } catch (e) {
+        console.error('getUserId Error:', e);
+        return null;
     }
-    return session.user.id;
 }
 
 export async function getPaymentWindows(monthStr?: string) {
     const userId = await getUserId();
+    if (!userId) return null;
+
     // monthStr format: "YYYY-MM"
     const targetMonth = monthStr || new Date().toISOString().slice(0, 7);
 
     // Let's get all payables for this month
-    const payables = await prisma.payable.findMany({
+    const payables: any[] = await prisma.payable.findMany({
         where: {
             paymentWindow: {
                 month: targetMonth,
-                userId // Filter payment windows by user
+                user: {
+                    id: userId
+                }
             }
         },
         include: {
@@ -62,6 +70,8 @@ export async function getPaymentWindows(monthStr?: string) {
 
 export async function addPayable(formData: FormData) {
     const userId = await getUserId();
+    if (!userId) return { error: 'Usuário não autenticado' };
+
     const name = formData.get('name') as string;
     const amount = parseFloat(formData.get('amount') as string);
     const dueDateStr = formData.get('dueDate') as string;
@@ -80,7 +90,7 @@ export async function addPayable(formData: FormData) {
             where: {
                 month: monthStr,
                 windowDay: windowDay,
-                userId
+                user: { id: userId }
             }
         });
 
@@ -90,7 +100,9 @@ export async function addPayable(formData: FormData) {
                     month: monthStr,
                     windowDay: windowDay,
                     receivedAmount: 0, // Default
-                    userId
+                    user: {
+                        connect: { id: userId }
+                    }
                 }
             });
         }
@@ -113,9 +125,39 @@ export async function addPayable(formData: FormData) {
 }
 
 export async function togglePayableStatus(id: string, currentStatus: boolean) {
-    await prisma.payable.update({
-        where: { id },
-        data: { isPaid: !currentStatus }
-    });
-    revalidatePath('/payments');
+    const userId = await getUserId();
+    if (!userId) return;
+
+    // Se estamos marcando como PAGO (!currentStatus === true)
+    const isPaying = !currentStatus;
+
+    try {
+        const payable = await prisma.payable.update({
+            where: { id },
+            data: { isPaid: isPaying }
+        });
+
+        if (isPaying) {
+            // Criar Transação de Despesa Automaticamente
+            console.log('[AutoTransaction] Criando despesa para pagamento:', payable.name);
+            await prisma.transaction.create({
+                data: {
+                    amount: Number(payable.amount),
+                    description: `Pagamento: ${payable.name}`,
+                    category: 'Contas Fixas', // Categoria padrão para pagamentos automáticos
+                    type: 'EXPENSE',
+                    date: new Date(), // Data do pagamento efetivo (hoje)
+                    isRecurring: false,
+                    user: {
+                        connect: { id: userId }
+                    }
+                }
+            });
+        }
+
+        revalidatePath('/payments');
+        revalidatePath('/'); // Atualiza dashboard também
+    } catch (error) {
+        console.error('Erro ao atualizar status do pagamento:', error);
+    }
 }
