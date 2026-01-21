@@ -27,6 +27,10 @@ RUN npm run build
 # Expor a porta 3000
 EXPOSE 3000
 
-# Comando para iniciar: migrations + servidor
-# Usa sh -c para executar múltiplos comandos em sequência
-CMD sh -c "npx prisma migrate deploy && npm run start"
+# Comando para iniciar com logging verbose
+CMD sh -c "echo '🚀 Starting migrations...' && \
+    npx prisma migrate deploy && \
+    echo '✅ Migrations complete!' && \
+    echo '🌐 Starting Next.js server on port 3000...' && \
+    exec npm run start"
+
