@@ -70,6 +70,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ status: 'ignored', reason: 'no_content' });
         }
 
+        // BUSCA USUÁRIO FALLBACK
+        const fallbackUser = await prisma.user.findFirst();
+        if (!fallbackUser) {
+            console.log('Webhook ignored: No user found in database');
+            return NextResponse.json({ status: 'ignored', reason: 'no_user' });
+        }
+
         // 4. AI Extraction
         const extraction = await AiAssistant.parseTransactionFromText(textToProcess);
 
@@ -81,7 +88,7 @@ export async function POST(req: NextRequest) {
                     category: extraction.category || 'Outros',
                     type: extraction.type || 'EXPENSE',
                     date: new Date(),
-                    // Optional: You could add a 'source: whatsapp' field if you update schema
+                    userId: fallbackUser.id
                 }
             });
 
