@@ -7,6 +7,7 @@ import { FloatingTransactionButton } from "@/components/transactions/FloatingTra
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
 import { ModuleHeader } from "@/components/dashboard/ModuleHeader";
 import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardView";
+import { MobileTutorialBanner } from "@/components/dashboard/MobileTutorialBanner";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     />
                 </ModuleHeader>
             </div>
+
+            <MobileTutorialBanner />
 
             {/* Summary Cards Row */}
             <div className="flex-shrink-0 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">

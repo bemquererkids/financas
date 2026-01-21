@@ -16,12 +16,8 @@ export function ModuleHeader({ title, subtitle, children, className }: ModuleHea
                 <div className="hidden md:block">
                     <UserGreeting />
                 </div>
-                {/* Mobile version of UserGreeting is handled inside UserGreeting component, but layout here might need adjustment for mobile */}
-                <div className="md:hidden">
-                    <UserGreeting />
-                </div>
 
-                <div className="h-10 w-px bg-white/10" />
+                <div className="hidden md:block h-10 w-px bg-white/10" />
 
                 <div>
                     <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">{title}</h1>
