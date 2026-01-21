@@ -86,7 +86,7 @@ export const authOptions: NextAuthOptions = {
             return token;
         }
     },
-    pages: {
-        signIn: '/auth/signin',
-    }
+    // pages: {
+    //     signIn: '/auth/signin', // Removido para não bloquear /auth/signup
+    // }
 };
