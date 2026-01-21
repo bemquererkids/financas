@@ -147,6 +147,7 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
+  phone         String?   @unique // Celular para contato/validação
   image         String?
   password      String?   // Para autenticação com email/senha
   accounts      Account[]

@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { PiggyBank, Mail, Lock, User, Loader2, Eye, EyeOff, Smartphone } from 'lucide-react';
 
 export default function SignUpPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
         name: '',
+        phone: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -22,6 +23,22 @@ export default function SignUpPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Máscara de telefone (XX) 9XXXX-XXXX
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, ''); // Apenas números
+        if (value.length > 11) value = value.slice(0, 11); // Limite de 11 dígitos
+
+        // Aplicar máscara
+        if (value.length > 2) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+        }
+        if (value.length > 7) {
+            value = `${value.slice(0, 10)}-${value.slice(10)}`;
+        }
+
+        setFormData({ ...formData, phone: value });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -29,6 +46,13 @@ export default function SignUpPage() {
         // Validações básicas
         if (formData.password !== formData.confirmPassword) {
             setError('As senhas não coincidem');
+            return;
+        }
+
+        // Remover formatação do telefone para validar e enviar
+        const rawPhone = formData.phone.replace(/\D/g, '');
+        if (rawPhone.length < 11) {
+            setError('Por favor, insira um número de celular válido com DDD.');
             return;
         }
 
@@ -41,6 +65,7 @@ export default function SignUpPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: formData.name,
+                    phone: rawPhone,
                     email: formData.email,
                     password: formData.password,
                 }),
@@ -99,6 +124,23 @@ export default function SignUpPage() {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="pl-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
                                     placeholder="Seu nome"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Telefone */}
+                        <div className="space-y-2">
+                            <Label htmlFor="phone" className="text-slate-300">Celular (WhatsApp)</Label>
+                            <div className="relative">
+                                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={handlePhoneChange}
+                                    className="pl-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
+                                    placeholder="(11) 99999-9999"
                                     required
                                 />
                             </div>
