@@ -4,13 +4,9 @@ import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { Progress } from "@/components/ui/progress";
 import { TrendingDown, TrendingUp, Wallet, PiggyBank } from "lucide-react";
 import { FloatingTransactionButton } from "@/components/transactions/FloatingTransactionButton";
-import { CashFlowView } from "@/components/dashboard/CashFlowView";
-import { TransactionList } from "@/components/transactions/TransactionList";
-import { ExpensesPieChart } from "@/components/dashboard/ExpensesPieChart";
-import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
 import { ModuleHeader } from "@/components/dashboard/ModuleHeader";
-import { UnifiedChartCard } from "@/components/dashboard/UnifiedChartCard";
+import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardView";
 
 export const dynamic = 'force-dynamic';
 
@@ -112,27 +108,14 @@ export default async function DashboardPage() {
             </div>
 
 
-            {/* Main Content - 3 Colunas: Transações | Gráficos | Fluxo de Caixa */}
-            <div className="flex-1 min-h-0 grid lg:grid-cols-3 gap-3 pb-2 overflow-hidden">
-                {/* Coluna 1: Histórico de Transações (Mais largo se possível, ou igual) */}
-                <div className="lg:col-span-1 min-h-0 flex flex-col h-full">
-                    <div className="flex-1 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden h-full flex flex-col">
-                        <TransactionList transactions={recentTransactions} />
-                    </div>
-                </div>
-
-                {/* Coluna 2: Gráficos Unificados */}
-                <div className="lg:col-span-1 min-h-[300px] lg:min-h-0">
-                    <UnifiedChartCard
-                        expensesByCategory={expensesByCategory}
-                        monthlyTrend={monthlyTrend}
-                    />
-                </div>
-
-                {/* Coluna 3: Fluxo de Caixa */}
-                <div className="lg:col-span-1 min-h-[300px] lg:min-h-0 h-full">
-                    <CashFlowView initialData={cashFlowData} />
-                </div>
+            {/* Main Content - Visão Unificada */}
+            <div className="flex-1 min-h-0 pb-2 overflow-hidden">
+                <UnifiedDashboardView
+                    transactions={recentTransactions}
+                    expensesByCategory={expensesByCategory}
+                    monthlyTrend={monthlyTrend}
+                    cashFlowData={cashFlowData}
+                />
             </div>
 
             <FloatingTransactionButton />
