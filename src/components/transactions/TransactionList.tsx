@@ -139,57 +139,57 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                     )}
                 </div>
 
-                {/* Desktop Layout - Table */}
+                {/* Desktop Layout - Table Compacta Sem Scroll */}
                 <div className="hidden md:block overflow-auto custom-scrollbar flex-1 relative">
-                    <table className="w-full min-w-[600px] table-auto">
+                    <table className="w-full table-auto text-left">
                         <thead className="bg-white/5 sticky top-0 z-10 backdrop-blur-md">
                             <tr className="border-b border-white/5">
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[100px]">Data</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[140px]">Categoria</th>
-                                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[140px]">Valor</th>
-                                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[90px]">Ações</th>
+                                <th className="py-2.5 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider w-[85px]">Data</th>
+                                <th className="py-2.5 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
+                                <th className="py-2.5 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider w-[120px]">Categoria</th>
+                                <th className="text-right py-2.5 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider w-[100px]">Valor</th>
+                                <th className="text-right py-2.5 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider w-[70px]">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {localTransactions.map((t) => (
                                 <tr key={t.id} className="group hover:bg-white/5 transition-colors">
-                                    <td className="py-3 px-4 text-slate-400 whitespace-nowrap text-sm">
+                                    <td className="py-2 px-3 text-slate-400 whitespace-nowrap text-xs">
                                         {formatDate(t.date)}
                                     </td>
-                                    <td className="py-3 px-4 font-medium text-white text-sm truncate max-w-[200px]">
+                                    <td className="py-2 px-2 font-medium text-white text-xs truncate max-w-[140px]" title={t.description}>
                                         {t.description}
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300 border border-white/5 inline-flex items-center gap-1.5 whitespace-nowrap">
-                                            <span className={`w-1.5 h-1.5 rounded-full ${t.type === 'INCOME' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                                    <td className="py-2 px-2">
+                                        <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-medium text-slate-300 border border-white/5 inline-flex items-center gap-1.5 whitespace-nowrap truncate max-w-[110px]">
+                                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.type === 'INCOME' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                                             {t.category}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-right font-mono text-sm whitespace-nowrap">
+                                    <td className="py-2 px-3 text-right font-mono text-xs whitespace-nowrap">
                                         <span className={t.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}>
                                             {t.type === 'EXPENSE' && '− '}
                                             {formatCurrency(Number(t.amount))}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <td className="py-2 px-2 text-right whitespace-nowrap">
+                                        <div className="flex justify-end gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
+                                                className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10"
                                                 onClick={() => handleEditClick(t)}
                                             >
-                                                <Edit2 className="h-3.5 w-3.5" />
+                                                <Edit2 className="h-3 w-3" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                                className="h-6 w-6 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
                                                 onClick={() => handleDeleteClick(t.id)}
                                                 disabled={isDeleting === t.id}
                                             >
-                                                <Trash2 className="h-3.5 w-3.5" />
+                                                <Trash2 className="h-3 w-3" />
                                             </Button>
                                         </div>
                                     </td>
@@ -197,7 +197,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                             ))}
                             {localTransactions.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-slate-500 text-sm">
+                                    <td colSpan={5} className="text-center py-12 text-slate-500 text-xs">
                                         Nenhuma transação encontrada.
                                     </td>
                                 </tr>

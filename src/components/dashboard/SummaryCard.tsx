@@ -39,7 +39,7 @@ export function SummaryCard({ title, amount, icon: Icon, subtext, variant = "def
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight truncate">{amount}</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate" title={String(amount)}>{amount}</div>
                 {subtext && (
                     <p className="text-xs text-slate-400 mt-1 font-light truncate">
                         {subtext}
