@@ -1,17 +1,29 @@
 'use server';
 
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
+
 export async function getPerformanceMetrics() {
+    const userId = await getUserId();
+
     // 1. Calculate Net Worth (Patrimônio Líquido)
     // Assets = Cash Balance + Investments (Projections initial balance for now)
     // Liabilities = Total Debts
 
-    const transactions = await prisma.transaction.findMany();
-    const debts = await prisma.debt.findMany();
-    const projections = await prisma.investmentProjection.findMany();
+    const transactions = await prisma.transaction.findMany({ where: { userId } });
+    const debts = await prisma.debt.findMany({ where: { userId } });
+    const projections = await prisma.investmentProjection.findMany({ where: { userId } });
 
     // Current Cash Balance (Sum of all time income - expenses)
     const cashBalance = transactions.reduce((acc, t) => {

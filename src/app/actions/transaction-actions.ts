@@ -2,10 +2,21 @@
 
 import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
+
 export async function createTransaction(formData: FormData) {
+    const userId = await getUserId();
     const amount = parseFloat(formData.get('amount') as string);
     const description = formData.get('description') as string;
     const category = formData.get('category') as string;
@@ -30,6 +41,7 @@ export async function createTransaction(formData: FormData) {
                 type,
                 date: new Date(dateStr),
                 isRecurring: false,
+                userId
             },
         });
 

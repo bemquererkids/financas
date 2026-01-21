@@ -2,22 +2,30 @@
 
 import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
+
 export async function getPaymentWindows(monthStr?: string) {
+    const userId = await getUserId();
     // monthStr format: "YYYY-MM"
     const targetMonth = monthStr || new Date().toISOString().slice(0, 7);
-
-    // Ensure windows exist for this month
-    // If not, we could conceptually create them or just return empty structure to be filled
-    // For simplicity, we query what exists and fill gaps in memory or create on fly
 
     // Let's get all payables for this month
     const payables = await prisma.payable.findMany({
         where: {
             paymentWindow: {
-                month: targetMonth
+                month: targetMonth,
+                userId // Filter payment windows by user
             }
         },
         include: {
@@ -53,6 +61,7 @@ export async function getPaymentWindows(monthStr?: string) {
 }
 
 export async function addPayable(formData: FormData) {
+    const userId = await getUserId();
     const name = formData.get('name') as string;
     const amount = parseFloat(formData.get('amount') as string);
     const dueDateStr = formData.get('dueDate') as string;
@@ -66,11 +75,12 @@ export async function addPayable(formData: FormData) {
     const monthStr = date.toISOString().slice(0, 7); // YYYY-MM
 
     try {
-        // Find or Create Payment Window
+        // Find or Create Payment Window for THIS user
         let window = await prisma.paymentWindow.findFirst({
             where: {
                 month: monthStr,
-                windowDay: windowDay
+                windowDay: windowDay,
+                userId
             }
         });
 
@@ -79,7 +89,8 @@ export async function addPayable(formData: FormData) {
                 data: {
                     month: monthStr,
                     windowDay: windowDay,
-                    receivedAmount: 0 // Default
+                    receivedAmount: 0, // Default
+                    userId
                 }
             });
         }

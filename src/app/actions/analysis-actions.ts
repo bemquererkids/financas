@@ -2,8 +2,18 @@
 
 import { PrismaClient } from '@prisma/client';
 import { getMonth, getYear } from 'date-fns';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
+
+async function getUserId() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized - Please sign in');
+    }
+    return session.user.id;
+}
 
 export type MonthResult = {
     month: string;
@@ -13,7 +23,9 @@ export type MonthResult = {
 };
 
 export async function getMonthlyAnalysis() {
+    const userId = await getUserId();
     const transactions = await prisma.transaction.findMany({
+        where: { userId },
         orderBy: { date: 'asc' }
     });
 
