@@ -115,27 +115,30 @@ export default async function DashboardPage() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid lg:grid-cols-5 gap-4">
-                {/* Transaction History (Maior destaque - 60% width) */}
-                <div className="lg:col-span-3 space-y-4">
+            <div className="grid lg:grid-cols-3 gap-4">
+                {/* Left Column - Transações e Análise */}
+                <div className="lg:col-span-2 space-y-4">
                     <TransactionList transactions={recentTransactions} />
-
-                    {/* Gráficos lado a lado abaixo das transações */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
-                            <h3 className="text-sm font-medium text-slate-300 mb-3">Despesas por Categoria</h3>
-                            <ExpensesPieChart data={expensesByCategory} />
-                        </div>
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
-                            <h3 className="text-sm font-medium text-slate-300 mb-3">Receita vs Despesa</h3>
-                            <IncomeExpenseChart data={monthlyTrend} />
-                        </div>
-                    </div>
                 </div>
 
-                {/* Cash Flow (Lateral - 40% width) */}
-                <div className="lg:col-span-2">
+                {/* Right Column - Cash Flow */}
+                <div className="lg:col-span-1">
                     <CashFlowView initialData={cashFlowData} />
+                </div>
+            </div>
+
+            {/* Gráficos - Linha completa abaixo */}
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-6">Análise Visual</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 className="text-sm font-medium text-slate-400 mb-4">Despesas por Categoria</h4>
+                        <ExpensesPieChart data={expensesByCategory} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-medium text-slate-400 mb-4">Receita vs Despesa (Últimos 6 Meses)</h4>
+                        <IncomeExpenseChart data={monthlyTrend} />
+                    </div>
                 </div>
             </div>
 
