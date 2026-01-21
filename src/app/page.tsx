@@ -20,7 +20,6 @@ export default async function DashboardPage() {
     const expensesByCategory = await getExpensesByCategory();
     const monthlyTrend = await getMonthlyTrend();
 
-    // Cash Flow - current month
     const now = new Date();
     const cashFlowData = await getCashFlow(now.getFullYear(), now.getMonth());
 
@@ -31,23 +30,25 @@ export default async function DashboardPage() {
     const expensesVsIncome = summary.income > 0 ? (summary.expenses / summary.income) * 100 : 0;
 
     return (
-        <div className="flex-1 p-4 md:p-6 space-y-3 overflow-hidden">
-            <ModuleHeader
-                title="Visão Geral"
-                subtitle="Acompanhe sua saúde financeira"
-            >
-                <FinancialAlerts
-                    balance={summary.balance}
-                    savingsRate={summary.savingsRate ?? 0}
-                    expensesVsIncome={expensesVsIncome}
-                />
-            </ModuleHeader>
+        <div className="flex-1 h-screen overflow-hidden flex flex-col p-4 md:p-6 gap-3">
+            <div className="flex-shrink-0">
+                <ModuleHeader
+                    title="Visão Geral"
+                    subtitle="Acompanhe sua saúde financeira"
+                >
+                    <FinancialAlerts
+                        balance={summary.balance}
+                        savingsRate={summary.savingsRate ?? 0}
+                        expensesVsIncome={expensesVsIncome}
+                    />
+                </ModuleHeader>
+            </div>
 
-            {/* Quick Actions */}
-            <QuickActions />
+            <div className="flex-shrink-0">
+                <QuickActions />
+            </div>
 
-            {/* Summary Cards - Grid 4 colunas */}
-            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            <div className="flex-shrink-0 grid gap-2 grid-cols-2 lg:grid-cols-4">
                 <SummaryCard
                     title="Receita Total"
                     amount={formatCurrency(summary.income)}
@@ -78,64 +79,58 @@ export default async function DashboardPage() {
                 />
             </div>
 
-            {/* Análise 50/30/20 - Mais compacta */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-3">Análise 50/30/20</h3>
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
+            <div className="flex-shrink-0 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3">
+                <h3 className="text-xs font-semibold text-white mb-2 uppercase tracking-wide">Análise 50/30/20</h3>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Necessidades (50%)</span>
-                            <span className="text-white font-medium">
+                            <span className="text-slate-400">Necessidades</span>
+                            <span className="text-white font-medium text-xs">
                                 {summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%
                             </span>
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-blue-500" />
+                        <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-blue-500" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Desejos (30%)</span>
-                            <span className="text-white font-medium">
+                            <span className="text-slate-400">Desejos</span>
+                            <span className="text-white font-medium text-xs">
                                 {summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%
                             </span>
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-purple-500" />
+                        <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-purple-500" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Investimentos (20%)</span>
-                            <span className="text-white font-medium">
+                            <span className="text-slate-400">Investimentos</span>
+                            <span className="text-white font-medium text-xs">
                                 {summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%
                             </span>
                         </div>
-                        <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-emerald-500" />
+                        <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-emerald-500" />
                     </div>
                 </div>
             </div>
 
-            {/* Main Dashboard Grid - 3 colunas otimizado */}
-            <div className="grid lg:grid-cols-12 gap-3">
-                {/* Left: Transações + Gráficos lado a lado */}
-                <div className="lg:col-span-8 space-y-3">
-                    {/* Transações */}
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
+            <div className="flex-1 min-h-0 grid lg:grid-cols-12 gap-3">
+                <div className="lg:col-span-8 flex flex-col gap-3 min-h-0">
+                    <div className="flex-1 min-h-0 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
                         <TransactionList transactions={recentTransactions} />
                     </div>
 
-                    {/* Dois gráficos lado a lado - mais compactos */}
-                    <div className="grid md:grid-cols-2 gap-3">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                    <div className="h-64 grid md:grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3">
                             <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Despesas por Categoria</h4>
                             <ExpensesPieChart data={expensesByCategory} />
                         </div>
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3">
                             <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Receita vs Despesa</h4>
                             <IncomeExpenseChart data={monthlyTrend} />
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Cash Flow */}
-                <div className="lg:col-span-4">
+                <div className="lg:col-span-4 min-h-0">
                     <CashFlowView initialData={cashFlowData} />
                 </div>
             </div>
