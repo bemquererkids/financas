@@ -147,9 +147,24 @@ export function NotificationBell() {
                                     <CheckCircle className="h-4 w-4" />
                                 </button>
                             )}
+                            {notifications.length > 0 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setNotifications([]);
+                                        setReadItemIds([]);
+                                        localStorage.setItem('readItemIds', JSON.stringify([]));
+                                    }}
+                                    className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-rose-400 transition-colors"
+                                    title="Limpar todas"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-colors"
+                                title="Fechar"
                             >
                                 <X className="h-4 w-4" />
                             </button>

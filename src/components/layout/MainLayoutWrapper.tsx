@@ -7,12 +7,14 @@ import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
-import { PiggyBank } from 'lucide-react';
+import { PiggyBank, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const isAuthPage = pathname?.startsWith('/auth');
 
     if (isAuthPage) {
@@ -40,7 +42,15 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                         <span className="font-bold text-lg text-white">MyWallet</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative text-slate-400 hover:text-white hover:bg-white/10 rounded-full"
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                    >
+                        <MessageCircle className="h-5 w-5" />
+                    </Button>
                     <NotificationBell />
                     <UserGreeting />
                 </div>
@@ -55,7 +65,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             </main>
 
             {/* AI Chatbot */}
-            <ChatWidget />
+            <ChatWidget isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
         </>
     );
 }

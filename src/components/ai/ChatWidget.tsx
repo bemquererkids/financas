@@ -9,8 +9,13 @@ import { MessageCircle, X, Send, Bot, User, Loader2, Wallet, PieChart, Utensils,
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 
-export function ChatWidget() {
-    const [isOpen, setIsOpen] = useState(false);
+interface ChatWidgetProps {
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+
+export function ChatWidget({ isOpen: externalIsOpen, onOpenChange }: ChatWidgetProps = {}) {
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
     const { messages, input, handleInputChange, handleSubmit, isLoading, error, append } = useChat({
         api: '/api/chat',
         onError: (err) => {
@@ -19,6 +24,10 @@ export function ChatWidget() {
     });
 
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Usar controle externo se fornecido, senão usar interno
+    const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+    const setIsOpen = onOpenChange || setInternalIsOpen;
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -141,18 +150,20 @@ export function ChatWidget() {
                 </Card>
             )}
 
-            {/* Toggle Button */}
-            <Button
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "h-14 w-14 rounded-full shadow-xl transition-all duration-300",
-                    isOpen
-                        ? "bg-zinc-800 hover:bg-zinc-700 text-white"
-                        : "bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-                )}
-            >
-                {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-            </Button>
+            {/* Toggle Button - só mostra se não tiver controle externo */}
+            {externalIsOpen === undefined && (
+                <Button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={cn(
+                        "h-14 w-14 rounded-full shadow-xl transition-all duration-300",
+                        isOpen
+                            ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                            : "bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                    )}
+                >
+                    {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+                </Button>
+            )}
         </div>
     );
 }
