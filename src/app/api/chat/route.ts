@@ -8,9 +8,16 @@ import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openaiInstance: OpenAI | null = null;
+function getOpenAI() {
+    if (!openaiInstance) {
+        openaiInstance = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
+        });
+    }
+    return openaiInstance;
+}
 
 // Definição das Ferramentas (Skills)
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
@@ -95,7 +102,7 @@ REGRAS:
         };
 
         // 2. Primeira Chamada ao GPT (Pode retornar texto ou tool_calls)
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: "gpt-3.5-turbo-0125",
             messages: [systemMessage, ...messages],
             tools: tools,
@@ -159,7 +166,7 @@ REGRAS:
             }
 
             // 4. Segunda Chamada (Gera a resposta final em texto para o usuário)
-            const secondResponse = await openai.chat.completions.create({
+            const secondResponse = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o',
                 stream: true,
                 messages: newMessages as any,
@@ -173,7 +180,7 @@ REGRAS:
 
         // Simplesmente reencaminha a resposta como stream (re-request as stream)
         // Isso é necessário porque StreamingTextResponse precisa de stream real.
-        const streamResponse = await openai.chat.completions.create({
+        const streamResponse = await getOpenAI().chat.completions.create({
             model: 'gpt-4o',
             stream: true,
             messages: [systemMessage, ...messages],
