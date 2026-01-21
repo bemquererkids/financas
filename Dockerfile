@@ -27,10 +27,6 @@ RUN npm run build
 # Expor a porta 3000
 EXPOSE 3000
 
-# Comando para iniciar com logging verbose
-CMD sh -c "echo '🚀 Starting migrations...' && \
-    npx prisma migrate deploy && \
-    echo '✅ Migrations complete!' && \
-    echo '🌐 Starting Next.js server on port 3000...' && \
-    exec npm run start"
-
+# Comando de start
+# Railway roda migrations automaticamente antes deste comando
+CMD ["npm", "run", "start"]
