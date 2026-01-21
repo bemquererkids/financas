@@ -1,14 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { PiggyBank } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const isAuthPage = pathname?.startsWith('/auth');
 
     if (isAuthPage) {
@@ -18,8 +21,11 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     return (
         <>
             {/* Sidebar Desktop */}
-            <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80]">
-                <Sidebar />
+            <div className={cn(
+                "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-[80] transition-all duration-300",
+                isCollapsed ? "md:w-[80px]" : "md:w-72"
+            )}>
+                <Sidebar collapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
             </div>
 
             {/* Mobile Navbar */}
@@ -37,7 +43,10 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Main Content */}
-            <main className="md:pl-72 pt-16 md:pt-0 pb-10 h-full">
+            <main className={cn(
+                "pt-16 md:pt-0 pb-10 h-full transition-all duration-300",
+                isCollapsed ? "md:pl-[80px]" : "md:pl-72"
+            )}>
                 {children}
             </main>
 
