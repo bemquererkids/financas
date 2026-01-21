@@ -16,7 +16,11 @@ import {
     ChevronRight,
     PanelLeftClose,
     PanelLeftOpen,
-    BookOpen
+    BookOpen,
+    Receipt,
+    Map,
+    BarChart2,
+    Compass
 } from 'lucide-react';
 
 const routes = [
@@ -28,13 +32,13 @@ const routes = [
     },
     {
         label: 'Pagamentos',
-        icon: CalendarDays,
+        icon: Receipt,
         href: '/payments',
         color: 'text-violet-500',
     },
     {
         label: 'Planejamento',
-        icon: Target,
+        icon: Map,
         href: '/planning',
         color: 'text-pink-700',
     },
@@ -46,7 +50,7 @@ const routes = [
     },
     {
         label: 'Desempenho',
-        icon: History,
+        icon: BarChart2,
         href: '/performance',
         color: 'text-orange-700',
     },
@@ -58,13 +62,13 @@ const routes = [
     },
     {
         label: 'Objetivos',
-        icon: PiggyBank,
+        icon: Target,
         href: '/goals',
         color: 'text-yellow-500',
     },
     {
         label: 'Como Começar',
-        icon: BookOpen,
+        icon: Compass,
         href: '/tutorial',
         color: 'text-white',
     },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { List, PieChart, BarChart3, ArrowRightLeft } from "lucide-react";
+import { History as HistoryIcon, PieChart, LineChart, Activity } from "lucide-react";
 import { TransactionList } from "@/components/transactions/TransactionList";
 import { ExpensesCategoryChart } from "@/components/dashboard/ExpensesCategoryChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
@@ -43,7 +43,7 @@ export function UnifiedDashboardView({ transactions, expensesByCategory, monthly
                                 : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                         )}
                     >
-                        <List className="h-3.5 w-3.5" />
+                        <HistoryIcon className="h-3.5 w-3.5" />
                         <span className="inline">Transações</span>
                     </button>
                     <button
@@ -67,7 +67,7 @@ export function UnifiedDashboardView({ transactions, expensesByCategory, monthly
                                 : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                         )}
                     >
-                        <BarChart3 className="h-3.5 w-3.5" />
+                        <LineChart className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Tendência</span>
                     </button>
                     <button
@@ -79,7 +79,7 @@ export function UnifiedDashboardView({ transactions, expensesByCategory, monthly
                                 : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                         )}
                     >
-                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                        <Activity className="h-3.5 w-3.5" />{/* Fallback seguro para Waves */}
                         <span className="inline">Fluxo</span>
                     </button>
                 </div>
