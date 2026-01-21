@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
-    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, isLoading, error, append } = useChat({
         api: '/api/chat',
         onError: (err) => {
             console.error("ChatWidget Error:", err);
@@ -48,10 +48,29 @@ export function ChatWidget() {
 
                     <CardContent className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
                         {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center space-y-2 opacity-50">
-                                <Bot className="h-12 w-12 text-emerald-500 mb-2" />
-                                <p className="text-sm font-medium text-white">Olá! Sou seu assistente.</p>
-                                <p className="text-xs text-zinc-400">Pergunte sobre seu saldo, gastos ou peça conselhos.</p>
+                            <div className="flex flex-col items-center justify-center h-full space-y-4">
+                                <div className="text-center space-y-2 opacity-50">
+                                    <Bot className="h-12 w-12 text-emerald-500 mx-auto mb-2" />
+                                    <p className="text-sm font-medium text-white">Olá! Como posso ajudar?</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-2 w-full px-4">
+                                    <p className="text-xs text-zinc-500 font-medium uppercase text-center mb-1">Sugestões Rápidas</p>
+                                    {[
+                                        "💰 Qual é o meu saldo atual?",
+                                        "📊 Faça um resumo dos meus gastos",
+                                        "🍔 Quanto gastei com Alimentação?",
+                                        "🔮 Qual a previsão para o próximo mês?"
+                                    ].map((suggestion, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => append({ role: 'user', content: suggestion })}
+                                            className="text-xs text-left text-zinc-300 bg-zinc-800/50 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/30 border border-white/5 p-3 rounded-lg transition-all"
+                                        >
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
