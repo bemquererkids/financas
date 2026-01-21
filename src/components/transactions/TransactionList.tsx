@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit2, AlertTriangle } from "lucide-react";
 import { deleteTransaction } from "@/app/actions/transaction-crud";
-import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EditTransactionDialog } from "./EditTransactionDialog";
 
 interface Transaction {
     id: string;
@@ -15,13 +17,7 @@ interface Transaction {
     type: string;
 }
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { EditTransactionDialog } from "./EditTransactionDialog";
-
-// ... (imports anteriores mantidos se não listados aqui, mas vou assumir que o replace context lida com blocos)
-
-export function TransactionList({ transactions }: { transactions: Transaction[] }) {
+export function TransactionList({ transactions, isEmbedded = false }: { transactions: Transaction[], isEmbedded?: boolean }) {
     const router = useRouter();
     const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -108,16 +104,21 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         return cat;
     };
 
+    const Wrapper = isEmbedded ? 'div' : 'div';
+    const wrapperClass = isEmbedded ? "h-full flex flex-col" : "rounded-2xl glass-card overflow-hidden h-full flex flex-col";
+
     return (
         <>
-            <div className="rounded-2xl glass-card overflow-hidden h-full flex flex-col">
-                <div className="p-4 border-b border-white/5 bg-white/5 flex-shrink-0">
-                    <h3 className="text-sm font-medium text-white">Histórico de Transações</h3>
-                    <p className="text-xs text-slate-400">Últimos lançamentos registrados.</p>
-                </div>
+            <div className={wrapperClass}>
+                {!isEmbedded && (
+                    <div className="p-4 border-b border-white/5 bg-white/5 flex-shrink-0">
+                        <h3 className="text-sm font-medium text-white">Histórico de Transações</h3>
+                        <p className="text-xs text-slate-400">Últimos lançamentos registrados.</p>
+                    </div>
+                )}
 
                 {/* Mobile Layout - Cards */}
-                <div className="md:hidden divide-y divide-white/5 flex-1 overflow-y-auto">
+                <div className="md:hidden divide-y divide-white/5 flex-1 overflow-y-auto custom-scrollbar">
                     {localTransactions.map((t) => (
                         <div key={t.id} className="p-4 hover:bg-white/5 transition-colors">
                             <div className="flex items-start justify-between gap-3">
