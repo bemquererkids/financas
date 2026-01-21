@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import { getFinancialSummary } from '@/app/actions/financial-actions';
 import { addPlanningItem } from '@/app/actions/planning-actions';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +54,12 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return new Response("Unauthorized", { status: 401 });
+        }
+        const userId = session.user.id;
+
         const { messages } = await req.json();
 
         // 1. Contexto Financeiro
@@ -65,25 +73,30 @@ export async function POST(req: Request) {
       Data de Hoje: ${new Date().toLocaleDateString('pt-BR')}
     `;
 
+        // 2. Chamar OpenAI
         const systemMessage = {
-            role: 'system',
-            content: `Você é um Consultor Financeiro Agente.
-      CONTEXTO: ${contextData}
-      
-      CAPACIDADES:
-      - Você pode salvar transações reais (passado/presente) usando add_transaction.
-      - Você pode criar planejamentos futuros (orçamento) usando add_planning_item.
-      
-      REGRAS:
-      - Se o usuário pedir para "salvar", "adicionar", "registrar" ou "planejar", USE AS FERRAMENTAS.
-      - Para planejamento, infira o mês correto (ex: "Janeiro de 2026" -> 2026-01).
-      - Categorias comuns: Moradia, Mercado, Transporte, Lazer, Saúde, Educação, Salário, Investimento.
-      - Responda confirmando a ação.`
+            role: "system",
+            content: `Você é um assistente financeiro pessoal inteligente e proativo chamado 'Antigravity'.
+Seu objetivo é ajudar o usuário a controlar suas finanças, analisar gastos e planejar o futuro.
+Você tem permissão para gerenciar as finanças do usuário.
+
+FERRAMENTAS DISPONÍVEIS:
+1. 'add_transaction': Registra uma nova despesa ou receita. Use para "Comprei um café por 15 reais" ou "Recebi meu salário".
+   - Argumentos: description (string), amount (number), type ('INCOME' | 'EXPENSE'), category (string), date (string ISO).
+2. 'add_planning_item': Adiciona um item ao *Planejamento Futuro*. Use quando o usuário falar sobre o futuro, ex: "Quero planejar gastar 500 em mercado mês que vem".
+   - Argumentos: month (string YYYY-MM), amount (number), description (string), type ('INCOME'|'EXPENSE'), category (string).
+
+REGRAS:
+- Seja direto e útil.
+- Se o usuário pedir para registrar algo, use a ferramenta apropriada. Não pergunte "quer que eu registre?", apenas registre e confirme.
+- Para categorias, tente inferir. Ex: "Sushi" -> "Alimentação".
+- Sempre responda em português do Brasil 🇧🇷.
+`
         };
 
         // 2. Primeira Chamada ao GPT (Pode retornar texto ou tool_calls)
         const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: "gpt-3.5-turbo-0125",
             messages: [systemMessage, ...messages],
             tools: tools,
             tool_choice: 'auto',
@@ -117,6 +130,7 @@ export async function POST(req: Request) {
                                 type: args.type,
                                 category: args.category,
                                 date: dateObj,
+                                userId: userId // Adicionando userId obrigatório
                             }
                         });
                         toolResult = JSON.stringify({ success: true, message: "Transação salva com sucesso no histórico." });
