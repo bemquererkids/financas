@@ -19,11 +19,11 @@ export function FinancialAlerts({ balance, savingsRate, expensesVsIncome }: Fina
         });
     }
 
-    if (savingsRate < 10 && savingsRate >= 0) {
+    if ((savingsRate ?? 0) < 10 && (savingsRate ?? 0) >= 0) {
         alerts.push({
             type: 'warning',
             icon: TrendingDown,
-            text: `Poupança ${savingsRate}%`,
+            text: `Poupança ${typeof savingsRate === 'number' ? savingsRate.toFixed(1) : '0.0'}%`,
         });
     }
 

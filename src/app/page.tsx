@@ -71,10 +71,10 @@ export default async function DashboardPage() {
                 />
                 <SummaryCard
                     title="Economia"
-                    amount={`${summary.savingsRate.toFixed(1)}%`}
+                    amount={`${typeof summary.savingsRate === 'number' ? summary.savingsRate.toFixed(1) : '0.0'}%`}
                     icon={PiggyBank}
                     subtext="Meta: 20%"
-                    variant={summary.savingsRate >= 20 ? "success" : "warning"}
+                    variant={(summary.savingsRate ?? 0) >= 20 ? "success" : "warning"}
                 />
             </div>
 
