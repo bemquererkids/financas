@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +29,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                 <Sidebar collapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
             </div>
 
-            {/* Mobile Navbar */}
+            {/* Mobile Navbar with Notification */}
             <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
                 <div className="flex items-center gap-3">
                     <MobileSidebar />
@@ -39,7 +40,10 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                         <span className="font-bold text-lg text-white">MyWallet</span>
                     </div>
                 </div>
-                <UserGreeting />
+                <div className="flex items-center gap-3">
+                    <NotificationBell />
+                    <UserGreeting />
+                </div>
             </div>
 
             {/* Main Content */}

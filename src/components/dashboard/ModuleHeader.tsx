@@ -24,7 +24,7 @@ export function ModuleHeader({ title, subtitle, children, className }: ModuleHea
                     {subtitle && <p className="text-xs text-slate-400 hidden md:block">{subtitle}</p>}
                 </div>
 
-                <div className="ml-2">
+                <div className="ml-2 hidden md:block">
                     <NotificationBell />
                 </div>
             </div>

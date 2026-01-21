@@ -45,13 +45,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <ModuleHeader
                     title="Visão Geral"
                     subtitle="Acompanhe sua saúde financeira"
-                >
-                    <FinancialAlerts
-                        balance={summary.balance}
-                        savingsRate={summary.savingsRate ?? 0}
-                        expensesVsIncome={expensesVsIncome}
-                    />
-                </ModuleHeader>
+                />
             </div>
 
             <MobileTutorialBanner />

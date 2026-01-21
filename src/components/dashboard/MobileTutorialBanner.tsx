@@ -7,8 +7,6 @@ import { useState, useEffect } from 'react';
 export function MobileTutorialBanner() {
     const [visible, setVisible] = useState(true);
 
-    // Persistir o fechamento? Por enquanto deixa volátil (sempre aparece no refresh) para garantir que vejam.
-    // Ou usar sessionStorage.
     useEffect(() => {
         const closed = sessionStorage.getItem('tutorial_banner_closed');
         if (closed) setVisible(false);
@@ -22,34 +20,31 @@ export function MobileTutorialBanner() {
     if (!visible) return null;
 
     return (
-        <div className="md:hidden mb-4 relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 shadow-lg shadow-emerald-500/20 animate-in slide-in-from-top-2 duration-500">
-            <div className="absolute top-2 right-2 z-10">
+        <div className="md:hidden mb-4 relative rounded-xl border border-emerald-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 p-3 shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <Compass className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold text-white">Por onde começar?</h3>
+                    <p className="text-[11px] text-slate-400 leading-tight">Veja o guia rápido do sistema</p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <Link
+                    href="/tutorial"
+                    className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors shadow-sm shadow-emerald-900/50"
+                >
+                    Ver Guia
+                </Link>
                 <button
                     onClick={handleClose}
-                    className="text-white/60 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
+                    className="h-7 w-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-white/5 hover:text-white transition-colors"
                 >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                 </button>
             </div>
-
-            <div className="p-4 flex items-center gap-4 relative z-0">
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm border border-white/10 shadow-inner">
-                    <Compass className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-sm font-bold text-white mb-0.5">Comece por aqui! 🚀</h3>
-                    <p className="text-xs text-emerald-100 mb-2 max-w-[200px]">Descubra como organizar suas finanças passo a passo.</p>
-                    <Link
-                        href="/tutorial"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-900 bg-white hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                    >
-                        Ver Tutorial Rápido <ArrowRight className="h-3 w-3" />
-                    </Link>
-                </div>
-            </div>
-
-            {/* Elemento Decorativo de Fundo */}
-            <div className="absolute top-1/2 -right-4 -translate-y-1/2 h-32 w-32 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-2xl pointer-events-none" />
         </div>
     );
 }
