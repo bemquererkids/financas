@@ -27,9 +27,6 @@ RUN npm run build
 # Expor a porta 3000
 EXPOSE 3000
 
-# Copiar e dar permissão ao script de start
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
-# Comando para iniciar (migrations + servidor)
-CMD ["/app/start.sh"]
+# Comando para iniciar: migrations + servidor
+# Usa sh -c para executar múltiplos comandos em sequência
+CMD sh -c "npx prisma migrate deploy && npm run start"
