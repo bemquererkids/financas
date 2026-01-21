@@ -1,19 +1,29 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai';
+
+import axios from 'axios'; // Not used directly but ensuring standard libs
 import OpenAI from 'openai';
-import { getFinancialSummary, getRecentTransactions } from '@/app/actions/financial-actions';
-import { addPlanningItem } from '@/app/actions/planning-actions';
-import { prisma } from '@/lib/prisma';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// Actions de Dados
+import { getFinancialSummary, getRecentTransactions } from '@/app/actions/financial-actions';
+import { addPlanningItem } from '@/app/actions/planning-actions';
+import { getGoals } from '@/app/actions/goal-actions';
+import { getDebts } from '@/app/actions/debt-actions';
+import { getProjections } from '@/app/actions/investment-actions';
+import { getPaymentWindows } from '@/app/actions/payment-actions';
+
+// Tool Actions (Diretas)
+import { prisma } from '@/lib/prisma';
+
 export const dynamic = 'force-dynamic';
 
-// Lazy initialization
+// Lazy Initializer
 let openaiInstance: OpenAI | null = null;
 function getOpenAI() {
     if (!openaiInstance) {
         openaiInstance = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
+            apiKey: process.env.OPENAI_API_KEY || 'dummy-key',
         });
     }
     return openaiInstance;
@@ -66,19 +76,62 @@ export async function POST(req: Request) {
             return new Response("Unauthorized", { status: 401 });
         }
         const userId = session.user.id;
-        const userName = session.user.name ? session.user.name.split(' ')[0] : "Usuário"; // Primeiro nome
+        const userName = session.user.name ? session.user.name.split(' ')[0] : "Usuário";
 
         const { messages } = await req.json();
 
-        // 📊 1. Coletar Contexto Financeiro Real
-        const summary = await getFinancialSummary();
-        const recentTransactions = await getRecentTransactions(); // Pega as últimas transações reais
+        // 📊 1. Coleta Massiva de Contexto (GOD MODE)
+        const [
+            summary,
+            recentTransactions,
+            goals,
+            debts,
+            investments,
+            paymentWindows
+        ] = await Promise.all([
+            getFinancialSummary(),
+            getRecentTransactions(),
+            getGoals(),
+            getDebts(),
+            getProjections(),
+            getPaymentWindows() // Mês atual by default
+        ]);
 
-        // Formatar transações para o prompt
+        // --- Formatação dos Dados para o Prompt ---
+
+        // 1. Transações
         const txList = recentTransactions.map(t =>
             `- ${new Date(t.date).toLocaleDateString('pt-BR')} | ${t.description} | R$ ${Number(t.amount).toFixed(2)} (${t.type}) | ${t.category}`
         ).join('\n');
 
+        // 2. Objetivos
+        const goalsList = goals.map(g =>
+            `- [${g.status === 'COMPLETED' ? '✅ CONCLUÍDO' : '🎯 PENDENTE'}] ${g.description} ${g.targetAmount ? `(Meta: R$ ${Number(g.targetAmount).toFixed(2)})` : ''}`
+        ).join('\n');
+
+        // 3. Dívidas
+        const debtsList = debts.map(d =>
+            `- ${d.name}: Total R$ ${Number(d.totalValue).toFixed(2)} (Restante: R$ ${Number(d.remainingValue).toFixed(2)}) - Parcela: R$ ${Number(d.monthlyPayment).toFixed(2)}`
+        ).join('\n');
+
+        // 4. Investimentos
+        const investList = investments.map(i =>
+            `- ${i.name}: Saldo Inicial R$ ${Number(i.initialBalance).toFixed(2)} | Aporte R$ ${Number(i.monthlyContribution).toFixed(2)}/mês`
+        ).join('\n');
+
+        // 5. Contas a Pagar (Pagamentos)
+        let paymentsList = "Nenhuma conta encontrada para este mês.";
+        if (paymentWindows && paymentWindows.windows) {
+            const list: string[] = [];
+            Object.values(paymentWindows.windows).forEach((w: any) => {
+                w.items.forEach((item: any) => {
+                    list.push(`- Dia ${w.day}: ${item.name} | R$ ${item.amount.toFixed(2)} [${item.isPaid ? '🟢 PAGO' : '🔴 PENDENTE'}]`);
+                });
+            });
+            if (list.length > 0) paymentsList = list.join('\n');
+        }
+
+        // --- Montagem do Prompt do Sistema ---
         const contextData = `
 DADOS DO USUÁRIO (${userName}):
 - Data Hoje: ${new Date().toLocaleDateString('pt-BR')}
@@ -86,38 +139,48 @@ DADOS DO USUÁRIO (${userName}):
 - Receitas (Mês): R$ ${summary.income.toFixed(2)}
 - Despesas (Mês): R$ ${summary.expenses.toFixed(2)}
 
-ÚLTIMAS TRANSAÇÕES REGISTRADAS:
+🎯 OBJETIVOS:
+${goalsList.length > 0 ? goalsList : "Nenhum cadastrado."}
+
+💸 DÍVIDAS ATIVAS:
+${debtsList.length > 0 ? debtsList : "Nenhuma dívida cadastrada."}
+
+📅 CONTAS DO MÊS (Pagamentos):
+${paymentsList}
+
+📈 INVESTIMENTOS (Projeções):
+${investList.length > 0 ? investList : "Nenhum investimento cadastrado."}
+
+📝 ÚLTIMAS TRANSAÇÕES:
 ${txList.length > 0 ? txList : "Nenhuma transação recente."}
 `;
 
-        // 🤖 2. Configurar System Message com Contexto Injetado
         const systemMessage = {
             role: "system",
-            content: `Você é o 'Agente Financeiro', um consultor pessoal experiente e ponderado de ${userName}.
-Seu papel é ORIENTAR e dar clareza sobre a vida financeira do usuário, baseando-se estritamente nos dados reais.
+            content: `Você é o 'Agente Financeiro', um consultor pessoal experiente, proativo e ponderado de ${userName}.
+Seu papel é ORIENTAR, dar clareza sobre TODA a vida financeira do usuário e responder dúvidas com base nos dados reais abaixo.
 
 CRÍTICO:
-- Você TEM acesso aos dados abaixo.
-- Aja como um mentor: explique o que os números significam, não apenas jogue valores.
-- NÃO tome decisões pelo usuário, apenas execute comandos se for explicitamente solicitado (ex: "registre isso").
-- Se não tiver certeza ou os dados não existirem, diga "Não tenho essa informação". NÃO TENTE ADIVINHAR.
+- Você TEM acesso a TUDO: saldo, dívidas, metas, contas a pagar e investimentos.
+- Aja como um Mentor Financeiro: "Notei que você tem contas a pagar dia 15, cuidado com o saldo."
+- Se a resposta estiver nos dados, RESPONDA. Se não, diga "Não tenho essa informação". NÃO INVENTE.
+- Seja conciso mas útil.
 
 ---
 ${contextData}
 ---
 
 REGRAS:
-1. Responda de forma cordial e profissional.
-2. Use os dados acima para responder perguntas. Se não estiver na lista, DIGA QUE NÃO SABE.
-3. Use tools apenas quando solicitado claramente.
-4. Responda sempre em Português do Brasil.
+1. Responda sempre em Português do Brasil.
+2. Não alucine dados.
+3. Se o usuário pedir para adicionar algo, use as tools disponíveis.
 `
         };
 
-        // 3. Primeira Chamada ao LLM (Upgrade para GPT-4o para evitar alucinações de tools)
+        // 3. Primeira Chamada ao LLM
         const response = await getOpenAI().chat.completions.create({
             model: "gpt-4o",
-            temperature: 0.2, // Baixa criatividade para garantir precisão factual
+            temperature: 0.2, // Baixa criatividade para precisão
             messages: [systemMessage, ...messages],
             tools: tools,
             tool_choice: 'auto',
@@ -125,50 +188,46 @@ REGRAS:
 
         const responseMessage = response.choices[0].message;
 
-        // 4. Executar Tool Calls se houver
+        // 4. Verificar se houve chamada de Tool
         if (responseMessage.tool_calls) {
-            const toolCalls = responseMessage.tool_calls;
             const newMessages = [systemMessage, ...messages, responseMessage];
 
-            for (const toolCall of toolCalls) {
+            for (const toolCall of responseMessage.tool_calls) {
                 const functionName = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments);
-                let toolResult = "";
+                const functionArgs = JSON.parse(toolCall.function.arguments);
+                let functionResult = "";
 
-                try {
-                    if (functionName === 'add_transaction') {
-                        const dateObj = args.date ? new Date(args.date) : new Date();
-                        await prisma.transaction.create({
-                            data: {
-                                userId: userId,
-                                description: args.description,
-                                amount: args.amount,
-                                type: args.type,
-                                category: args.category,
-                                date: dateObj,
-                            } as any
-                        });
-                        toolResult = JSON.stringify({ success: true, message: `Transação '${args.description}' registrada com sucesso.` });
-                    }
-                    else if (functionName === 'add_planning_item') {
-                        await addPlanningItem(
-                            args.month,
-                            args.amount,
-                            args.description,
-                            args.type,
-                            args.category
-                        );
-                        toolResult = JSON.stringify({ success: true, message: `Adicionado ao planejamento de ${args.month}.` });
-                    }
-                } catch (e: any) {
-                    toolResult = JSON.stringify({ success: false, error: e.message });
+                if (functionName === 'add_transaction') {
+                    // Executar no Banco Real
+                    const transaction = await prisma.transaction.create({
+                        data: {
+                            userId,
+                            description: functionArgs.description,
+                            amount: Number(functionArgs.amount),
+                            type: functionArgs.type,
+                            category: functionArgs.category,
+                            date: new Date(functionArgs.date || new Date()),
+                            isRecurring: false
+                        } as any
+                    });
+                    functionResult = JSON.stringify({ success: true, id: transaction.id, message: "Transação registrada!" });
+                } else if (functionName === 'add_planning_item') {
+                    await addPlanningItem(
+                        functionArgs.month,
+                        Number(functionArgs.amount),
+                        functionArgs.description,
+                        functionArgs.type,
+                        functionArgs.category
+                    );
+                    functionResult = JSON.stringify({ success: true, message: "Planejamento atualizado!" });
                 }
 
                 newMessages.push({
-                    role: 'tool',
                     tool_call_id: toolCall.id,
-                    content: toolResult,
-                } as any);
+                    role: "tool",
+                    name: functionName,
+                    content: functionResult,
+                });
             }
 
             // 5. Segunda Chamada (Resposta Final)
@@ -192,8 +251,8 @@ REGRAS:
 
         return new StreamingTextResponse(OpenAIStream(streamResponse as any));
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Chat API Error:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response('Error processing chat request', { status: 500 });
     }
 }
