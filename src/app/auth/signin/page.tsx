@@ -36,7 +36,10 @@ export default function SignInPage() {
             });
 
             if (result?.error) {
-                if (formData.email.includes('@gmail.com')) {
+                // Verificar se é erro de credenciais (usuário não existe ou senha errada)
+                if (result.error.includes('CredentialsSignin') || result.error === 'CredentialsSignin') {
+                    setError('Conta não encontrada. Clique em "Criar conta grátis" abaixo para se cadastrar.');
+                } else if (formData.email.includes('@gmail.com')) {
                     setError('Usuário do Gmail? Use o botão "Continuar com Google" abaixo');
                 } else {
                     setError('Email ou senha incorretos');
