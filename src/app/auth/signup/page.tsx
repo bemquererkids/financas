@@ -1,48 +1,72 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { PiggyBank, Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 
-export default function SignInPage() {
+export default function SignUpPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || '/';
-
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
         password: '',
+        confirmPassword: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // Validações básicas
+        if (formData.password !== formData.confirmPassword) {
+            setError('As senhas não coincidem');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            const result = await signIn('credentials', {
+            // Registrar usuário
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Erro ao criar conta');
+            }
+
+            // Login automático após registro
+            const signInResult = await signIn('credentials', {
                 email: formData.email,
                 password: formData.password,
                 redirect: false,
             });
 
-            if (result?.error) {
-                setError('Email ou senha incorretos');
-                return;
+            if (signInResult?.error) {
+                throw new Error('Conta criada, mas erro ao fazer login');
             }
 
-            router.push(callbackUrl);
+            router.push('/');
             router.refresh();
-        } catch (err) {
-            setError('Erro ao fazer login. Tente novamente.');
+        } catch (err: any) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
@@ -56,13 +80,30 @@ export default function SignInPage() {
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400 shadow-lg shadow-emerald-500/20 mb-4">
                         <PiggyBank className="h-8 w-8 text-slate-900" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo de Volta</h1>
-                    <p className="text-slate-400">Entre para continuar</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
+                    <p className="text-slate-400">Comece a organizar suas finanças</p>
                 </div>
 
                 {/* Form Card */}
                 <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
                     <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Nome */}
+                        <div className="space-y-2">
+                            <Label htmlFor="name" className="text-slate-300">Nome Completo</Label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="pl-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
+                                    placeholder="Seu nome"
+                                    required
+                                />
+                            </div>
+                        </div>
+
                         {/* Email */}
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-slate-300">Email</Label>
@@ -82,12 +123,7 @@ export default function SignInPage() {
 
                         {/* Senha */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password" className="text-slate-300">Senha</Label>
-                                <Link href="/auth/forgot-password" className="text-xs text-emerald-400 hover:text-emerald-300">
-                                    Esqueceu?
-                                </Link>
-                            </div>
+                            <Label htmlFor="password" className="text-slate-300">Senha</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 <Input
@@ -105,6 +141,33 @@ export default function SignInPage() {
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                Mínimo 8 caracteres, 1 maiúscula, 1 número e 1 especial
+                            </p>
+                        </div>
+
+                        {/* Confirmar Senha */}
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword" className="text-slate-300">Confirmar Senha</Label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Input
+                                    id="confirmPassword"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
                         </div>
@@ -125,10 +188,10 @@ export default function SignInPage() {
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Entrando...
+                                    Criando conta...
                                 </>
                             ) : (
-                                'Entrar'
+                                'Criar Conta'
                             )}
                         </Button>
                     </form>
@@ -147,7 +210,7 @@ export default function SignInPage() {
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => signIn('google', { callbackUrl })}
+                        onClick={() => signIn('google', { callbackUrl: '/' })}
                         className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white"
                     >
                         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -159,11 +222,11 @@ export default function SignInPage() {
                         Continuar com Google
                     </Button>
 
-                    {/* Sign Up Link */}
+                    {/* Sign In Link */}
                     <p className="mt-6 text-center text-sm text-slate-400">
-                        Não tem uma conta?{' '}
-                        <Link href="/auth/signup" className="text-emerald-400 hover:text-emerald-300 font-medium">
-                            Criar conta grátis
+                        Já tem uma conta?{' '}
+                        <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                            Entrar
                         </Link>
                     </p>
                 </div>
