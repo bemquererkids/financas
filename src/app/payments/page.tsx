@@ -128,7 +128,7 @@ export default function PaymentsPage() {
                         </div>
                         <div className="w-full md:w-32">
                             <label className="text-xs text-emerald-400/70 ml-1 mb-1 block">Valor</label>
-                            <Input name="amount" type="number" step="0.01" placeholder="R$" required className="glass-input text-white h-10" />
+                            <Input name="amount" type="text" inputMode="decimal" placeholder="R$" required className="glass-input text-white h-10" />
                         </div>
                         <div className="w-full md:w-auto">
                             <label className="text-xs text-emerald-400/70 ml-1 mb-1 block">Vencimento</label>

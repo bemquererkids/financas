@@ -25,7 +25,13 @@ export async function createTransaction(formData: FormData) {
         return { error: 'Usuário não autenticado. Por favor, faça login novamente.' };
     }
 
-    const amountRaw = formData.get('amount') as string;
+    let amountRaw = formData.get('amount') as string;
+
+    // Suporte a vírgula (R$ 1.000,00 ou 10,50)
+    if (amountRaw.includes(',')) {
+        amountRaw = amountRaw.replace(/\./g, '').replace(',', '.');
+    }
+
     const amount = parseFloat(amountRaw);
     const description = formData.get('description') as string;
     const category = formData.get('category') as string;

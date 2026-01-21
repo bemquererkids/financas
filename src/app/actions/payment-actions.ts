@@ -73,7 +73,13 @@ export async function addPayable(formData: FormData) {
     if (!userId) return { error: 'Usuário não autenticado' };
 
     const name = formData.get('name') as string;
-    const amount = parseFloat(formData.get('amount') as string);
+
+    let amountRaw = formData.get('amount') as string;
+    if (amountRaw.includes(',')) {
+        amountRaw = amountRaw.replace(/\./g, '').replace(',', '.');
+    }
+    const amount = parseFloat(amountRaw);
+
     const dueDateStr = formData.get('dueDate') as string;
     const windowDay = parseInt(formData.get('windowDay') as string); // 7, 15, or 30
 

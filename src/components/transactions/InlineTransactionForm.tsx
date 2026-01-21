@@ -89,8 +89,8 @@ export function InlineTransactionForm({ onSuccess }: InlineTransactionFormProps)
                     <Label className="text-xs text-slate-400">Valor</Label>
                     <Input
                         name="amount"
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         placeholder="0,00"
                         className="h-10 bg-white/5 border-white/10"
                         required
