@@ -31,6 +31,13 @@ export async function POST(req: NextRequest) {
 
         const { name, email, password } = validationResult.data;
 
+        // Normalizar nome: primeira letra de cada palavra maiúscula
+        const normalizedName = name
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+
         // Verificar se email já existe
         const existingUser = await prisma.user.findUnique({
             where: { email },
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
         // Criar usuário
         const user = await prisma.user.create({
             data: {
-                name,
+                name: normalizedName,
                 email,
                 password: hashedPassword,
                 emailVerified: new Date(), // Auto-verificar por enquanto (pode adicionar email verification depois)
