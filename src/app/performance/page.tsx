@@ -172,10 +172,13 @@ export default function PerformancePage() {
                         </p>
                         <div className="space-y-3">
                             <div className="flex items-start gap-2 p-2 rounded bg-white/5">
-                                <div className={`w-2 h-2 rounded-full mt-1.5 ${metrics.savingsRate > 20 ? 'bg-emerald-400' : 'bg-yellow-400'}`} />
+                                <div className={`w-2 h-2 rounded-full mt-1.5 ${(metrics.savingsRate ?? 0) > 20 ? 'bg-emerald-400' : 'bg-yellow-400'}`} />
                                 <div className="flex-1">
                                     <p className="text-xs font-medium text-white">Taxa de Poupança</p>
-                                    <p className="text-xs text-slate-400">{metrics.savingsRate.toFixed(1)}% {metrics.savingsRate > 20 ? '(Excelente!)' : '(Melhorar)'}</p>
+                                    <p className="text-xs text-slate-400">
+                                        {typeof metrics.savingsRate === 'number' ? metrics.savingsRate.toFixed(1) : '0.0'}%
+                                        {' '}{(metrics.savingsRate ?? 0) > 20 ? '(Excelente!)' : '(Melhorar)'}
+                                    </p>
                                 </div>
                             </div>
 
