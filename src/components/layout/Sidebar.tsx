@@ -22,6 +22,7 @@ import {
     BarChart2,
     Compass
 } from 'lucide-react';
+import { CurrencyTicker } from '@/components/layout/CurrencyTicker';
 
 const routes = [
     {
@@ -141,20 +142,20 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                 </div>
             </div>
 
-            <div className="px-3 py-2">
-                {!collapsed ? (
-                    <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-900/50 to-emerald-950/20 border border-emerald-500/20">
-                        <p className="text-xs text-emerald-200 mb-2">Status do Sistema</p>
-                        <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xs font-bold text-emerald-400">Online v1.0</span>
+
+
+            <div className="px-3 py-2 mt-auto">
+                <div className={cn("rounded-xl border border-white/5 bg-gradient-to-br from-slate-900/50 to-slate-800/20", !collapsed && "p-3")}>
+                    {!collapsed && <p className="text-[10px] text-slate-500 mb-2 font-medium tracking-wider uppercase ml-1">Mercado Hoje</p>}
+                    <CurrencyTicker collapsed={collapsed} />
+
+                    {!collapsed && (
+                        <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-600">
+                            <span>Status: Online</span>
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex justify-center">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Online v1.0" />
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
