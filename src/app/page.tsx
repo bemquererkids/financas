@@ -82,7 +82,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 />
 
                 {/* Card 5: Análise 50/30/20 (Integrado) */}
-                <div className="glass-card border border-white/5 rounded-xl p-3 flex flex-col justify-between hover:bg-white/5 transition-colors duration-300">
+                <div className="glass-card border border-white/5 rounded-xl p-3 flex flex-col justify-between hover:bg-white/5 transition-colors duration-300 col-span-2 md:col-span-1 lg:col-span-1">
                     <h3 className="text-xs font-medium text-slate-200 uppercase tracking-wider mb-2">Regra 50/30/20</h3>
                     <div className="space-y-2 flex-1 flex flex-col justify-center">
                         <div className="space-y-0.5">
