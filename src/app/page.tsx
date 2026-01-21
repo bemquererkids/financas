@@ -39,7 +39,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     const expensesVsIncome = summary.income > 0 ? (summary.expenses / summary.income) * 100 : 0;
 
     return (
-        <div className="flex-1 h-screen overflow-hidden flex flex-col p-4 md:p-6 gap-3">
+        <div className="flex-1 h-full md:h-screen flex flex-col p-4 md:p-6 gap-3 overflow-y-auto md:overflow-hidden">
             {/* Header - Desktop Only (Mobile usa o título do card) */}
             <div className="flex-shrink-0 hidden md:block">
                 <ModuleHeader
@@ -118,7 +118,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
 
             {/* Main Content - Visão Unificada */}
-            <div className="flex-1 min-h-0 pb-2 overflow-hidden">
+            <div className="flex-1 min-h-[550px] md:min-h-0 pb-2 overflow-hidden">
                 <UnifiedDashboardView
                     transactions={recentTransactions}
                     expensesByCategory={expensesByCategory}
