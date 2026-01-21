@@ -31,14 +31,14 @@ export default async function DashboardPage() {
     const expensesVsIncome = summary.income > 0 ? (summary.expenses / summary.income) * 100 : 0;
 
     return (
-        <div className="flex-1 p-4 md:p-6 space-y-4">
+        <div className="flex-1 p-4 md:p-6 space-y-3 overflow-hidden">
             <ModuleHeader
                 title="Visão Geral"
                 subtitle="Acompanhe sua saúde financeira"
             >
                 <FinancialAlerts
                     balance={summary.balance}
-                    savingsRate={summary.savingsRate}
+                    savingsRate={summary.savingsRate ?? 0}
                     expensesVsIncome={expensesVsIncome}
                 />
             </ModuleHeader>
@@ -78,67 +78,65 @@ export default async function DashboardPage() {
                 />
             </div>
 
-            {/* Regra 50/30/20 */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-3 rounded-xl glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Análise 50/30/20</h3>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Necessidades (50%)</span>
-                                <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.needs.actual)} ({summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%)
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-blue-500" />
+            {/* Análise 50/30/20 - Mais compacta */}
+            <div className="bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-white mb-3">Análise 50/30/20</h3>
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">Necessidades (50%)</span>
+                            <span className="text-white font-medium">
+                                {summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Desejos (30%)</span>
-                                <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.wants.actual)} ({summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%)
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-purple-500" />
+                        <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-blue-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">Desejos (30%)</span>
+                            <span className="text-white font-medium">
+                                {summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Investimentos/Dívidas (20%)</span>
-                                <span className="text-white font-medium">
-                                    {formatCurrency(summary.rule503020.savings.actual)} ({summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%)
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800" indicatorClassName="bg-emerald-500" />
+                        <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-purple-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">Investimentos (20%)</span>
+                            <span className="text-white font-medium">
+                                {summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%
+                            </span>
                         </div>
+                        <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1.5" indicatorClassName="bg-emerald-500" />
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid lg:grid-cols-3 gap-4">
-                {/* Left Column - Transações e Análise */}
-                <div className="lg:col-span-2 space-y-4">
-                    <TransactionList transactions={recentTransactions} />
+            {/* Main Dashboard Grid - 3 colunas otimizado */}
+            <div className="grid lg:grid-cols-12 gap-3">
+                {/* Left: Transações + Gráficos lado a lado */}
+                <div className="lg:col-span-8 space-y-3">
+                    {/* Transações */}
+                    <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
+                        <TransactionList transactions={recentTransactions} />
+                    </div>
+
+                    {/* Dois gráficos lado a lado - mais compactos */}
+                    <div className="grid md:grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Despesas por Categoria</h4>
+                            <ExpensesPieChart data={expensesByCategory} />
+                        </div>
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-4">
+                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Receita vs Despesa</h4>
+                            <IncomeExpenseChart data={monthlyTrend} />
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right Column - Cash Flow */}
-                <div className="lg:col-span-1">
+                {/* Right: Cash Flow */}
+                <div className="lg:col-span-4">
                     <CashFlowView initialData={cashFlowData} />
-                </div>
-            </div>
-
-            {/* Gráficos - Linha completa abaixo */}
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-6">Análise Visual</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 className="text-sm font-medium text-slate-400 mb-4">Despesas por Categoria</h4>
-                        <ExpensesPieChart data={expensesByCategory} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-medium text-slate-400 mb-4">Receita vs Despesa (Últimos 6 Meses)</h4>
-                        <IncomeExpenseChart data={monthlyTrend} />
-                    </div>
                 </div>
             </div>
 
