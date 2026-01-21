@@ -84,14 +84,14 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
 
     return (
         <>
-            <div className="rounded-2xl glass-card overflow-hidden">
-                <div className="p-4 border-b border-white/5 bg-white/5">
+            <div className="rounded-2xl glass-card overflow-hidden h-full flex flex-col">
+                <div className="p-4 border-b border-white/5 bg-white/5 flex-shrink-0">
                     <h3 className="text-sm font-medium text-white">Histórico de Transações</h3>
                     <p className="text-xs text-slate-400">Últimos lançamentos registrados.</p>
                 </div>
 
                 {/* Mobile Layout - Cards */}
-                <div className="md:hidden divide-y divide-white/5">
+                <div className="md:hidden divide-y divide-white/5 flex-1 overflow-y-auto">
                     {localTransactions.map((t) => (
                         <div key={t.id} className="p-4 hover:bg-white/5 transition-colors">
                             <div className="flex items-start justify-between gap-3">
@@ -140,9 +140,9 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                 </div>
 
                 {/* Desktop Layout - Table */}
-                <div className="hidden md:block overflow-x-auto custom-scrollbar">
+                <div className="hidden md:block overflow-auto custom-scrollbar flex-1 relative">
                     <table className="w-full min-w-[600px] table-auto">
-                        <thead className="bg-white/5">
+                        <thead className="bg-white/5 sticky top-0 z-10 backdrop-blur-md">
                             <tr className="border-b border-white/5">
                                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[100px]">Data</th>
                                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>

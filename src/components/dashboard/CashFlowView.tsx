@@ -85,14 +85,14 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
     };
 
     return (
-        <div className="rounded-2xl glass-card overflow-hidden">
+        <div className="rounded-2xl glass-card overflow-hidden h-full flex flex-col">
             {/* Header com navegação */}
-            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-emerald-600 to-emerald-500">
+            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-emerald-600 to-emerald-500 flex-shrink-0">
                 <h3 className="text-lg font-bold text-white text-center">Fluxo de Caixa</h3>
             </div>
 
             {/* Month Navigation */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/5">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/5 flex-shrink-0">
                 <button
                     onClick={() => navigateMonth(-1)}
                     disabled={isPending}
@@ -120,7 +120,7 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
             </div>
 
             {/* Summary */}
-            <div className="grid grid-cols-2 gap-4 p-4 border-b border-white/5 bg-white/2">
+            <div className="grid grid-cols-2 gap-4 p-4 border-b border-white/5 bg-white/2 flex-shrink-0">
                 <div className="text-center">
                     <p className="text-xs text-slate-400">Entradas</p>
                     <p className="text-lg font-bold text-emerald-400">{formatCurrency(data.totalIncome)}</p>
@@ -132,7 +132,7 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
             </div>
 
             {/* Transactions by Day */}
-            <div className={`divide-y divide-white/5 max-h-[400px] overflow-y-auto transition-opacity ${isPending ? 'opacity-50' : ''}`}>
+            <div className={`divide-y divide-white/5 overflow-y-auto flex-1 transition-opacity ${isPending ? 'opacity-50' : ''}`}>
                 {data.days.length === 0 ? (
                     <div className="p-8 text-center text-slate-500">
                         Nenhuma transação neste mês
