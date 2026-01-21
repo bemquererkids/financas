@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
 
 export const authOptions: NextAuthOptions = {
-    // Adapter temporariamente desativado para permitir login sem tabelas de Auth no banco
-    // adapter: PrismaAdapter(prisma) as Adapter,
+    // Adapter ativado para persistência no banco
+    adapter: PrismaAdapter(prisma) as Adapter,
     session: {
         strategy: "jwt",
     },
