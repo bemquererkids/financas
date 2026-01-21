@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ChevronLeft, ChevronRight, Home, ShoppingCart, Zap, GraduationCap, Heart, Car, Utensils, DollarSign } from 'lucide-react';
+import {
+    ChevronLeft, ChevronRight, Home, ShoppingCart, Zap, GraduationCap, Heart, Car, Utensils,
+    DollarSign, Wallet, CreditCard, TrendingUp, Landmark
+} from 'lucide-react';
 import { getCashFlow, CashFlowData } from '@/app/actions/cashflow-actions';
 
 interface CashFlowViewProps {
@@ -20,8 +23,17 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
     'Creche': GraduationCap,
     'Saúde': Heart,
     'Transporte': Car,
+    'Uber': Car,
+    'Combustível': Car,
     'Alimentação': Utensils,
-    'Salário': DollarSign,
+    'Restaurante': Utensils,
+    'Salário': Wallet,
+    'Renda': Wallet,
+    'Investimento': TrendingUp,
+    'Cartão': CreditCard,
+    'Fatura': CreditCard,
+    'CREDIT_CARD_BILL': CreditCard,
+    'Bank': Landmark
 };
 
 const categoryColors: Record<string, string> = {
@@ -35,8 +47,16 @@ const categoryColors: Record<string, string> = {
     'Creche': 'bg-green-500',
     'Saúde': 'bg-pink-500',
     'Transporte': 'bg-slate-500',
+    'Uber': 'bg-slate-500',
+    'Combustível': 'bg-slate-500',
     'Alimentação': 'bg-amber-500',
+    'Restaurante': 'bg-amber-500',
     'Salário': 'bg-emerald-500',
+    'Renda': 'bg-emerald-500',
+    'Investimento': 'bg-cyan-500',
+    'Cartão': 'bg-rose-500',
+    'Fatura': 'bg-rose-500',
+    'CREDIT_CARD_BILL': 'bg-rose-500',
 };
 
 export function CashFlowView({ initialData }: CashFlowViewProps) {
@@ -161,7 +181,6 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-white truncate">{tx.description}</p>
-                                            <p className="text-xs text-slate-500">{tx.category}</p>
                                         </div>
 
                                         {/* Amount */}

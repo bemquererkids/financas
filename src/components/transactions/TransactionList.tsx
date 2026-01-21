@@ -82,6 +82,32 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         return `${day}/${month}/${year}`;
     };
 
+    const formatCategory = (cat: string) => {
+        const dict: Record<string, string> = {
+            'CREDIT_CARD_BILL': 'Fatura Cartão',
+            'INCOME': 'Receita',
+            'EXPENSE': 'Despesa',
+            'SALARY': 'Salário',
+            'INVESTMENT': 'Investimento',
+            'FOOD': 'Alimentação',
+            'TRANSPORT': 'Transporte',
+            'HOUSING': 'Moradia',
+            'HEALTH': 'Saúde',
+            'EDUCATION': 'Educação',
+            'LEISURE': 'Lazer',
+            'OTHER': 'Outros'
+        };
+        // Se estiver no dicionário, retorna o valor.
+        if (dict[cat]) return dict[cat];
+
+        // Se não, tenta formatar Title Case se estiver tudo maiúsculo ou minúsculo
+        if (cat === cat.toUpperCase() || cat === cat.toLowerCase()) {
+            return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase().replace(/_/g, ' ');
+        }
+
+        return cat;
+    };
+
     return (
         <>
             <div className="rounded-2xl glass-card overflow-hidden h-full flex flex-col">
@@ -100,7 +126,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-xs text-slate-400">{formatDate(t.date)}</span>
                                         <span className="px-2 py-0.5 rounded-full bg-white/5 text-xs text-slate-400">
-                                            {t.category}
+                                            {formatCategory(t.category)}
                                         </span>
                                     </div>
                                 </div>
@@ -163,7 +189,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                                     <td className="py-2 px-2">
                                         <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-medium text-slate-300 border border-white/5 inline-flex items-center gap-1.5 whitespace-nowrap truncate max-w-[110px]">
                                             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.type === 'INCOME' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                                            {t.category}
+                                            {formatCategory(t.category)}
                                         </span>
                                     </td>
                                     <td className="py-2 px-3 text-right font-mono text-xs whitespace-nowrap">
