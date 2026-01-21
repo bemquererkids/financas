@@ -131,9 +131,25 @@ export async function POST(req: Request) {
             if (list.length > 0) paymentsList = list.join('\n');
         }
 
+        // 📊 0. Coleta do Perfil do Usuário
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                financialSituation: true,
+                monthlyIncome: true,
+                userProfile: true,
+                mainGoal: true,
+            }
+        });
+
         // --- Montagem do Prompt do Sistema ---
         const contextData = `
 DADOS DO USUÁRIO (${userName}):
+- Perfil: ${user?.userProfile || 'Não definido'}
+- Situação: ${user?.financialSituation || 'Não definida'}
+- Renda Mensal: R$ ${user?.monthlyIncome?.toFixed(2) || '0.00'}
+- Objetivo Principal: ${user?.mainGoal || 'Não definido'}
+
 - Data Hoje: ${new Date().toLocaleDateString('pt-BR')}
 - Saldo Atual: R$ ${summary.balance.toFixed(2)}
 - Receitas (Mês): R$ ${summary.income.toFixed(2)}
