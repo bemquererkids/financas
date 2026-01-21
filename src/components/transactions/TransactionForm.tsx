@@ -22,6 +22,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function TransactionForm() {
     const [open, setOpen] = useState(false);
@@ -37,9 +38,9 @@ export function TransactionForm() {
         setLoading(false);
         if (result?.success) {
             setOpen(false);
-            // Opcional: Toast de sucesso aqui
+            toast.success('Transação salva com sucesso! 🚀');
         } else {
-            alert('Erro ao salvar');
+            toast.error(result?.error || 'Erro ao salvar transação 😢');
         }
     }
 

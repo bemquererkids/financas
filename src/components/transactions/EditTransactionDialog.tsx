@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface Transaction {
     id: string;
@@ -54,19 +55,22 @@ export function EditTransactionDialog({ transaction, open, onOpenChange }: EditT
         if (!transaction) return;
 
         setLoading(true);
+
+        // ... (dentro da função handleSubmit)
         try {
             const formData = new FormData(event.currentTarget);
             const result = await updateTransaction(transaction.id, formData);
 
             if (result && 'success' in result) {
                 onOpenChange(false);
-                router.refresh(); // Atualiza a lista
+                router.refresh();
+                toast.success('Alterações salvas com sucesso! ✨');
             } else {
-                alert('Erro ao atualizar. Tente novamente.');
+                toast.error('Erro ao atualizar. Tente novamente.');
             }
         } catch (error) {
             console.error(error);
-            alert('Ocorreu um erro inesperado.');
+            toast.error('Ocorreu um erro inesperado.');
         } finally {
             setLoading(false);
         }
