@@ -4,9 +4,16 @@ import path from 'path';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openaiInstance: OpenAI | null = null;
+function getOpenAI() {
+    if (!openaiInstance) {
+        openaiInstance = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
+        });
+    }
+    return openaiInstance;
+}
 
 // --- TIPAGEM AVANÇADA PARA INTENÇÕES ---
 export type IntentType = 'TRANSACTION' | 'PLANNING' | 'INVESTMENT' | 'GOAL' | 'PAYABLE' | 'UNKNOWN';
@@ -110,7 +117,7 @@ export async function processIntent(text: string): Promise<ParsedIntent | null> 
             }
         `;
 
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "user", content: prompt }],
             temperature: 0,
@@ -183,7 +190,7 @@ export async function analyzeImageTransaction(base64Image: string): Promise<any 
             Retorne JSON igual ao formato de texto (com campo "intent").
         `;
 
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: "gpt-4o",
             messages: [
                 {
@@ -232,7 +239,7 @@ export async function transcribeAudioMessage(base64Audio: string): Promise<strin
         const buffer = Buffer.from(base64Audio, 'base64');
         fs.writeFileSync(tempFilePath, buffer);
 
-        const transcription = await openai.audio.transcriptions.create({
+        const transcription = await getOpenAI().audio.transcriptions.create({
             file: fs.createReadStream(tempFilePath),
             model: "whisper-1",
             language: "pt",

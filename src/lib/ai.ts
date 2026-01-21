@@ -1,10 +1,19 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 
-// Initialize OpenAI only if key is present to avoid build errors
-const openai = process.env.OPENAI_API_KEY
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null;
+// Lazy initialization to avoid build-time errors
+let openaiInstance: OpenAI | null = null;
+function getOpenAI() {
+    if (!openaiInstance) {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY not found');
+        }
+        openaiInstance = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        });
+    }
+    return openaiInstance;
+}
 
 export type ExtractedTransaction = {
     intent: 'CREATE_TRANSACTION' | 'UNKNOWN';
@@ -19,8 +28,7 @@ export class AiAssistant {
      * Transcribes audio file to text using Whisper
      */
     static async transcribeAudio(filePath: string): Promise<string> {
-        if (!openai) throw new Error('OPENAI_API_KEY not found');
-
+        const openai = getOpenAI();
         const transcription = await openai.audio.transcriptions.create({
             file: fs.createReadStream(filePath),
             model: 'whisper-1',
@@ -34,7 +42,7 @@ export class AiAssistant {
      * Extracts structured transaction data from text using GPT
      */
     static async parseTransactionFromText(text: string): Promise<ExtractedTransaction> {
-        if (!openai) throw new Error('OPENAI_API_KEY not found');
+        const openai = getOpenAI();
 
         const prompt = `
         Você é um assistente financeiro pessoal. Analise a frase do usuário e extraia os dados da transação.
