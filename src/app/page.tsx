@@ -6,7 +6,6 @@ import { TrendingDown, TrendingUp, Wallet, PiggyBank } from "lucide-react";
 import { FloatingTransactionButton } from "@/components/transactions/FloatingTransactionButton";
 import { CashFlowView } from "@/components/dashboard/CashFlowView";
 import { TransactionList } from "@/components/transactions/TransactionList";
-import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ExpensesPieChart } from "@/components/dashboard/ExpensesPieChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
@@ -31,6 +30,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex-1 h-screen overflow-hidden flex flex-col p-4 md:p-6 gap-3">
+            {/* Header */}
             <div className="flex-shrink-0">
                 <ModuleHeader
                     title="Visão Geral"
@@ -44,10 +44,7 @@ export default async function DashboardPage() {
                 </ModuleHeader>
             </div>
 
-            <div className="flex-shrink-0">
-                <QuickActions />
-            </div>
-
+            {/* Summary Cards */}
             <div className="flex-shrink-0 grid gap-2 grid-cols-2 lg:grid-cols-4">
                 <SummaryCard
                     title="Receita Total"
@@ -79,6 +76,7 @@ export default async function DashboardPage() {
                 />
             </div>
 
+            {/* Análise 50/30/20 compacta */}
             <div className="flex-shrink-0 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3">
                 <h3 className="text-xs font-semibold text-white mb-2 uppercase tracking-wide">Análise 50/30/20</h3>
                 <div className="grid grid-cols-3 gap-2">
@@ -112,25 +110,34 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 grid lg:grid-cols-12 gap-3">
-                <div className="lg:col-span-8 flex flex-col gap-3 min-h-0">
-                    <div className="flex-1 min-h-0 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
+            {/* Main Content - ocupa todo espaço restante */}
+            <div className="flex-1 min-h-0 grid lg:grid-cols-3 gap-3">
+                {/* Coluna Esquerda: 2/3 */}
+                <div className="lg:col-span-2 flex flex-col gap-3 min-h-0">
+                    {/* Transações - 60% */}
+                    <div className="flex-[3] min-h-0 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl overflow-hidden">
                         <TransactionList transactions={recentTransactions} />
                     </div>
 
-                    <div className="h-64 grid md:grid-cols-2 gap-3">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3">
-                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Despesas por Categoria</h4>
-                            <ExpensesPieChart data={expensesByCategory} />
+                    {/* Gráficos lado a lado - 40% */}
+                    <div className="flex-[2] grid md:grid-cols-2 gap-3 min-h-0">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 flex flex-col">
+                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide flex-shrink-0">Despesas por Categoria</h4>
+                            <div className="flex-1 min-h-0">
+                                <ExpensesPieChart data={expensesByCategory} />
+                            </div>
                         </div>
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3">
-                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Receita vs Despesa</h4>
-                            <IncomeExpenseChart data={monthlyTrend} />
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 flex flex-col">
+                            <h4 className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide flex-shrink-0">Receita vs Despesa</h4>
+                            <div className="flex-1 min-h-0">
+                                <IncomeExpenseChart data={monthlyTrend} />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="lg:col-span-4 min-h-0">
+                {/* Coluna Direita: 1/3 - Cash Flow */}
+                <div className="lg:col-span-1 min-h-0">
                     <CashFlowView initialData={cashFlowData} />
                 </div>
             </div>
