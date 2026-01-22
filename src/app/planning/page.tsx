@@ -40,8 +40,9 @@ export default function PlanningPage() {
                     setProjectionData(data.projection as ProjectionPoint[]);
 
                     // Verificar se a renda parece incorreta (ex: muito baixa, dados de teste)
-                    if (data.monthlyIncome > 0 && data.monthlyIncome < 100) {
-                        setLowIncomeWarning(data.monthlyIncome);
+                    const income = data.monthlyIncome || 0;
+                    if (income > 0 && income < 100) {
+                        setLowIncomeWarning(income);
                     }
 
                     // Calcular insights básicos
