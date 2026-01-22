@@ -39,8 +39,8 @@ export default function GoalsPage() {
     return (
         <div className="flex-1 p-4 md:p-6 space-y-4 overflow-hidden">
             <ModuleHeader
-                title="Objetivos & Metas"
-                subtitle="Roadmap financeiro e pontos de ação"
+                title="Meus Objetivos"
+                subtitle="Onde quero chegar"
             />
 
             <div className="max-w-5xl mx-auto space-y-4">
@@ -81,16 +81,16 @@ export default function GoalsPage() {
                         <div
                             key={goal.id}
                             className={`p-3 rounded-lg border flex items-center justify-between transition-all ${goal.status === 'COMPLETED'
-                                    ? 'bg-emerald-950/20 border-emerald-500/20 opacity-70'
-                                    : 'glass-card border-white/10 bg-white/5 hover:border-emerald-500/30'
+                                ? 'bg-emerald-950/20 border-emerald-500/20 opacity-70'
+                                : 'glass-card border-white/10 bg-white/5 hover:border-emerald-500/30'
                                 }`}
                         >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <button
                                     onClick={async () => { await toggleGoalStatus(goal.id, goal.status); loadGoals(); }}
                                     className={`h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition ${goal.status === 'COMPLETED'
-                                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                                            : 'border-slate-500 text-transparent hover:border-emerald-400'
+                                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                                        : 'border-slate-500 text-transparent hover:border-emerald-400'
                                         }`}
                                 >
                                     <Check className="h-3 w-3" />

@@ -44,26 +44,26 @@ export default function PerformancePage() {
     return (
         <div className="flex-1 p-4 md:p-6 space-y-6">
             <ModuleHeader
-                title="Desempenho"
-                subtitle="KPIs Globais e Saúde Financeira"
+                title="Minha Evolução"
+                subtitle="Resumo da sua saúde financeira"
             />
 
             {/* Top KPI Cards */}
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                 <Card className="glass-card border-white/10 bg-white/5 hover:border-emerald-500/30 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-xs font-medium text-slate-300">Patrimônio Líquido</CardTitle>
+                        <CardTitle className="text-xs font-medium text-slate-300">Riqueza Acumulada</CardTitle>
                         <Scale className="h-4 w-4 text-emerald-400" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-xl md:text-2xl font-bold text-white">{formatCurrency(metrics.netWorth)}</div>
-                        <p className="text-xs text-slate-500 mt-1">Ativos - Passivos</p>
+                        <p className="text-xs text-slate-500 mt-1">Saldo Real (Livre de dívidas)</p>
                     </CardContent>
                 </Card>
 
                 <Card className="glass-card border-white/10 bg-white/5 hover:border-blue-500/30 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-xs font-medium text-slate-300">Score de Saúde</CardTitle>
+                        <CardTitle className="text-xs font-medium text-slate-300">Nota de Saúde</CardTitle>
                         <Activity className="h-4 w-4 text-blue-400" />
                     </CardHeader>
                     <CardContent>
@@ -78,23 +78,23 @@ export default function PerformancePage() {
 
                 <Card className="glass-card border-white/10 bg-white/5 hover:border-emerald-500/30 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-xs font-medium text-slate-300">Ativos Totais</CardTitle>
+                        <CardTitle className="text-xs font-medium text-slate-300">O que tenho</CardTitle>
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-xl md:text-2xl font-bold text-emerald-400">{formatCurrency(metrics.totalAssets)}</div>
-                        <p className="text-xs text-slate-500 mt-1">Caixa + Investimentos</p>
+                        <p className="text-xs text-slate-500 mt-1">Dinheiro + Investimentos</p>
                     </CardContent>
                 </Card>
 
                 <Card className="glass-card border-white/10 bg-white/5 hover:border-rose-500/30 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-xs font-medium text-slate-300">Passivos (Dívidas)</CardTitle>
+                        <CardTitle className="text-xs font-medium text-slate-300">O que devo</CardTitle>
                         <TrendingDown className="h-4 w-4 text-rose-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-xl md:text-2xl font-bold text-rose-400">{formatCurrency(metrics.totalLiabilities)}</div>
-                        <p className="text-xs text-slate-500 mt-1">{metrics.totalLiabilities === 0 ? 'Sem dívidas' : 'Reduzir gradualmente'}</p>
+                        <p className="text-xs text-slate-500 mt-1">{metrics.totalLiabilities === 0 ? 'Sem dívidas' : 'Valor a quitar'}</p>
                     </CardContent>
                 </Card>
             </div>
