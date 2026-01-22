@@ -78,7 +78,7 @@ export default function PlanningPage() {
     return (
         <div className="flex-1 h-full flex flex-col p-4 md:p-6 gap-6 overflow-y-auto w-full pb-20">
             <ModuleHeader
-                title="Planejamento Futuro"
+                title="Para Onde Vai"
                 subtitle="Projeção para os próximos 12 meses e simulação de cenários."
                 onChatToggle={handleChatToggle}
             />

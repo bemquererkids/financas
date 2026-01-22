@@ -40,8 +40,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {/* Header - Desktop Only (Mobile usa o título do card) */}
             <div className="flex-shrink-0 hidden md:block">
                 <DashboardHeader
-                    title="Visão Geral"
-                    subtitle="Acompanhe sua saúde financeira"
+                    title="Minha Carteira"
+                    subtitle="Onde estou financeiramente agora?"
                 />
             </div>
 

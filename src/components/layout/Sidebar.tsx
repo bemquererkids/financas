@@ -5,71 +5,66 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
-    LayoutDashboard,
-    CalendarDays,
-    PiggyBank,
-    TrendingUp,
-    CreditCard,
+    Wallet,
+    CalendarClock,
+    Compass,
+    Sprout,
+    LineChart,
+    Link as LinkIcon,
     Target,
-    History,
-    ChevronLeft,
-    ChevronRight,
+    Sparkles,
     PanelLeftClose,
     PanelLeftOpen,
-    BookOpen,
-    Receipt,
-    Map,
-    BarChart2,
-    Compass
+    PiggyBank
 } from 'lucide-react';
 import { CurrencyTicker } from '@/components/layout/CurrencyTicker';
 
 const routes = [
     {
-        label: 'Visão Geral',
-        icon: LayoutDashboard,
+        label: 'Minha Carteira',
+        icon: Wallet,
         href: '/',
         color: 'text-sky-500',
     },
     {
-        label: 'Pagamentos',
-        icon: Receipt,
+        label: 'Contas a Pagar',
+        icon: CalendarClock,
         href: '/payments',
         color: 'text-violet-500',
     },
     {
-        label: 'Planejamento',
-        icon: Map,
+        label: 'Para Onde Vai',
+        icon: Compass,
         href: '/planning',
         color: 'text-pink-700',
     },
     {
-        label: 'Investimentos',
-        icon: TrendingUp,
+        label: 'Meu Futuro',
+        icon: Sprout,
         href: '/investments',
         color: 'text-emerald-500',
     },
     {
-        label: 'Desempenho',
-        icon: BarChart2,
+        label: 'Minha Evolução',
+        icon: LineChart,
         href: '/performance',
         color: 'text-orange-700',
     },
     {
-        label: 'Dívidas',
-        icon: CreditCard,
+        label: 'Minhas Dívidas',
+        icon: LinkIcon,
         href: '/debts',
         color: 'text-red-500',
     },
     {
-        label: 'Objetivos',
+        label: 'Meus Objetivos',
         icon: Target,
         href: '/goals',
         color: 'text-yellow-500',
     },
     {
-        label: 'Como Começar',
-        icon: Compass,
+        label: 'Primeiros Passos',
+        icon: Sparkles,
         href: '/tutorial',
         color: 'text-white',
     },
@@ -86,7 +81,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     return (
         <div className={cn(
             "space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white border-r border-white/10 transition-all duration-300",
-            collapsed ? "w-[80px]" : "w-72" // Largura controlada pelo pai, mas bom ter aqui também
+            collapsed ? "w-[80px]" : "w-72"
         )}>
             <div className="px-3 py-2 flex-1 relative">
                 <div className="flex items-center justify-between mb-10 pl-2">
@@ -112,7 +107,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                     </div>
                 )}
 
-                {/* Botão de abrir centralizado quando fechado */}
                 {collapsed && onToggle && (
                     <div className="flex justify-center mb-6">
                         <Button onClick={onToggle} variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-white">
@@ -141,8 +135,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                     ))}
                 </div>
             </div>
-
-
 
             <div className="px-3 py-2 mt-auto">
                 <div className={cn("rounded-xl border border-white/5 bg-gradient-to-br from-slate-900/50 to-slate-800/20", !collapsed && "p-3")}>

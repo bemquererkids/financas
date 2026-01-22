@@ -86,7 +86,7 @@ export default function PaymentsPage() {
     return (
         <div className="flex-1 space-y-4 p-4 md:p-6">
             <ModuleHeader
-                title="Pagamentos"
+                title="Contas a Pagar"
                 subtitle="Controle de contas por Janelas (7, 15, 30)"
             >
                 <div className="flex items-center gap-2">
