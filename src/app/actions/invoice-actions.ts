@@ -14,63 +14,88 @@ const openai = new OpenAI({
 });
 
 export async function extractInvoiceData(formData: FormData) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return { error: 'Unauthorized' };
-
-    const file = formData.get('file') as File;
-    if (!file) return { error: 'No file provided' };
-
+    console.log('Started extractInvoiceData');
     try {
-        // 1. Converter File para Buffer
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        // 2. Extrair Texto do PDF
-        const pdfData = await pdf(buffer);
-        const text = pdfData.text.slice(0, 3000); // Pegar os primeiros 3k caracteres
-
-        if (!text || text.length < 10) {
-            return { error: 'Não foi possível ler o texto do PDF.' };
+        if (!process.env.OPENAI_API_KEY) {
+            console.error('Missing OPENAI_API_KEY');
+            return { error: 'Erro de configuração no servidor (API Key).' };
         }
 
-        // 3. Usar LLM para analisar
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { error: 'Unauthorized' };
+
+        const file = formData.get('file') as File;
+        if (!file) return { error: 'No file provided' };
+
+        console.log(`Processing file: ${file.name}, size: ${file.size}`);
+
+        // 1. Converter File para Buffer
+        let text = '';
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const pdfData = await pdf(buffer);
+            text = pdfData.text ? pdfData.text.slice(0, 4000) : '';
+        } catch (pdfError: any) {
+            console.error('PDF Parse Error:', pdfError);
+            return { error: 'Não foi possível ler o conteúdo deste PDF. Ele pode ser uma imagem escaneada ou estar protegido.' };
+        }
+
+        if (!text || text.length < 10) {
+            return { error: 'O PDF parece vazio ou ilegível (imagem?).' };
+        }
+
+        console.log('PDF text extracted, calling OpenAI...');
+
+        // 3. Usar LLM para analisar e classificar
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             temperature: 0,
             messages: [
                 {
                     role: "system",
-                    content: `Você é um extrator de dados de fatura de cartão de crédito.
-                    Analise o texto fornecido e extraia:
-                    1. Nome do Cartão/Banco (ex: Nubank, Itaú, XP).
-                    2. Valor TOTAL da fatura (fechada ou atual).
-                    3. Data de Vencimento (formato YYYY-MM-DD).
+                    content: `Você é uma IA especialista em contabilidade pessoal.
+                    Analise o texto do documento financeiro e extraia os dados para o MyWallet.
                     
-                    Retorne APENAS um JSON válido no formato:
+                    PRIMEIRO, CLASSIFIQUE O TIPO:
+                    - "PAYABLE": Se for uma Fatura de Cartão, Boleto de Conta (Luz, Água, Internet), ou qualquer cobrança com Vencimento Futuro.
+                    - "TRANSACTION": Se for um Recibo, Nota Fiscal, Comprovante de Pagamento (PIX) ou Gasto JÁ realizado.
+
+                    EM SEGUIDA, EXTRAIA:
+                    1. Descrição Sugerida (Nome do local ou serviço. Ex: "Uber", "Fatura Nubank", "Conta de Luz").
+                    2. Valor TOTAL.
+                    3. Data Relevante (Vencimento para PAYABLE, Data da Compra para TRANSACTION).
+                    4. Categoria Sugerida (Ex: "Alimentação", "Transporte", "Moradia", "Cartão").
+
+                    Retorne APENAS um JSON válido:
                     {
-                        "bankName": "string",
-                        "amount": number, // exemplo: 1250.50
-                        "dueDate": "YYYY-MM-DD"
+                        "type": "PAYABLE" | "TRANSACTION",
+                        "description": "string",
+                        "amount": number,
+                        "date": "YYYY-MM-DD",
+                        "category": "string"
                     }
-                    Se não encontrar algum campo, retorne null nele.`
+                    Se não encontrar algum campo, retorne null, mas tente inferir o máximo possível.`
                 },
                 {
                     role: "user",
-                    content: `Texto da Fatura:\n${text}`
+                    content: `Texto do Documento (Início):\n${text}`
                 }
             ],
             response_format: { type: "json_object" }
         });
 
         const content = completion.choices[0].message.content;
-        if (!content) return { error: 'Failed to extract data' };
+        if (!content) throw new Error('Empty response from OpenAI');
 
         const data = JSON.parse(content);
+        console.log('OpenAI analysis success:', data);
+
         return { success: true, data };
 
-    } catch (error) {
-        console.error('Invoice Extraction Error:', error);
-        return { error: 'Erro ao processar o arquivo. Tente manualmente.' };
+    } catch (error: any) {
+        console.error('CRITICAL ERROR in extractInvoiceData:', error);
+        return { error: `Erro ao processar documento: ${error.message || 'Erro interno'}. Tente manualmente.` };
     }
 }
 
