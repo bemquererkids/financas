@@ -1,7 +1,7 @@
 
-import axios from 'axios';
-import OpenAI from 'openai';
-import { OpenAIStream, StreamingTextResponse } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { streamText, tool } from 'ai';
+import { z } from 'zod';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -12,43 +12,16 @@ import { getDebts } from '@/app/actions/debt-actions';
 import { getProjections } from '@/app/actions/investment-actions';
 import { getPaymentWindows } from '@/app/actions/payment-actions';
 
-// Tool Actions (Diretas)
+// DB
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Allow longer generation for tools
 
-// Lazy Initializer
-let openaiInstance: OpenAI | null = null;
-function getOpenAI() {
-    if (!openaiInstance) {
-        openaiInstance = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY || 'dummy-key',
-        });
-    }
-    return openaiInstance;
-}
-
-// 🛠️ Definição das Ferramentas (Skills)
-const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-    {
-        type: 'function',
-        function: {
-            name: 'add_transaction',
-            description: 'Registrar uma nova transação financeira AGORA (Histórico/Extrato Real).',
-            parameters: {
-                type: 'object',
-                properties: {
-                    description: { type: 'string', description: 'Descrição (ex: Almoço, Uber)' },
-                    amount: { type: 'number', description: 'Valor (ex: 50.00)' },
-                    type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
-                    category: { type: 'string' },
-                    date: { type: 'string', description: 'YYYY-MM-DD' }
-                },
-                required: ['description', 'amount', 'type', 'category']
-            }
-        }
-    }
-];
+// Initialize custom Google provider with Vertex API Key
+const google = createGoogleGenerativeAI({
+    apiKey: process.env.VERTEX_API_KEY,
+});
 
 export async function POST(req: Request) {
     try {
@@ -152,9 +125,9 @@ ${investList.length > 0 ? investList : "Nenhum investimento cadastrado."}
 ${txList.length > 0 ? txList : "Nenhuma transação recente."}
 `;
 
-        const systemMessage = {
-            role: "system",
-            content: `Você é o 'Agente Financeiro', um parceiro de organização financeira de ${userName}.
+        const systemPrompt = `Você é o 'Agente Financeiro', um parceiro de organização financeira de ${userName}.
+**REGRA PRIMORDIAL: Toda a sua comunicação deve ser estritamente em Português do Brasil (pt-BR).**
+
 Seu objetivo é trazer tranquilidade e clareza. Use um tom **colaborativo, leve e organizado** ("Vamos resolver tudo", "Um passo de cada vez").
 
 CONTEXTO DO ONBOARDING:
@@ -173,76 +146,57 @@ ${contextData}
 ---
 
 REGRAS TÉCNICAS:
-- Responda sempre em Português do Brasil.
+- Responda SEMPRE em Português do Brasil.
 - Não invente valores que não estão no contexto.
 - Se o usuário pedir para adicionar algo, use as tools disponíveis.
-`
-        };
+`;
 
-        // 3. Primeira Chamada ao LLM
-        const response = await getOpenAI().chat.completions.create({
-            model: "gpt-4o",
-            temperature: 0.2, // Baixa criatividade para precisão
-            messages: [systemMessage, ...messages],
-            tools: tools,
-            tool_choice: 'auto',
-        });
+        // 🚀 Google ADK Integration (via Vercel AI SDK)
+        const result = await streamText({
+            model: google('models/gemini-2.5-flash'),
+            system: systemPrompt,
+            messages,
+            tools: {
+                add_transaction: tool({
+                    description: 'Registrar uma nova transação financeira AGORA (Histórico/Extrato Real).',
+                    parameters: z.object({
+                        description: z.string().describe('Descrição da transação (ex: Almoço, Uber, Salário)'),
+                        amount: z.number().describe('Valor monetário (ex: 50.00)'),
+                        type: z.enum(['INCOME', 'EXPENSE']).describe('Tipo de transação: INCOME (Entrada) ou EXPENSE (Saída)'),
+                        category: z.string().describe('Categoria da despesa (ex: FOOD, TRANSPORT, LEISURE, HOUSING)'),
+                        date: z.string().optional().describe('Data da transação no formato YYYY-MM-DD. Se não informado, usar data de hoje.')
+                    }),
+                    execute: async ({ description, amount, type, category, date }: { description: string, amount: number, type: 'INCOME' | 'EXPENSE', category: string, date?: string }) => {
+                        console.log('🛠️ Tool Execution: add_transaction', { description, amount });
 
-        const responseMessage = response.choices[0].message;
-
-        // 4. Verificar se houve chamada de Tool
-        if (responseMessage.tool_calls) {
-            const newMessages = [systemMessage, ...messages, responseMessage];
-
-            for (const toolCall of responseMessage.tool_calls) {
-                const functionName = toolCall.function.name;
-                const functionArgs = JSON.parse(toolCall.function.arguments);
-                let functionResult = "";
-
-                if (functionName === 'add_transaction') {
-                    // Executar no Banco Real
-                    const transaction = await prisma.transaction.create({
-                        data: {
-                            userId,
-                            description: functionArgs.description,
-                            amount: Number(functionArgs.amount),
-                            type: functionArgs.type,
-                            category: functionArgs.category,
-                            date: new Date(functionArgs.date || new Date()),
-                            isRecurring: false
-                        } as any
-                    });
-                    functionResult = JSON.stringify({ success: true, id: transaction.id, message: "Transação registrada!" });
-                }
-
-                newMessages.push({
-                    tool_call_id: toolCall.id,
-                    role: "tool",
-                    name: functionName,
-                    content: functionResult,
-                });
+                        try {
+                            const transaction = await prisma.transaction.create({
+                                data: {
+                                    userId,
+                                    description,
+                                    amount: Number(amount),
+                                    type,
+                                    category: category.toUpperCase(),
+                                    date: new Date(date || new Date()),
+                                    isRecurring: false
+                                } as any
+                            });
+                            return {
+                                success: true,
+                                id: transaction.id,
+                                message: `Transação '${description}' de R$ ${amount} registrada com sucesso!`,
+                                transaction
+                            };
+                        } catch (error) {
+                            console.error('Tool Error:', error);
+                            return { success: false, error: 'Falha ao registrar transação no banco de dados.' };
+                        }
+                    }
+                })
             }
-
-            // 5. Segunda Chamada (Resposta Final)
-            const secondResponse = await getOpenAI().chat.completions.create({
-                model: 'gpt-4o',
-                temperature: 0.2,
-                stream: true,
-                messages: newMessages as any,
-            });
-
-            return new StreamingTextResponse(OpenAIStream(secondResponse as any));
-        }
-
-        // Sem tools -> Stream direto
-        const streamResponse = await getOpenAI().chat.completions.create({
-            model: 'gpt-4o',
-            temperature: 0.2,
-            stream: true,
-            messages: [systemMessage, ...messages],
         });
 
-        return new StreamingTextResponse(OpenAIStream(streamResponse as any));
+        return result.toTextStreamResponse();
 
     } catch (error) {
         console.error('Chat API Error:', error);
