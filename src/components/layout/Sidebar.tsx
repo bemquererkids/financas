@@ -91,13 +91,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
             collapsed ? "w-[72px]" : "w-72"
         )}>
             {/* Toggle Button "Notch" Style */}
+            {/* Toggle Button "Circled Arrow" Style */}
             {onToggle && (
                 <button
                     onClick={onToggle}
-                    className="absolute -right-3 top-9 z-50 h-6 w-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center cursor-pointer hover:bg-emerald-600 hover:border-emerald-500 hover:text-white text-slate-400 transition-all shadow-lg"
+                    className="absolute -right-3.5 top-8 z-50 h-7 w-7 rounded-full bg-[#0A0F1C] border border-slate-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:text-emerald-500 text-slate-400 transition-all shadow-lg ring-4 ring-[#0A0F1C]" // Added ring to create separation from content behind
                     title={collapsed ? "Expandir menu" : "Recolher menu"}
                 >
-                    {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+                    {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
                 </button>
             )}
 
