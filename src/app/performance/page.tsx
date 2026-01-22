@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getPerformanceMetrics } from '@/app/actions/performance-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Scale, Activity, Sparkles } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -149,12 +150,12 @@ export default function PerformancePage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-[280px] flex items-center justify-center text-slate-500">
-                                <div className="text-center">
-                                    <Activity className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                                    <p>Sem ativos registrados</p>
-                                </div>
-                            </div>
+                            <EmptyState
+                                icon={Activity}
+                                title="Sem dados suficientes"
+                                description="Atualize seus ativos e passivos para ver o gráfico."
+                                className="min-h-[280px] p-0"
+                            />
                         )}
                     </CardContent>
                 </Card>

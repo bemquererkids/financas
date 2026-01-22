@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { InvestmentChart } from '@/components/investments/InvestmentChart';
+import { EmptyState } from '@/components/ui/empty-state';
 import { calculateProjectionData, createProjection, getProjections } from '@/app/actions/investment-actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -181,7 +182,12 @@ export default function InvestmentsPage() {
                         </CardHeader>
                         <CardContent className="p-0 overflow-y-auto flex-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-emerald-500/20 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/40 [&::-webkit-scrollbar-thumb]:rounded-full">
                             {savedProjections.length === 0 && (
-                                <p className="text-xs text-slate-500 p-4 text-center">Nenhum cenário salvo.</p>
+                                <EmptyState
+                                    icon={TrendingUp}
+                                    title="Nenhum cenário"
+                                    description="Simule e salve estratégias acima."
+                                    className="min-h-[200px] p-4"
+                                />
                             )}
                             <div className="divide-y divide-white/5">
                                 {savedProjections.map((proj) => (

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getDebts, createDebt, payoffDebt, deleteDebt } from '@/app/actions/debt-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -115,12 +116,13 @@ export default function DebtsPage() {
             </div>
 
             {debts.length === 0 && !isAdding && (
-                <div className="flex items-center justify-center h-64 text-slate-500">
-                    <div className="text-center">
-                        <CreditCard className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                        <p>Nenhuma dívida registrada</p>
-                    </div>
-                </div>
+                <EmptyState
+                    icon={CheckCircle}
+                    title="Zero dívidas! Que paz."
+                    description="Parabéns! Você não tem pendências registradas. Se surgir algo, adicione aqui para criar um plano de quitação."
+                    ctaLabel="Registrar Dívida"
+                    onCtaClick={() => setIsAdding(true)}
+                />
             )}
         </div>
     );

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getGoals, createGoal, toggleGoalStatus, deleteGoal } from '@/app/actions/goal-actions';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Trash2, Plus, Target } from 'lucide-react';
@@ -12,6 +13,7 @@ export default function GoalsPage() {
     const [goals, setGoals] = useState<any[]>([]);
     const [newItem, setNewItem] = useState('');
     const [newAmount, setNewAmount] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
     const [monthlySavings, setMonthlySavings] = useState(500); // Simulador de capacidade
 
     useEffect(() => { loadGoals(); }, []);
@@ -72,6 +74,7 @@ export default function GoalsPage() {
                 {/* Add Goal Form */}
                 <div className="flex gap-2 p-3 rounded-xl glass-card border border-white/10 bg-white/5">
                     <Input
+                        ref={inputRef}
                         placeholder="Novo objetivo (ex: Viajar para Europa)"
                         value={newItem}
                         onChange={(e) => setNewItem(e.target.value)}
@@ -94,12 +97,13 @@ export default function GoalsPage() {
                 {/* Goals List */}
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
                     {goals.length === 0 && (
-                        <div className="flex items-center justify-center h-48 text-slate-500">
-                            <div className="text-center">
-                                <Target className="h-10 w-10 mx-auto mb-2 opacity-20" />
-                                <p>Nenhum objetivo definido</p>
-                            </div>
-                        </div>
+                        <EmptyState
+                            icon={Target}
+                            title="Qual é o seu próximo sonho?"
+                            description="Defina metas claras (uma viagem, um carro, reserva de emergência) para saber exatamente quanto guardar por mês."
+                            ctaLabel="Criar Primeiro Objetivo"
+                            onCtaClick={() => inputRef.current?.focus()}
+                        />
                     )}
 
                     {goals.map(goal => {

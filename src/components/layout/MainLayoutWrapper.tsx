@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
@@ -17,6 +17,19 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const isAuthPage = pathname?.startsWith('/auth');
 
+    useEffect(() => {
+        const stored = localStorage.getItem('sidebarCollapsed');
+        if (stored) {
+            setIsCollapsed(JSON.parse(stored));
+        }
+    }, []);
+
+    const toggleSidebar = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+    };
+
     if (isAuthPage) {
         return <div className="h-full w-full">{children}</div>;
     }
@@ -26,9 +39,9 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             {/* Sidebar Desktop */}
             <div className={cn(
                 "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-[80] transition-all duration-300",
-                isCollapsed ? "md:w-[80px]" : "md:w-72"
+                isCollapsed ? "md:w-[72px]" : "md:w-72"
             )}>
-                <Sidebar collapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
+                <Sidebar collapsed={isCollapsed} onToggle={toggleSidebar} />
             </div>
 
             {/* Mobile Navbar with Notification */}
@@ -59,7 +72,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             {/* Main Content */}
             <main className={cn(
                 "pt-16 md:pt-0 pb-10 h-full transition-all duration-300",
-                isCollapsed ? "md:pl-[80px]" : "md:pl-72"
+                isCollapsed ? "md:pl-[72px]" : "md:pl-72"
             )}>
                 {children}
             </main>

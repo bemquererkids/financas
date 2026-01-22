@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit2, AlertTriangle } from "lucide-react";
+import { Trash2, Edit2, AlertTriangle, History as HistoryIcon } from "lucide-react";
 import { deleteTransaction } from "@/app/actions/transaction-crud";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditTransactionDialog } from "./EditTransactionDialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Transaction {
     id: string;
@@ -160,9 +161,12 @@ export function TransactionList({ transactions, isEmbedded = false }: { transact
                         </div>
                     ))}
                     {localTransactions.length === 0 && (
-                        <div className="text-center py-12 text-slate-500">
-                            <p>Nenhuma transação encontrada.</p>
-                        </div>
+                        <EmptyState
+                            icon={HistoryIcon}
+                            title="Sem movimentações"
+                            description="Toque no + para começar."
+                            className="min-h-[300px]"
+                        />
                     )}
                 </div>
 
@@ -224,8 +228,15 @@ export function TransactionList({ transactions, isEmbedded = false }: { transact
                             ))}
                             {localTransactions.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-slate-500 text-xs">
-                                        Nenhuma transação encontrada.
+                                    <td colSpan={5}>
+                                        <EmptyState
+                                            icon={HistoryIcon}
+                                            title="Sem movimentações"
+                                            description="Suas transações recentes aparecerão aqui."
+                                            className="min-h-[300px]"
+                                            ctaLabel="Nova Transação"
+                                            onCtaClick={() => document.getElementById('floating-transaction-btn')?.click()}
+                                        />
                                     </td>
                                 </tr>
                             )}

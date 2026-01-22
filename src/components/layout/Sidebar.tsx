@@ -87,7 +87,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
     return (
         <div className={cn(
-            "relative space-y-4 py-4 flex flex-col h-full bg-[#0A0F1C] text-white border-r border-white/10 transition-all duration-300 ease-in-out",
+            "relative space-y-4 py-4 flex flex-col h-full bg-[#0A0F1C] text-white border-r border-white/10 transition-all duration-300 ease-in-out overflow-visible",
             collapsed ? "w-[72px]" : "w-72"
         )}>
             {/* Toggle Button "Notch" Style */}
