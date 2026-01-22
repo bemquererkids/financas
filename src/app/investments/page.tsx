@@ -85,10 +85,10 @@ export default function InvestmentsPage() {
             />
 
             <div className="grid gap-4 md:grid-cols-12 flex-1 min-h-0">
-                {/* Lateral Esquerda - Controles Compactados */}
-                <div className="col-span-12 md:col-span-4 lg:col-span-3 flex flex-col gap-4 overflow-y-auto pr-1">
+                {/* Lateral Esquerda - Controles Compactados e Cenários */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 flex flex-col gap-4 h-full">
                     {/* Card Unificado: Parâmetros + Resultado */}
-                    <Card className="glass-card border-white/10 bg-white/5">
+                    <Card className="glass-card border-white/10 bg-white/5 shrink-0">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-white flex items-center gap-2 text-sm uppercase tracking-wider text-emerald-400">
                                 <TrendingUp className="h-4 w-4" /> Simulador
@@ -174,12 +174,12 @@ export default function InvestmentsPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Lista de Cenários - Mais compacta */}
-                    <Card className="glass-card border-white/10 bg-white/5 flex-1 min-h-[200px] flex flex-col">
-                        <CardHeader className="py-3 px-4 border-b border-white/5">
+                    {/* Lista de Cenários - Expansível com Scroll Interno Estilizado */}
+                    <Card className="glass-card border-white/10 bg-white/5 flex-1 min-h-0 flex flex-col overflow-hidden">
+                        <CardHeader className="py-3 px-4 border-b border-white/5 shrink-0 bg-white/5">
                             <CardTitle className="text-slate-300 text-sm">Cenários Salvos</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 overflow-y-auto flex-1">
+                        <CardContent className="p-0 overflow-y-auto flex-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-emerald-500/20 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/40 [&::-webkit-scrollbar-thumb]:rounded-full">
                             {savedProjections.length === 0 && (
                                 <p className="text-xs text-slate-500 p-4 text-center">Nenhum cenário salvo.</p>
                             )}
