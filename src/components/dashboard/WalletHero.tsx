@@ -53,45 +53,47 @@ export function WalletHero({ summary }: WalletHeroProps) {
                 <div className="relative z-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3 items-center">
 
                     {/* 1. O Número Principal (Livre para Gastar) */}
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                            <Wallet className="w-4 h-4" />
-                            <span>Dinheiro livre hoje</span>
-                            <button onClick={togglePrivacy} className="hover:text-white transition-colors ml-1">
-                                {hideValues ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
+                    <div className="space-y-1">
+                        <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2 text-slate-300 text-sm font-medium">
+                                <Wallet className="w-4 h-4 text-emerald-400" />
+                                <span>Dinheiro livre hoje</span>
+                                <button onClick={togglePrivacy} className="hover:text-white transition-colors ml-1 text-slate-500">
+                                    {hideValues ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-medium">Já descontando contas pendentes</p>
                         </div>
 
-                        <div className="flex items-baseline gap-1">
+                        <div className="flex items-baseline gap-1 pt-1">
                             <h1 className={`text-4xl md:text-5xl font-bold tracking-tight ${hideValues ? 'blur-md select-none' : ''} ${summary.fundsAvailable < 0 ? 'text-red-400' : 'text-white'}`}>
                                 {hideValues ? 'R$ 8.888,88' : formatCurrency(summary.fundsAvailable)}
                             </h1>
                         </div>
 
                         {/* Estado Emocional */}
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color} ${statusConfig.border} border`}>
+                        <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color} ${statusConfig.border} border`}>
                             <statusConfig.icon className="w-3.5 h-3.5" />
                             {statusConfig.text}
                         </div>
                     </div>
 
                     {/* 2. O Contexto (Compromissos e Saldo Real) */}
-                    <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-8">
-                        <div className="space-y-1">
-                            <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Compromissos</p>
+                    <div className="space-y-5 border-t md:border-t-0 md:border-l border-slate-800 pt-5 md:pt-0 md:pl-8">
+                        <div className="space-y-1.5">
                             <div className="flex justify-between items-end">
-                                <span className="text-slate-400 text-sm">Contas até o fim do mês</span>
+                                <span className="text-slate-400 text-sm font-medium">Contas para pagar</span>
                                 <span className={`font-mono font-medium ${hideValues ? 'blur-sm' : ''} text-slate-200`}>
                                     {hideValues ? '----' : formatCurrency(summary.commitments)}
                                 </span>
                             </div>
-                            {/* Barra de progresso visual do comprometimento */}
                             <Progress value={summary.balance > 0 ? (summary.commitments / summary.balance) * 100 : 0} className="h-1.5 bg-slate-900" indicatorClassName="bg-amber-500/70" />
+                            <p className="text-[10px] text-slate-500 text-right">até o fim do mês</p>
                         </div>
 
-                        <div className="space-y-1 pt-2">
-                            <div className="flex justify-between items-end text-xs">
-                                <span className="text-slate-500">Saldo em Conta (Bruto)</span>
+                        <div className="space-y-1 pt-2 border-t border-slate-800/50">
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500">Total atual nas contas</span>
                                 <span className={`font-mono text-slate-400 ${hideValues ? 'blur-sm' : ''}`}>
                                     {hideValues ? '----' : formatCurrency(summary.balance)}
                                 </span>
@@ -103,18 +105,18 @@ export function WalletHero({ summary }: WalletHeroProps) {
                     <div className="flex gap-3 md:justify-end mt-2 md:mt-0">
                         <Button
                             onClick={() => openTransaction('INCOME')}
-                            className="flex-1 md:flex-none h-12 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-bold rounded-xl shadow-lg shadow-emerald-900/20 group"
+                            className="flex-1 md:flex-none h-12 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-bold rounded-xl shadow-lg shadow-emerald-900/20 group transition-all"
                         >
-                            <ArrowUpCircle className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
-                            Entrada
+                            <ArrowUpCircle className="mr-2 w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+                            Recebi
                         </Button>
                         <Button
                             onClick={() => openTransaction('EXPENSE')}
                             variant="outline"
-                            className="flex-1 md:flex-none h-12 border-slate-700 hover:bg-slate-800 text-slate-200 font-medium rounded-xl hover:text-white group"
+                            className="flex-1 md:flex-none h-12 border-slate-700 hover:bg-slate-800 text-slate-200 font-medium rounded-xl hover:text-white group transition-all"
                         >
-                            <ArrowDownCircle className="mr-2 w-5 h-5 text-red-400 group-hover:text-red-300 group-hover:scale-110 transition-transform" />
-                            Saída
+                            <ArrowDownCircle className="mr-2 w-5 h-5 text-red-400 group-hover:translate-y-0.5 transition-transform" />
+                            Gastei
                         </Button>
                     </div>
                 </div>
