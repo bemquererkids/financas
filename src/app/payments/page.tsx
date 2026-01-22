@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle, Circle, Calendar, Save, Upload, FileSpreadsheet, X } from 'lucide-react';
+import { Plus, CheckCircle, Circle, Calendar, Save, Upload, X } from 'lucide-react';
 import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
+import { NewInvoiceDialog } from '@/components/payments/NewInvoiceDialog';
 
 export default function PaymentsPage() {
     const [data, setData] = useState<any>(null);
@@ -89,6 +90,9 @@ export default function PaymentsPage() {
                 subtitle="Controle de contas por Janelas (7, 15, 30)"
             >
                 <div className="flex items-center gap-2">
+                    {/* Botão Novo de Fatura (Cartão) */}
+                    <NewInvoiceDialog onOpenChange={(open) => !open && loadData()} />
+
                     <input
                         type="file"
                         accept=".csv,.txt"
