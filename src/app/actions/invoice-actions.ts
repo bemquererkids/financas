@@ -41,14 +41,19 @@ export async function extractFinancialData(text: string) {
                     Analise o texto do documento financeiro e extraia os dados para o MyWallet.
                     
                     PRIMEIRO, CLASSIFIQUE O TIPO:
-                    - "PAYABLE": Se for uma Fatura de Cartão, Boleto de Conta (Luz, Água, Internet), ou qualquer cobrança com Vencimento Futuro.
-                    - "TRANSACTION": Se for um Recibo, Nota Fiscal, Comprovante de Pagamento (PIX) ou Gasto JÁ realizado.
+                    - "PAYABLE": Se for uma Fatura de Cartão (fechada), Boleto de Conta (Luz, Água, Internet), ou qualquer cobrança.
+                    - "TRANSACTION": Se for um comprovante de pagamento JÁ efetuado.
+
+                    ATENÇÃO CRÍTICA PARA FATURAS DE CARTÃO (ex: Itaú, Nubank):
+                    - Valor: Procure por "Total desta fatura", "Valor da Fatura" ou "Total a pagar". Ignore "Pagamento mínimo" ou "Lançamentos atuais" se houver um Total consolidado.
+                    - Data: Procure por "Vencimento", "Vence em". EXTRAIA A DATA EXATA QUE ESTÁ NO PAPEL (ex: 26/12/2025). NÃO use a data de hoje. Se estiver vencida, mantenha a data original vencida.
+                    - Descrição: Use "Fatura [Nome do Banco]" (ex: "Fatura Itaú", "Fatura Nubank").
 
                     EM SEGUIDA, EXTRAIA:
-                    1. Descrição Sugerida (Nome do local ou serviço. Ex: "Uber", "Fatura Nubank", "Conta de Luz").
-                    2. Valor TOTAL.
-                    3. Data Relevante (Vencimento para PAYABLE, Data da Compra para TRANSACTION).
-                    4. Categoria Sugerida (Ex: "Alimentação", "Transporte", "Moradia", "Cartão").
+                    1. Descrição Sugerida.
+                    2. Valor TOTAL (number).
+                    3. Data Relevante (YYYY-MM-DD).
+                    4. Categoria Sugerida (Ex: "Cartão de Crédito" para faturas, "Moradia" para luz).
 
                     Retorne APENAS um JSON válido:
                     {
@@ -58,7 +63,7 @@ export async function extractFinancialData(text: string) {
                         "date": "YYYY-MM-DD",
                         "category": "string"
                     }
-                    Se não encontrar algum campo, retorne null, mas tente inferir o máximo possível.`
+                    Se não encontrar algum campo, tente inferir pelo contexto, mas priorize a exatidão dos números.`
                 },
                 {
                     role: "user",
