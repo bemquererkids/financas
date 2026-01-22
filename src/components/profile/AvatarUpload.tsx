@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition, useEffect } from 'react';
 import { Camera, Upload, X, User, Check } from 'lucide-react';
 import { updateUserAvatar, removeUserAvatar } from '@/app/actions/user-actions';
+import { toast } from 'sonner';
 
 interface AvatarUploadProps {
     currentAvatar?: string | null;
@@ -46,7 +47,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
             setIsCameraActive(true);
         } catch (err) {
             console.error("Erro ao acessar câmera:", err);
-            alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+            toast.error('Não foi possível acessar a câmera. Verifique as permissões. 📸');
         }
     };
 
@@ -79,8 +80,9 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
             if (result.success) {
                 setPreview(null);
                 setIsOpen(false);
+                toast.success('Foto de perfil atualizada! ✨');
             } else {
-                alert('Erro ao salvar avatar. Verifique sua conexão e tente novamente.');
+                toast.error('Erro ao salvar avatar. Verifique sua conexão. 😢');
             }
         });
     };
@@ -90,6 +92,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
             await removeUserAvatar();
             setPreview(null);
             setIsOpen(false);
+            toast.success('Foto removida com sucesso!');
         });
     };
 
