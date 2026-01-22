@@ -79,7 +79,7 @@ export default function PlanningPage() {
         <div className="flex-1 h-full flex flex-col p-4 md:p-6 gap-6 overflow-y-auto w-full pb-20">
             <ModuleHeader
                 title="Planejamento Futuro"
-                subtitle="Projete seus meses e simule cenários para alcançar sua liberdade financeira."
+                subtitle="Projeção para os próximos 12 meses e simulação de cenários."
                 onChatToggle={handleChatToggle}
             />
 

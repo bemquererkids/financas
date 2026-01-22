@@ -154,6 +154,14 @@ export default function PaymentsPage() {
                 </div>
             )}
 
+            {/* Aviso de Contexto */}
+            <div className="bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                <p className="text-xs text-emerald-200">
+                    <span className="font-semibold">Nota:</span> O total pendente nestas janelas é deduzido automaticamente do seu <span className="text-white font-medium">Dinheiro Livre</span> na visão geral.
+                </p>
+            </div>
+
             {!data ? (
                 <div className="text-slate-400">Carregando janelas...</div>
             ) : (

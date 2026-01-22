@@ -73,6 +73,7 @@ export default function PerformancePage() {
                             className="h-2 mt-2 bg-white/10"
                             indicatorClassName={metrics.healthScore > 70 ? "bg-emerald-500" : metrics.healthScore > 40 ? "bg-yellow-500" : "bg-red-500"}
                         />
+                        <p className="text-[10px] text-slate-500 mt-1.5 opacity-80">Nota dinâmica baseada em seus hábitos recentes</p>
                     </CardContent>
                 </Card>
 

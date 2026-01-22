@@ -62,7 +62,7 @@ export function WalletHero({ summary }: WalletHeroProps) {
                                     {hideValues ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
-                            <p className="text-[10px] text-slate-500 font-medium">Já descontando contas pendentes</p>
+                            <p className="text-[10px] text-slate-500 font-medium">Saldo total - Contas a pagar = <span className="text-emerald-400">Livre</span></p>
                         </div>
 
                         <div className="flex items-baseline gap-1 pt-1">

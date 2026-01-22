@@ -163,10 +163,14 @@ export default function InvestmentsPage() {
                                     <p className="text-[9px] text-slate-600">Considerando rendimento perpétuo</p>
                                 </div>
                             </div>
-
-                            <Button onClick={handleSave} size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs">
-                                <Save className="h-3 w-3 mr-2" /> Salvar Cenário
-                            </Button>
+                            <div className="pt-2">
+                                <Button onClick={handleSave} size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs mb-2">
+                                    <Save className="h-3 w-3 mr-2" /> Salvar Cenário
+                                </Button>
+                                <p className="text-[9px] text-slate-600 text-center opacity-70">
+                                    Projeção • não é garantia de retorno
+                                </p>
+                            </div>
                         </CardContent>
                     </Card>
 
