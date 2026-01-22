@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, User, Mail, Camera } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
+import { toast } from 'sonner';
 
 export function UserGreeting() {
     const { data: session, status } = useSession();
@@ -22,13 +23,13 @@ export function UserGreeting() {
 
         // Validar tipo de arquivo
         if (!file.type.startsWith('image/')) {
-            alert('Por favor, selecione uma imagem válida');
+            toast.error('Por favor, selecione uma imagem válida');
             return;
         }
 
         // Validar tamanho (máx 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 5MB');
+            toast.error('A imagem deve ter no máximo 5MB');
             return;
         }
 
@@ -48,17 +49,18 @@ export function UserGreeting() {
                 });
 
                 if (response.ok) {
+                    toast.success('Foto de perfil atualizada!');
                     // Recarregar sessão para atualizar a imagem
                     window.location.reload();
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Erro ao atualizar foto');
+                    toast.error(error.error || 'Erro ao atualizar foto');
                 }
             };
             reader.readAsDataURL(file);
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Erro ao fazer upload da foto');
+            toast.error('Erro ao fazer upload da foto');
         } finally {
             setIsUploading(false);
         }
@@ -106,7 +108,7 @@ export function UserGreeting() {
                         </div>
                     </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-80">
+                <PopoverContent align="end" className="w-80 z-[1000]">
                     <div className="space-y-4">
                         {/* Avatar e Upload */}
                         <div className="flex items-center gap-4">

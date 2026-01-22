@@ -20,7 +20,7 @@ export function ModuleHeader({ title, subtitle, children, className, onChatToggl
                     <UserGreeting />
                 </div>
 
-                <div className="hidden md:block h-10 w-px bg-white/10" />
+                <div className="hidden md:block h-8 w-px bg-white/10 self-center" />
 
                 <div>
                     <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">{title}</h1>
