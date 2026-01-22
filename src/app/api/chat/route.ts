@@ -1,5 +1,5 @@
 
-import axios from 'axios'; // Not used directly but ensuring standard libs
+import axios from 'axios';
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { getServerSession } from 'next-auth';
@@ -7,7 +7,6 @@ import { authOptions } from '@/lib/auth';
 
 // Actions de Dados
 import { getFinancialSummary, getRecentTransactions } from '@/app/actions/financial-actions';
-import { addPlanningItem } from '@/app/actions/planning-actions';
 import { getGoals } from '@/app/actions/goal-actions';
 import { getDebts } from '@/app/actions/debt-actions';
 import { getProjections } from '@/app/actions/investment-actions';
@@ -46,24 +45,6 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
                     date: { type: 'string', description: 'YYYY-MM-DD' }
                 },
                 required: ['description', 'amount', 'type', 'category']
-            }
-        }
-    },
-    {
-        type: 'function',
-        function: {
-            name: 'add_planning_item',
-            description: 'Adicionar item ao PLANEJAMENTO FUTURO (Orçamento/Meta).',
-            parameters: {
-                type: 'object',
-                properties: {
-                    month: { type: 'string', description: 'YYYY-MM' },
-                    description: { type: 'string' },
-                    amount: { type: 'number' },
-                    type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
-                    category: { type: 'string' }
-                },
-                required: ['month', 'description', 'amount', 'type', 'category']
             }
         }
     }
@@ -232,15 +213,6 @@ REGRAS TÉCNICAS:
                         } as any
                     });
                     functionResult = JSON.stringify({ success: true, id: transaction.id, message: "Transação registrada!" });
-                } else if (functionName === 'add_planning_item') {
-                    await addPlanningItem(
-                        functionArgs.month,
-                        Number(functionArgs.amount),
-                        functionArgs.description,
-                        functionArgs.type,
-                        functionArgs.category
-                    );
-                    functionResult = JSON.stringify({ success: true, message: "Planejamento atualizado!" });
                 }
 
                 newMessages.push({
