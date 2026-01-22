@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, Upload, FileText, Loader2, CheckCircle2, AlertCircle, Receipt, ArrowRight } from 'lucide-react';
-import { extractInvoiceData, createInvoicePayable } from '@/app/actions/invoice-actions';
+import { Upload, FileText, Loader2, CheckCircle2 } from 'lucide-react';
+import { extractFinancialData, createInvoicePayable } from '@/app/actions/invoice-actions';
 import { createTransaction } from '@/app/actions/transaction-actions';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'CHOICE' | 'LOADING' | 'CONFIRM'>('CHOICE');
     const [formData, setFormData] = useState({
-        type: 'PAYABLE', // 'PAYABLE' | 'TRANSACTION'
+        type: 'PAYABLE',
         description: '',
         amount: '',
         date: '',
@@ -35,33 +35,64 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
         onOpenChange?.(val);
     };
 
+    const extractTextFromPDF = async (file: File): Promise<string> => {
+        // Import dinâmico REAL para evitar quebra de build no SSR
+        // @ts-ignore
+        const pdfjsLib = await import('pdfjs-dist/build/pdf');
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+
+        let fullText = '';
+        const maxPages = Math.min(pdf.numPages, 2);
+
+        for (let i = 1; i <= maxPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            // @ts-ignore
+            const pageText = textContent.items.map((item: any) => item.str).join(' ');
+            fullText += pageText + '\n';
+        }
+        return fullText;
+    };
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setStep('LOADING');
-        const uploadData = new FormData();
-        uploadData.append('file', file);
 
         try {
-            const result = await extractInvoiceData(uploadData);
+            const text = await extractTextFromPDF(file);
+            console.log('Texto extraído (Client):', text.length, 'chars');
+
+            if (!text || text.length < 10) {
+                throw new Error('PDF vazio ou ilegível (imagem?)');
+            }
+
+            const result = await extractFinancialData(text);
 
             if (result.success && result.data) {
                 setFormData({
                     type: result.data.type || 'PAYABLE',
-                    description: result.data.description || result.data.bankName || 'Documento',
+                    description: result.data.description || 'Documento',
                     amount: result.data.amount?.toString() || '',
-                    date: result.data.date || result.data.dueDate || new Date().toISOString().split('T')[0],
+                    date: result.data.date || new Date().toISOString().split('T')[0],
                     category: result.data.category || 'Outros'
                 });
                 toast.success('Documento analisado com sucesso!');
             } else {
-                toast.error('Não conseguimos ler automaticamente. Preencha manualmente.');
+                toast.error(result.error || 'Não conseguimos ler automaticamente.');
             }
-        } catch (error) {
-            toast.error('Erro na leitura do arquivo.');
+        } catch (error: any) {
+            console.error('Erro Client-Side:', error);
+            toast.error(`Erro: ${error.message || 'Falha ao ler o arquivo'}. Tente uma foto ou preencha manual.`);
         } finally {
             setStep('CONFIRM');
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -78,20 +109,16 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
             submitData.append('name', formData.description);
             submitData.append('amount', formData.amount);
             submitData.append('dueDate', formData.date);
-            // Salva como Contas a Pagar
             try {
                 await createInvoicePayable(submitData);
                 commonMsgs.success = 'Conta agendada com sucesso.';
             } catch (e) { commonMsgs.error = 'Erro ao salvar conta.'; }
-
         } else {
-            // TRANSACTION (GASTO PASSADO)
             submitData.append('description', formData.description);
             submitData.append('amount', formData.amount);
             submitData.append('date', formData.date);
-            submitData.append('type', 'EXPENSE'); // Assumindo despesa por padrão para documentos
+            submitData.append('type', 'EXPENSE');
             submitData.append('category', formData.category);
-
             try {
                 const res = await createTransaction(submitData);
                 if (res?.success) commonMsgs.success = 'Gasto registrado com sucesso.';
@@ -139,8 +166,8 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                         <Upload className="h-5 w-5" />
                                     </div>
                                     <div className="text-left">
-                                        <p className="font-medium text-slate-200">Enviar PDF</p>
-                                        <p className="text-xs text-slate-500">IA detecta se é Conta ou Gasto</p>
+                                        <p className="font-medium text-slate-200">Selecionar PDF</p>
+                                        <p className="text-xs text-slate-500">Processamento seguro no navegador</p>
                                     </div>
                                 </div>
                             </button>
@@ -183,15 +210,14 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                 <Loader2 className="h-10 w-10 text-emerald-400 animate-spin relative z-10" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-medium text-white">Analisando documento...</h3>
-                                <p className="text-sm text-slate-400">Classificando entre Gasto e Conta a Pagar...</p>
+                                <h3 className="text-lg font-medium text-white">Lendo arquivo...</h3>
+                                <p className="text-sm text-slate-400">Extraindo dados no seu dispositivo...</p>
                             </div>
                         </div>
                     )}
 
                     {step === 'CONFIRM' && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                            {/* Classificador */}
                             <div className="p-1 bg-slate-900 rounded-lg flex border border-slate-800">
                                 <button
                                     onClick={() => setFormData({ ...formData, type: 'PAYABLE' })}
@@ -246,7 +272,6 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                     </div>
                                 </div>
 
-                                {/* Campo Categoria apenas para TRANSACTION */}
                                 {formData.type === 'TRANSACTION' && (
                                     <div className="space-y-1 animate-in fade-in zoom-in-95">
                                         <Label className="text-xs text-slate-400">Categoria</Label>

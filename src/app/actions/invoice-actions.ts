@@ -5,49 +5,32 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { addPayable } from './payment-actions';
 
-// pdf-parse usually exports via module.exports, so require is safer in node env
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdf = require('pdf-parse');
-
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function extractInvoiceData(formData: FormData) {
-    console.log('Started extractInvoiceData');
+/**
+ * Nova versão: Recebe o TEXTO já extraído no frontend.
+ * Isso elimina a dependência de parsing de PDF no servidor (que causa erro 500 no Railway).
+ */
+export async function extractFinancialData(text: string) {
+    console.log('Started extractFinancialData (Server Action)');
     try {
         if (!process.env.OPENAI_API_KEY) {
             console.error('Missing OPENAI_API_KEY');
-            return { error: 'Erro de configuração no servidor (API Key).' };
+            return { error: 'Configuração de IA ausente no servidor.' };
         }
 
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) return { error: 'Unauthorized' };
 
-        const file = formData.get('file') as File;
-        if (!file) return { error: 'No file provided' };
-
-        console.log(`Processing file: ${file.name}, size: ${file.size}`);
-
-        // 1. Converter File para Buffer
-        let text = '';
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const pdfData = await pdf(buffer);
-            text = pdfData.text ? pdfData.text.slice(0, 4000) : '';
-        } catch (pdfError: any) {
-            console.error('PDF Parse Error:', pdfError);
-            return { error: 'Não foi possível ler o conteúdo deste PDF. Ele pode ser uma imagem escaneada ou estar protegido.' };
+        if (!text || text.length < 5) {
+            return { error: 'Texto do documento vazio ou muito curto.' };
         }
 
-        if (!text || text.length < 10) {
-            return { error: 'O PDF parece vazio ou ilegível (imagem?).' };
-        }
+        console.log(`Processing text length: ${text.length} chars`);
 
-        console.log('PDF text extracted, calling OpenAI...');
-
-        // 3. Usar LLM para analisar e classificar
+        // Usar LLM para analisar e classificar
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             temperature: 0,
@@ -79,7 +62,7 @@ export async function extractInvoiceData(formData: FormData) {
                 },
                 {
                     role: "user",
-                    content: `Texto do Documento (Início):\n${text}`
+                    content: `Texto do Documento (Início):\n${text.slice(0, 4000)}`
                 }
             ],
             response_format: { type: "json_object" }
@@ -94,12 +77,16 @@ export async function extractInvoiceData(formData: FormData) {
         return { success: true, data };
 
     } catch (error: any) {
-        console.error('CRITICAL ERROR in extractInvoiceData:', error);
-        return { error: `Erro ao processar documento: ${error.message || 'Erro interno'}. Tente manualmente.` };
+        console.error('CRITICAL ERROR in extractFinancialData:', error);
+        return { error: `Erro ao processar: ${error.message || 'Erro interno'}.` };
     }
 }
 
+// Wrapper legado apenas para não quebrar imports se houver, mas idealmente não usado mais
+export async function extractInvoiceData(formData: FormData) {
+    return { error: 'Função obsoleta. Use o extrator no navegador.' };
+}
+
 export async function createInvoicePayable(formData: FormData) {
-    // Wrapper para reaproveitar a lógica de addPayable
     return await addPayable(formData);
 }
