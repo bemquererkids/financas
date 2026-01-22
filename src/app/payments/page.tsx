@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle, Circle, Calendar, Save, Upload, X } from 'lucide-react';
+import { Plus, CheckCircle, Circle, Calendar, Save, Upload, X, CalendarClock } from 'lucide-react';
 import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
 import { NewInvoiceDialog } from '@/components/payments/NewInvoiceDialog';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export default function PaymentsPage() {
     const [data, setData] = useState<any>(null);
@@ -83,6 +84,9 @@ export default function PaymentsPage() {
         reader.readAsText(file);
     };
 
+    // Função auxiliar para verificar se todas as janelas estão vazias
+    const hasItems = data && Object.values(data.windows || {}).some((w: any) => w.items.length > 0);
+
     return (
         <div className="flex-1 space-y-4 p-4 md:p-6">
             <ModuleHeader
@@ -90,7 +94,7 @@ export default function PaymentsPage() {
                 subtitle="Controle de contas por Janelas (7, 15, 30)"
             >
                 <div className="flex items-center gap-2">
-                    {/* Botão Novo de Fatura (Cartão) */}
+                    {/* Botão Novo de Fatura (Cartão/Smart Doc) */}
                     <NewInvoiceDialog onOpenChange={(open) => !open && loadData()} />
 
                     <input
@@ -103,7 +107,7 @@ export default function PaymentsPage() {
                     <Button
                         variant="outline"
                         onClick={handleImportClick}
-                        className="border-dashed border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400"
+                        className="hidden md:flex border-dashed border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400"
                         title="Importar CSV (Nome, Valor, Data, Dia)"
                     >
                         <Upload className="h-4 w-4 mr-2" />
@@ -167,7 +171,15 @@ export default function PaymentsPage() {
             </div>
 
             {!data ? (
-                <div className="text-slate-400">Carregando janelas...</div>
+                <div className="text-slate-400 text-center py-10">Carregando janelas...</div>
+            ) : !hasItems && !isAdding ? (
+                <EmptyState
+                    icon={CalendarClock}
+                    title="Nenhuma conta por aqui ainda"
+                    description="Quando você adicionar contas, elas aparecem aqui e impactam seu dinheiro livre."
+                    ctaLabel="Adicionar conta"
+                    onCtaClick={() => setIsAdding(true)}
+                />
             ) : (
                 <div className="grid gap-6 md:grid-cols-3">
                     {[7, 15, 30].map(day => {

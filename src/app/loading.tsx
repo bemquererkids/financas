@@ -1,26 +1,33 @@
+import { Wallet } from "lucide-react";
+
 export default function Loading() {
     return (
-        <div className="flex-1 p-6 space-y-8 animate-pulse">
-            {/* Header Skeleton */}
-            <div className="flex items-center gap-4 mb-8">
-                <div className="h-10 w-10 bg-white/5 rounded-full" />
-                <div className="h-10 w-px bg-white/10 mx-2" />
-                <div className="space-y-2">
-                    <div className="h-6 w-48 bg-white/5 rounded" />
-                    <div className="h-3 w-32 bg-white/5 rounded" />
+        <div className="fixed inset-0 bg-[#0A0F1C] flex flex-col items-center justify-center z-[9999]">
+            <div className="relative">
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+
+                {/* Logo Icon */}
+                <div className="relative bg-gradient-to-br from-emerald-400 to-cyan-400 p-0.5 rounded-2xl shadow-2xl shadow-emerald-500/20">
+                    <div className="bg-[#0A0F1C] p-4 rounded-[14px]">
+                        <Wallet className="h-12 w-12 text-emerald-400 animate-pulse" />
+                    </div>
                 </div>
             </div>
 
-            {/* Content Grid Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-32 rounded-xl bg-white/5 border border-white/5" />
-                ))}
+            <div className="mt-8 text-center space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-200 to-cyan-200 bg-clip-text text-transparent tracking-tight">
+                    MyWallet
+                </h1>
+                <p className="text-sm text-slate-500 font-medium tracking-wide">
+                    Sua carteira, com consciência
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 h-96 rounded-3xl bg-white/5 border border-white/5" />
-                <div className="h-96 rounded-3xl bg-white/5 border border-white/5" />
+            <div className="absolute bottom-12">
+                <div className="h-1 w-24 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500/50 w-full animate-[shimmer_1.5s_infinite]" />
+                </div>
             </div>
         </div>
     );
