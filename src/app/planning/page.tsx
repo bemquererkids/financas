@@ -29,6 +29,8 @@ export default function PlanningPage() {
         pontoEquilibrio: 'N/A'
     });
 
+    const [lowIncomeWarning, setLowIncomeWarning] = useState<number | null>(null);
+
     useEffect(() => {
         async function fetchProjection() {
             try {
@@ -36,6 +38,11 @@ export default function PlanningPage() {
 
                 if (data && 'projection' in data && Array.isArray(data.projection)) {
                     setProjectionData(data.projection as ProjectionPoint[]);
+
+                    // Verificar se a renda parece incorreta (ex: muito baixa, dados de teste)
+                    if (data.monthlyIncome > 0 && data.monthlyIncome < 100) {
+                        setLowIncomeWarning(data.monthlyIncome);
+                    }
 
                     // Calcular insights básicos
                     const start = data.projection[0]?.saldo || 0;
@@ -68,12 +75,28 @@ export default function PlanningPage() {
     };
 
     return (
-        <div className="flex-1 h-full flex flex-col p-4 md:p-6 gap-6 overflow-y-auto w-full">
+        <div className="flex-1 h-full flex flex-col p-4 md:p-6 gap-6 overflow-y-auto w-full pb-20">
             <ModuleHeader
                 title="Planejamento Futuro"
                 subtitle="Projete seus meses e simule cenários para alcançar sua liberdade financeira."
                 onChatToggle={handleChatToggle}
             />
+
+            {/* Alerta de Renda Baixa (Dados suspeitos) */}
+            {!loading && lowIncomeWarning && (
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex gap-3 items-start mb-2 animate-in slide-in-from-top-2">
+                    <div className="bg-amber-500/20 p-2 rounded-lg text-amber-500">
+                        <Loader2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h4 className="text-white font-bold text-sm">Valores parecem incorretos?</h4>
+                        <p className="text-slate-400 text-xs mt-1">
+                            Sua renda mensal base está cadastrada como <strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lowIncomeWarning)}</strong>.
+                            <br />Isso gera projeções muito baixas. Se isso for um erro, atualize sua Renda Mensal no Perfil.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {!loading && projectionData.length > 0 && projectionData[0].saldo === 0 && projectionData[11].saldo === 0 && (
                 <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex gap-3 items-start mb-4">
