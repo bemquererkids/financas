@@ -1,177 +1,91 @@
 'use server';
 
-import { PlanningEngine, MonthData } from "@/lib/planning-engine";
-import { prisma } from "../../lib/prisma";
-import { revalidatePath } from "next/cache";
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-async function getUserId() {
+export async function getFinancialProjection() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-        throw new Error('Unauthorized - Please sign in');
+        return { error: 'Usuário não autenticado' };
     }
-    return session.user.id;
-}
 
-export async function getPlanningData(): Promise<MonthData[]> {
-    const userId = await getUserId();
+    const userId = session.user.id;
 
-    const today = new Date();
-    // Start from current month
-    const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    try {
+        // 1. Buscar dados do usuário (Renda e Perfil)
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { monthlyIncome: true }
+        });
 
-    // Get next 12 months
-    return await PlanningEngine.getPlanningGrid(startMonth, 12, userId);
-}
+        const income = user?.monthlyIncome || 0;
 
-export async function addPlanningItem(
-    month: string, // YYYY-MM
-    amount: number,
-    description: string,
-    type: 'INCOME' | 'EXPENSE',
-    category: string
-) {
-    const userId = await getUserId();
+        // 2. Calcular Saldo Atual Real (Receitas - Despesas)
+        const transactions = await prisma.transaction.findMany({
+            where: { userId },
+            select: { type: true, amount: true, date: true }
+        });
 
-    // Construct a date: 1st day of the target month
-    const [year, m] = month.split('-');
-    const date = new Date(parseInt(year), parseInt(m) - 1, 15); // Middle of month to be safe from timezone shifts
+        let currentBalance = 0;
+        let totalExpensesLast3Months = 0;
+        const now = new Date();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(now.getMonth() - 3);
 
-    await prisma.transaction.create({
-        data: {
-            userId,
-            amount,
-            description,
-            type,
-            category,
-            date,
-            isRecurring: false // Manual planning entry
-        }
-    });
+        transactions.forEach(t => {
+            const amount = Number(t.amount);
+            if (t.type === 'INCOME') {
+                currentBalance += amount;
+            } else {
+                currentBalance -= amount;
 
-    revalidatePath('/planning');
-    revalidatePath('/'); // Update dashboard too
-}
-
-export async function replicateMonthToFuture(
-    sourceMonth: string, // YYYY-MM
-    targetMonthsCount: number = 11
-) {
-    const userId = await getUserId();
-
-    // 1. Fetch all transactions from source month
-    const [year, m] = sourceMonth.split('-');
-    const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(m), 1);
-
-    const transactions = await prisma.transaction.findMany({
-        where: {
-            userId,
-            date: {
-                gte: startDate,
-                lt: endDate
+                // Calcular despesas recentes para média
+                if (new Date(t.date) >= threeMonthsAgo) {
+                    totalExpensesLast3Months += amount;
+                }
             }
+        });
+
+        // 3. Estimar Despesa Mensal Média
+        // Se tiver histórico, usa média dos últimos 3 meses. Se não, usa 80% da renda como estimativa conservadora (segurança)
+        let averageMonthlyExpense = totalExpensesLast3Months / 3;
+        if (averageMonthlyExpense === 0 && income > 0) {
+            averageMonthlyExpense = income * 0.8;
         }
-    });
 
-    // 2. Clone for future months
-    for (let i = 1; i <= targetMonthsCount; i++) {
-        const nextMonthDate = new Date(parseInt(year), parseInt(m) - 1 + i, 15);
+        // 4. Gerar Projeção para 12 Meses
+        const projection = [];
+        let accumulatedBalance = currentBalance;
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-        // Simple Bulk Insert
-        const copies = transactions.map(t => ({
-            userId,
-            amount: t.amount,
-            description: t.description,
-            category: t.category,
-            type: t.type,
-            date: nextMonthDate,
-            isRecurring: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }));
+        for (let i = 0; i < 12; i++) {
+            const futureDate = new Date();
+            futureDate.setMonth(now.getMonth() + i);
 
-        if (copies.length > 0) {
-            await prisma.transaction.createMany({
-                data: copies
+            // Fluxo de caixa mensal previsto (Renda - Despesa Média)
+            const expectedCashflow = income - averageMonthlyExpense;
+
+            accumulatedBalance += expectedCashflow;
+
+            projection.push({
+                month: monthNames[futureDate.getMonth()],
+                year: futureDate.getFullYear(),
+                saldo: Math.round(accumulatedBalance),
+                receita: income,
+                despesa: Math.round(averageMonthlyExpense)
             });
         }
+
+        return {
+            currentBalance,
+            averageMonthlyExpense,
+            monthlyIncome: income,
+            projection
+        };
+
+    } catch (error) {
+        console.error('Erro ao calcular projeção:', error);
+        return { error: 'Falha ao processar dados financeiros' };
     }
-
-    revalidatePath('/planning');
-}
-
-export async function updatePlanningItem(id: string, amount: number) {
-    const userId = await getUserId();
-
-    // Verify ownership before updating
-    const item = await prisma.transaction.findUnique({
-        where: { id },
-        select: { userId: true }
-    });
-
-    if (!item || item.userId !== userId) {
-        throw new Error('Unauthorized');
-    }
-
-    await prisma.transaction.update({
-        where: { id },
-        data: { amount, updatedAt: new Date() }
-    });
-
-    revalidatePath('/planning');
-    revalidatePath('/');
-}
-
-export async function deletePlanningItem(id: string) {
-    const userId = await getUserId();
-
-    // Verify ownership before deleting
-    const item = await prisma.transaction.findUnique({
-        where: { id },
-        select: { userId: true }
-    });
-
-    if (!item || item.userId !== userId) {
-        throw new Error('Unauthorized');
-    }
-
-    await prisma.transaction.delete({
-        where: { id }
-    });
-
-    revalidatePath('/planning');
-    revalidatePath('/');
-}
-
-export async function consolidateMonth(month: string) {
-    const userId = await getUserId();
-
-    // Mark all transactions in this month as "consolidated" by updating description
-    const [year, m] = month.split('-');
-    const startDate = new Date(parseInt(year), parseInt(m) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(m), 1);
-
-    // Get all recurring (planned) transactions for this month
-    const transactions = await prisma.transaction.findMany({
-        where: {
-            userId,
-            date: { gte: startDate, lt: endDate },
-            isRecurring: true
-        }
-    });
-
-    // Mark them as non-recurring (consolidated/real)
-    for (const t of transactions) {
-        await prisma.transaction.update({
-            where: { id: t.id },
-            data: { isRecurring: false }
-        });
-    }
-
-    revalidatePath('/planning');
-    revalidatePath('/');
-
-    return { consolidated: transactions.length };
 }

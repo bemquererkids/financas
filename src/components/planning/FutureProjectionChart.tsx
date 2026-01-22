@@ -5,44 +5,46 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 
-const data = [
-    { month: 'Jan', saldo: 5000 },
-    { month: 'Fev', saldo: 6200 },
-    { month: 'Mar', saldo: 5800 },
-    { month: 'Abr', saldo: 7500 },
-    { month: 'Mai', saldo: 8900 },
-    { month: 'Jun', saldo: 10500 },
-    { month: 'Jul', saldo: 12100 },
-    { month: 'Ago', saldo: 11000 },
-    { month: 'Set', saldo: 13500 },
-    { month: 'Out', saldo: 15200 },
-    { month: 'Nov', saldo: 17800 },
-    { month: 'Dez', saldo: 20000 },
-];
+interface ProjectionPoint {
+    month: string;
+    saldo: number;
+}
 
-export function FutureProjectionChart() {
+interface FutureProjectionChartProps {
+    data: ProjectionPoint[];
+}
+
+export function FutureProjectionChart({ data }: FutureProjectionChartProps) {
+    // Calculando crescimento percentual
+    const startBalance = data[0]?.saldo || 0;
+    const endBalance = data[data.length - 1]?.saldo || 0;
+    const growth = startBalance === 0 ? 100 : ((endBalance - startBalance) / Math.abs(startBalance)) * 100;
+    const isPositive = growth >= 0;
+
     return (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800 shadow-xl overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800 shadow-xl overflow-hidden h-full flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
                 <div>
                     <CardTitle className="text-lg text-white font-bold">Projeção Patrimonial</CardTitle>
-                    <p className="text-xs text-slate-400">Previsão de crescimento para os próximos 12 meses</p>
+                    <p className="text-xs text-slate-400">Previsão baseada no seu comportamento atual</p>
                 </div>
                 <div className="flex gap-2">
-                    <div className="flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                        <span className="text-xs font-bold text-emerald-500">+25%</span>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${isPositive ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                        {isPositive ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
+                        <span className={`text-xs font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {growth > 999 ? '>999%' : `${growth.toFixed(1)}%`}
+                        </span>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 min-h-0">
                 <div className="h-[300px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
@@ -77,7 +79,7 @@ export function FutureProjectionChart() {
                             <Area
                                 type="monotone"
                                 dataKey="saldo"
-                                stroke="#10b981"
+                                stroke={isPositive ? "#10b981" : "#ef4444"}
                                 strokeWidth={3}
                                 fillOpacity={1}
                                 fill="url(#colorSaldo)"
