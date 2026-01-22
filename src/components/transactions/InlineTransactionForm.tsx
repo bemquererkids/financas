@@ -15,9 +15,10 @@ import {
 
 interface InlineTransactionFormProps {
     onSuccess?: () => void;
+    defaultType?: 'INCOME' | 'EXPENSE';
 }
 
-export function InlineTransactionForm({ onSuccess }: InlineTransactionFormProps) {
+export function InlineTransactionForm({ onSuccess, defaultType = 'EXPENSE' }: InlineTransactionFormProps) {
     const [loading, setLoading] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -41,7 +42,7 @@ export function InlineTransactionForm({ onSuccess }: InlineTransactionFormProps)
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                     <Label className="text-xs text-slate-400">Tipo</Label>
-                    <Select name="type" required defaultValue="EXPENSE">
+                    <Select name="type" required defaultValue={defaultType}>
                         <SelectTrigger className="h-10 bg-white/5 border-white/10">
                             <SelectValue placeholder="Selecione" />
                         </SelectTrigger>

@@ -1,10 +1,7 @@
 import { getFinancialSummary, getRecentTransactions, getExpensesByCategory, getMonthlyTrend } from "@/app/actions/financial-actions";
 import { getCashFlow } from "@/app/actions/cashflow-actions";
-import { SummaryCard } from "@/components/dashboard/SummaryCard";
-import { Progress } from "@/components/ui/progress";
-import { TrendingDown, TrendingUp, Wallet, PiggyBank } from "lucide-react";
+import { WalletHero } from "@/components/dashboard/WalletHero";
 import { FloatingTransactionButton } from "@/components/transactions/FloatingTransactionButton";
-import { FinancialAlerts } from "@/components/dashboard/FinancialAlerts";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardView";
 import { MobileTutorialBanner } from "@/components/dashboard/MobileTutorialBanner";
@@ -50,70 +47,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
             <MobileTutorialBanner />
 
-            {/* Summary Cards Row */}
-            <div className="flex-shrink-0 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                <SummaryCard
-                    title="Receita Total"
-                    amount={formatCurrency(summary.income)}
-                    icon={TrendingUp}
-                    subtext="+12% vs mês anterior"
-                    variant="success"
-                />
-                <SummaryCard
-                    title="Despesas"
-                    amount={formatCurrency(summary.expenses)}
-                    icon={TrendingDown}
-                    subtext="-2% vs mês anterior"
-                    variant="danger"
-                />
-                <SummaryCard
-                    title="Saldo Atual"
-                    amount={formatCurrency(summary.balance)}
-                    icon={Wallet}
-                    subtext="Disponível"
-                    variant={summary.balance >= 0 ? "success" : "danger"}
-                />
-                <SummaryCard
-                    title="Economia"
-                    amount={`${typeof summary.savingsRate === 'number' ? summary.savingsRate.toFixed(1) : '0.0'}%`}
-                    icon={PiggyBank}
-                    subtext="Meta: 20%"
-                    variant={(summary.savingsRate ?? 0) >= 20 ? "success" : "warning"}
-                />
-
-                {/* Card 5: Análise 50/30/20 (Integrado) */}
-                <div className="glass-card border border-white/5 rounded-xl p-3 flex flex-col justify-between hover:bg-white/5 transition-colors duration-300 col-span-2 md:col-span-1 lg:col-span-1">
-                    <h3 className="text-xs font-medium text-slate-200 uppercase tracking-wider mb-2">Regra 50/30/20</h3>
-                    <div className="space-y-2 flex-1 flex flex-col justify-center">
-                        <div className="space-y-0.5">
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-slate-400">Nec. (50%)</span>
-                                <span className="text-white font-mono">
-                                    {summary.income > 0 ? ((summary.rule503020.needs.actual / summary.income) * 100).toFixed(0) : 0}%
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.needs.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-blue-500" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-slate-400">Des. (30%)</span>
-                                <span className="text-white font-mono">
-                                    {summary.income > 0 ? ((summary.rule503020.wants.actual / summary.income) * 100).toFixed(0) : 0}%
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.wants.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-purple-500" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-slate-400">Inv. (20%)</span>
-                                <span className="text-white font-mono">
-                                    {summary.income > 0 ? ((summary.rule503020.savings.actual / summary.income) * 100).toFixed(0) : 0}%
-                                </span>
-                            </div>
-                            <Progress value={summary.income > 0 ? (summary.rule503020.savings.actual / summary.income) * 100 : 0} className="bg-slate-800 h-1" indicatorClassName="bg-emerald-500" />
-                        </div>
-                    </div>
-                </div>
+            {/* Wallet Hero - A Carteira Digital de Decisão */}
+            <div className="flex-shrink-0 animate-in fade-in slide-in-from-top-4 duration-500">
+                <WalletHero summary={summary} />
             </div>
 
 

@@ -40,6 +40,23 @@ export async function getFinancialSummary(month?: number, year?: number) {
     const ledger = engine.calculateLedger();
     const rule503020 = engine.calculateRule503020(ledger);
 
+    // Calcular compromissos futuros do mês (Contas a Pagar não pagas)
+    const pendingPayables = await prisma.payable.findMany({
+        where: {
+            paymentWindow: {
+                userId
+            },
+            dueDate: {
+                gte: today, // Vencem de hoje em diante (no mês atual ou futuro próximo)
+                lte: lastDay // Até o fim do mês visualizado
+            },
+            isPaid: false
+        }
+    });
+
+    const commitments = pendingPayables.reduce((acc, p) => acc + Number(p.amount), 0);
+    const fundsAvailable = ledger.balance - commitments;
+
     // Formatar o período para exibição
     const displayDate = new Date(targetYear, targetMonth, 1);
 
@@ -48,6 +65,8 @@ export async function getFinancialSummary(month?: number, year?: number) {
         income: ledger.totalIncome,
         expenses: ledger.totalExpense,
         balance: ledger.balance,
+        commitments,
+        fundsAvailable,
         savingsRate: ledger.savingsRate,
         rule503020
     };
