@@ -148,10 +148,19 @@ export default function InvestmentsPage() {
                             </div>
 
                             {/* Resultado Integrado */}
-                            <div className="mt-4 pt-3 border-t border-white/10 text-center bg-white/5 rounded-lg py-2">
-                                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Patrimônio Projetado</p>
-                                <div className="text-2xl font-bold text-emerald-400">
-                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
+                            <div className="mt-4 pt-3 border-t border-white/10 text-center bg-white/5 rounded-lg py-2 space-y-2">
+                                <div>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Patrimônio Total</p>
+                                    <div className="text-xl font-bold text-emerald-400">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(finalAmount)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Renda Mensal (Passiva)</p>
+                                    <div className="text-lg font-bold text-emerald-300">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(finalAmount * (Math.pow(1 + inputs.annualReturnRate / 100, 1 / 12) - 1))}
+                                    </div>
+                                    <p className="text-[9px] text-slate-600">Considerando rendimento perpétuo</p>
                                 </div>
                             </div>
 
