@@ -203,6 +203,7 @@ export default function GoalsPage() {
                 showUploads={false}
                 inputPlaceholder="Digite sua dúvida sobre objetivos..."
                 welcomeMessage="Olá! Sou seu estrategista financeiro. Quer ajuda para definir metas realistas, calcular prazos ou criar um plano para atingir seus sonhos mais rápido?"
+                context="goals"
             />
         </div>
     );

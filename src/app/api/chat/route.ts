@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         const userName = session.user.name?.split(' ')[0] || "Usuário";
         const todayStr = new Date().toLocaleDateString('pt-BR');
 
-        const { messages } = await req.json();
+        const { messages, context = 'general' } = await req.json();
         const lastMessage = messages[messages.length - 1].content;
 
         // Obter contexto COMPLETO
@@ -78,38 +78,71 @@ ${contextData.lastTransactions.map(t => `- ${t.description} (${t.category}): R$ 
             summaryText = "Resumo financeiro indisponível no momento.";
         }
 
-        // 1. ANÁLISE DE INTENÇÃO (Usando o modelo que sabemos que funciona)
-        try {
-            const { object: analysis } = await generateObject({
-                model: google('gemini-2.0-flash'),
-                schema: IntentSchema,
-                system: `Você é o Agente Financeiro MyWallet, um Planejador Financeiro Sênior (CFP®).
+        // --- CONTEXTO EXPERT ---
+        let specializedPrompt = "";
+        let expertRole = "Planejador Financeiro Sênior (CFP®)";
+
+        switch (context) {
+            case 'goals':
+                expertRole = "Estrategista de Metas Financeiras";
+                specializedPrompt = `
+FOCO: Ajudar o usuário a definir e alcançar objetivos.
+- Se o usuário perguntar "como definir metas", sugira o método SMART.
+- Se falar de um sonho (ex: casa própria), ajude a calcular quanto guardar por mês.
+- Use os dados de 'OBJETIVOS ATUAIS' e 'SALDO' para dar conselhos realistas.
+`;
+                break;
+            case 'investments':
+                expertRole = "Consultor de Investimentos (CGA)";
+                specializedPrompt = `
+FOCO: Educação financeira e estratégia de investimentos.
+- Explique conceitos (CDB, FIIs, Ações) de forma simples se perguntado.
+- Se o usuário perguntar "onde investir", analise o perfil (conservador/arrojado) baseado no histórico (se houver) ou pergunte.
+- NÃO dê recomendação de compra específica de ativo (ex: "Compre PETR4 agora"), mas sim de classes (ex: "Ações de commodities").
+- Lembre sempre da Reserva de Emergência antes de investir.
+`;
+                break;
+            case 'payments':
+                expertRole = "Organizador Financeiro e Concierge";
+                specializedPrompt = `
+FOCO: Gestão de fluxo de caixa e contas a pagar.
+- Ajude a organizar vencimentos.
+- Se houver pouco saldo, priorize contas essenciais (Luz, Água, Aluguel).
+- Sugira janelas de pagamento (dia 7, 15, 30).
+`;
+                break;
+            default:
+                specializedPrompt = "FOCO: Visão holística das finanças, saúde financeira e bons hábitos.";
+                break;
+        }
+
+        const systemPrompt = `Você é o Agente Financeiro MyWallet, atuando como ${expertRole}.
 Hoje é dia ${todayStr}.
 
 ${summaryText}
 
 SUA MISSÃO:
-Atuar como um consultor financeiro proativo, seguro e hiper-personalizado.
-Não dê respostas genéricas. Use os números do usuário.
+Atuar de forma proativa, segura e hiper-personalizada.
+${specializedPrompt}
 
 GUARDRAILS DE SEGURANÇA (SIGA RIGOROSAMENTE):
-1. **Prioridade de Sobrevivência**: Se o usuário tiver saldo negativo ou zero, ignore objetivos de longo prazo e foque em: (1) Reduzir gastos, (2) Renegociar dívidas.
-2. **Contas Vencendo**: Se houver contas próximas (${contextData?.upcomingBills.length || 0}), alerte o usuário antes de sugerir novos gastos.
-3. **Reserva de Emergência**: Se o usuário não tiver uma, sugira começar com R$ 500,00 antes de investir em viagens ou bens de consumo.
-4. **Dívidas**: Se houver dívidas com juros altos, sugira o método "Avalanche" (pagar a de maior juros primeiro).
-5. **Realismo**: Se o usuário quer juntar R$ 10k em 1 mês ganhando R$ 2k, diga que é impossível e proponha um plano viável.
+1. **Prioridade de Sobrevivência**: Se saldo <= 0, foco total em cortar gastos.
+2. **Contas Vencendo**: Alerte sobre contas próximas.
+3. **Reserva de Emergência**: Prioridade #1 antes de investimentos arriscados.
+4. **Tom de Voz**: Premium, direto, empático. Use bullets para listas.
 
 INTENÇÕES:
-- TRANSACTION: Registrar gasto/ganho recebido.
-- PAYABLE: Agendar conta futura.
-- CHAT: Consultoria financeira baseada nos dados acima. Responda com planos práticos, passo-a-passo.
+- TRANSACTION: Registrar gasto/ganho.
+- PAYABLE: Agendar conta.
+- CHAT: Consultoria.`;
 
-REGRAS PARA 'chatMessage':
-- Seja direto e empático.
-- Use emojis moderadamente.
-- Se for dar uma dica, use bullets.
-- CITE VALORES. Ex: "Com seu saldo de R$ X, sugiro..."`,
-                prompt: `Mensagem atual do usuário: "${lastMessage}"`
+        // 1. ANÁLISE DE INTENÇÃO (Structured)
+        try {
+            const { object: analysis } = await generateObject({
+                model: google('gemini-2.0-flash'),
+                schema: IntentSchema,
+                system: systemPrompt,
+                prompt: `Mensagem atual (${context}): "${lastMessage}"`
             });
 
             let finalResponse = analysis.chatMessage || "Entendido.";
@@ -164,10 +197,21 @@ REGRAS PARA 'chatMessage':
             const logPath = path.join(process.cwd(), 'chat_error.log');
             fs.appendFileSync(logPath, `${new Date().toISOString()} - Intent Error: ${innerError.message}\n`);
 
-            // Fallback simples se o structured output falhar
-            return new Response(JSON.stringify({ content: "Não entendi, pode repetir de forma mais clara?" }), {
-                headers: { 'Content-Type': 'application/json' }
-            });
+            // Fallback: Se falhar a estrutura, tente apenas conversar
+            try {
+                const { text } = await generateText({
+                    model: google('gemini-2.0-flash'),
+                    system: systemPrompt,
+                    prompt: lastMessage
+                });
+                return new Response(JSON.stringify({ content: text }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (fallbackError) {
+                return new Response(JSON.stringify({ content: "Desculpe, estou com dificuldades para processar sua solicitação no momento. Tente reformular." }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
 
     } catch (error: any) {

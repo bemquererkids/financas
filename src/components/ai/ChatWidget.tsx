@@ -18,6 +18,7 @@ interface ChatWidgetProps {
     showUploads?: boolean;
     inputPlaceholder?: string;
     welcomeMessage?: string;
+    context?: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -41,7 +42,8 @@ export function ChatWidget({
     onSuccess,
     showUploads = true,
     inputPlaceholder = 'Agende uma conta...',
-    welcomeMessage
+    welcomeMessage,
+    context = 'general'
 }: ChatWidgetProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -127,7 +129,8 @@ export function ChatWidget({
                     messages: [...messages, userMessage].map(m => ({
                         role: m.role,
                         content: m.content || ''
-                    }))
+                    })),
+                    context
                 })
             });
 

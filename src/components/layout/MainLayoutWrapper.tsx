@@ -34,6 +34,23 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
         return <div className="h-full w-full">{children}</div>;
     }
 
+    const getChatContext = () => {
+        if (pathname?.includes('/goals')) return 'goals';
+        if (pathname?.includes('/investments')) return 'investments';
+        if (pathname?.includes('/payments')) return 'payments';
+        return 'general';
+    };
+
+    const getWelcomeMessage = () => {
+        const ctx = getChatContext();
+        switch (ctx) {
+            case 'goals': return "Olá! Sou seu estrategista de metas. Vamos planejar seus sonhos?";
+            case 'investments': return "Olá! Sou seu consultor de investimentos. Onde você quer chegar financeiramente?";
+            case 'payments': return "Olá! Precisa de ajuda para organizar suas contas e vencimentos?";
+            default: return "Olá! Sou seu assistente financeiro pessoal. Como posso ajudar hoje?";
+        }
+    };
+
     return (
         <>
             {/* Sidebar Desktop */}
@@ -77,11 +94,12 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                 {children}
             </main>
 
-            {/* AI Chatbot */}
+            {/* AI Chatbot - Global Context Aware */}
             <ChatWidget
                 isOpen={isChatOpen}
                 onOpenChange={setIsChatOpen}
-                welcomeMessage="Olá! Sou seu assistente financeiro pessoal. Posso ajudar a analisar seus gastos, cadastrar contas ou tirar dúvidas sobre investimentos. Como posso ajudar hoje?"
+                context={getChatContext()}
+                welcomeMessage={getWelcomeMessage()}
             />
         </>
     );
