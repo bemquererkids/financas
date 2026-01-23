@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
             prisma.transaction.findMany({
                 where: { userId, date: { gte: new Date(new Date().setMonth(new Date().getMonth() - 3)) } }
             }),
-            prisma.investment.findMany({ where: { userId } })
+            prisma.investmentProjection.findMany({ where: { userId } })
         ]);
 
         // Calcular perfil financeiro
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
             .reduce((sum, t) => sum + Number(t.amount), 0) / 3;
 
         const monthlyIncome = user?.monthlyIncome || 0;
-        const currentInvestments = investments.reduce((sum, i) => sum + Number(i.currentValue), 0);
+        const currentInvestments = investments.reduce((sum, i) => sum + Number(i.initialBalance), 0);
         const availableToInvest = amount || (monthlyIncome - monthlyExpenses) * 0.2; // 20% da sobra
 
         // Determinar perfil de risco
