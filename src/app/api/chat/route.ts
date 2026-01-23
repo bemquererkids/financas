@@ -139,7 +139,7 @@ INTENÇÕES:
         // 1. ANÁLISE DE INTENÇÃO (Structured)
         try {
             const { object: analysis } = await generateObject({
-                model: google('gemini-1.5-flash'), // Using stable model
+                model: google('gemini-2.0-flash'), // Reverting to 2.0-flash as per user request
                 schema: IntentSchema,
                 system: systemPrompt,
                 prompt: `Mensagem atual (${context}): "${lastMessage}"`
@@ -201,7 +201,7 @@ INTENÇÕES:
             // Fallback: Se falhar a estrutura, tente apenas conversar
             try {
                 const { text } = await generateText({
-                    model: google('gemini-1.5-flash'), // Using stable model
+                    model: google('gemini-2.0-flash'), // Reverting to 2.0-flash
                     system: systemPrompt,
                     prompt: lastMessage
                 });
