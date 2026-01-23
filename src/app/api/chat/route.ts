@@ -139,7 +139,7 @@ INTENÇÕES:
         // 1. ANÁLISE DE INTENÇÃO (Structured)
         try {
             const { object: analysis } = await generateObject({
-                model: google('gemini-2.0-flash'),
+                model: google('gemini-1.5-flash'), // Using stable model
                 schema: IntentSchema,
                 system: systemPrompt,
                 prompt: `Mensagem atual (${context}): "${lastMessage}"`
@@ -196,18 +196,21 @@ INTENÇÕES:
         } catch (innerError: any) {
             const logPath = path.join(process.cwd(), 'chat_error.log');
             fs.appendFileSync(logPath, `${new Date().toISOString()} - Intent Error: ${innerError.message}\n`);
+            console.error("Intent Error:", innerError);
 
             // Fallback: Se falhar a estrutura, tente apenas conversar
             try {
                 const { text } = await generateText({
-                    model: google('gemini-2.0-flash'),
+                    model: google('gemini-1.5-flash'), // Using stable model
                     system: systemPrompt,
                     prompt: lastMessage
                 });
                 return new Response(JSON.stringify({ content: text }), {
                     headers: { 'Content-Type': 'application/json' }
                 });
-            } catch (fallbackError) {
+            } catch (fallbackError: any) {
+                fs.appendFileSync(logPath, `${new Date().toISOString()} - Fallback Error: ${fallbackError.message}\n`);
+                console.error("Fallback Error:", fallbackError);
                 return new Response(JSON.stringify({ content: "Desculpe, estou com dificuldades para processar sua solicitação no momento. Tente reformular." }), {
                     headers: { 'Content-Type': 'application/json' }
                 });
