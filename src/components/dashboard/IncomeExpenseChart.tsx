@@ -62,6 +62,7 @@ export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Legend
                         wrapperStyle={{ paddingTop: 10 }}
+                        iconType="circle"
                         formatter={(value) => (
                             <span className="text-slate-300 text-xs">
                                 {value === 'income' ? 'Receita' : 'Despesa'}
@@ -71,15 +72,15 @@ export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
                     <Bar
                         dataKey="income"
                         fill="#10b981"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
+                        radius={[10, 10, 10, 10]}
+                        maxBarSize={20}
                         background={false}
                     />
                     <Bar
                         dataKey="expense"
                         fill="#ef4444"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
+                        radius={[10, 10, 10, 10]}
+                        maxBarSize={20}
                         background={false}
                     />
                 </BarChart>

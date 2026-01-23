@@ -101,8 +101,8 @@ export function ExpensesCategoryChart({ data }: ExpensesCategoryChartProps) {
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                     <Bar
                         dataKey="amount"
-                        radius={[0, 4, 4, 0]}
-                        barSize={32}
+                        radius={[10, 10, 10, 10]}
+                        barSize={20}
                         animationDuration={1500}
                     >
                         {sortedData.map((entry, index) => (

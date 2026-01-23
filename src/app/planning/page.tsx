@@ -124,14 +124,14 @@ export default function PlanningPage() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Gráfico de Projeção (Ocupa 2 colunas no desktop) */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-8">
                             <FutureProjectionChart data={projectionData} />
 
                             {/* Insights Rápidos */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
+                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between hover:border-slate-700 transition-colors">
                                     <div>
                                         <p className="text-slate-400 text-xs mb-1 font-medium flex items-center gap-1">
                                             Patrimônio Projetado
@@ -148,7 +148,7 @@ export default function PlanningPage() {
                                     </span>
                                 </div>
 
-                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
+                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between hover:border-slate-700 transition-colors">
                                     <div>
                                         <p className="text-slate-400 text-xs mb-1 font-medium">Saúde do Fluxo de Caixa</p>
                                         <p className={`text-2xl font-bold mt-1 ${insights.pontoEquilibrio === 'Positivo' ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -162,7 +162,7 @@ export default function PlanningPage() {
                                     </span>
                                 </div>
 
-                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
+                                <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-4 rounded-xl flex flex-col justify-between hover:border-slate-700 transition-colors">
                                     <div>
                                         <p className="text-slate-400 text-xs mb-1 font-medium">Potencial de Poupança Mensal</p>
                                         <p className={`text-2xl font-bold mt-1 ${insights.aporteMensal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -177,12 +177,15 @@ export default function PlanningPage() {
                         </div>
 
                         {/* Controles de Simulação */}
-                        <div className="lg:col-span-1">
+                        <div className="lg:col-span-1 h-full">
                             <SimulationControls />
                         </div>
                     </div>
 
-                    <PlanningTable data={projectionData} />
+                    {/* Tabela de Detalhamento - Movida para fora do grid para evitar sobreposição visual */}
+                    <div className="mt-8">
+                        <PlanningTable data={projectionData} />
+                    </div>
                 </>
             )}
 

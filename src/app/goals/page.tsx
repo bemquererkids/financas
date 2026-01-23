@@ -6,8 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Trash2, Plus, Target } from 'lucide-react';
+import { Check, Trash2, Plus, Target, Sparkles } from 'lucide-react';
 import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
+import { ChatWidget } from '@/components/ai/ChatWidget';
 
 export default function GoalsPage() {
     const [goals, setGoals] = useState<any[]>([]);
@@ -15,6 +16,8 @@ export default function GoalsPage() {
     const [newAmount, setNewAmount] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const [monthlySavings, setMonthlySavings] = useState(500); // Simulador de capacidade
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatInput, setChatInput] = useState('');
 
     useEffect(() => { loadGoals(); }, []);
 
@@ -44,7 +47,19 @@ export default function GoalsPage() {
             <ModuleHeader
                 title="Meus Objetivos"
                 subtitle="Onde quero chegar e viabilidade"
-            />
+            >
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setChatInput("Como definir bons objetivos financeiros?");
+                        setChatOpen(true);
+                    }}
+                    className="border-emerald-500/30 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 h-9 px-4 text-xs uppercase font-bold tracking-wider"
+                >
+                    <Sparkles className="h-3 w-3 mr-2" />
+                    Consultar IA
+                </Button>
+            </ModuleHeader>
 
             <div className="max-w-5xl mx-auto w-full space-y-4 flex-1 flex flex-col min-h-0">
 
@@ -155,6 +170,18 @@ export default function GoalsPage() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => {
+                                            setChatInput(`Me dê um plano prático para atingir meu objetivo "${goal.description}" de ${formatCurrency(target)}${monthlySavings > 0 ? ` guardando R$ ${monthlySavings}/mês` : ''}.`);
+                                            setChatOpen(true);
+                                        }}
+                                        title="Pedir dica para IA"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         className="h-8 w-8 text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
                                         onClick={async () => {
                                             if (confirm('Excluir objetivo?')) { await deleteGoal(goal.id); loadGoals(); }
@@ -168,6 +195,15 @@ export default function GoalsPage() {
                     })}
                 </div>
             </div>
+
+            <ChatWidget
+                isOpen={chatOpen}
+                onOpenChange={setChatOpen}
+                initialInput={chatInput}
+                showUploads={false}
+                inputPlaceholder="Digite sua dúvida sobre objetivos..."
+                welcomeMessage="Olá! Sou seu estrategista financeiro. Quer ajuda para definir metas realistas, calcular prazos ou criar um plano para atingir seus sonhos mais rápido?"
+            />
         </div>
     );
 }

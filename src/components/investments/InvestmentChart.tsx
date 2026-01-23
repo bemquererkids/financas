@@ -17,15 +17,15 @@ export function InvestmentChart({ data }: { data: any[] }) {
     }
 
     return (
-        <div className="h-[400px] w-full mt-6">
+        <div className="h-full w-full min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={data}
                     margin={{
-                        top: 10,
-                        right: 30,
-                        left: 0,
-                        bottom: 0,
+                        top: 20,
+                        right: 40,
+                        left: 10,
+                        bottom: 30,
                     }}
                 >
                     <defs>

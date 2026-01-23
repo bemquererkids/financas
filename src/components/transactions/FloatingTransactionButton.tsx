@@ -1,22 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, X } from 'lucide-react';
 import { InlineTransactionForm } from '@/components/transactions/InlineTransactionForm';
+import { toast } from 'sonner';
 
 export function FloatingTransactionButton() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+
+    useEffect(() => {
+        const hidden = localStorage.getItem('hideTransactionFab');
+        if (hidden) setIsVisible(false);
+    }, []);
+
+    const handleClose = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsVisible(false);
+        localStorage.setItem('hideTransactionFab', 'true');
+        toast("Atalho ocultado", {
+            description: "O botão de nova transação foi removido.",
+            action: {
+                label: "Desfazer",
+                onClick: () => {
+                    setIsVisible(true);
+                    localStorage.removeItem('hideTransactionFab');
+                }
+            },
+            duration: 5000,
+        });
+    };
+
+    if (!isVisible) return null;
 
     return (
         <>
-            {/* FAB Button - Left side to not conflict with Chat */}
-            <button
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-110 hover:rotate-90 transition-all duration-300"
-                aria-label="Nova Transação"
-            >
-                <Plus className="h-7 w-7 text-white" />
-            </button>
+            <div className="fixed bottom-6 right-6 md:right-28 z-40 group">
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-14 h-14 rounded-full bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center justify-center hover:scale-110 hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:border-emerald-500/50 hover:bg-slate-800 transition-all duration-300 relative"
+                    aria-label="Nova Transação"
+                >
+                    <Plus className="h-6 w-6 text-emerald-500 group-hover:text-emerald-400 transition-colors" />
+                </button>
+
+                {/* Close Button - Always visible on mobile, on Hover for desktop - Cleaner Style */}
+                <button
+                    onClick={handleClose}
+                    className="absolute -top-1 -right-1 z-50 h-5 w-5 rounded-full bg-slate-900 border border-white/10 text-slate-400 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
+                    title="Ocultar atalho"
+                >
+                    <X className="h-3 w-3" />
+                </button>
+            </div>
 
             {/* Modal Overlay */}
             {isOpen && (

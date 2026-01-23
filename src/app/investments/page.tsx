@@ -79,7 +79,7 @@ export default function InvestmentsPage() {
     };
 
     return (
-        <div className="flex-1 space-y-4 p-4 md:p-6 lg:h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+        <div className="flex-1 space-y-4 p-4 md:p-6 lg:h-[calc(100vh-80px)] overflow-y-auto pb-6 flex flex-col">
             <ModuleHeader
                 title="Meu Futuro"
                 subtitle="Projeção de crescimento patrimonial"
@@ -212,17 +212,17 @@ export default function InvestmentsPage() {
 
                 {/* Área Principal - Gráfico */}
                 <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full">
-                    <div className="rounded-3xl glass-card p-6 h-full flex flex-col bg-[#0f172a]/50 border border-white/5">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Evolução Patrimonial</h3>
-                            <div className="text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-full">
+                    <Card className="rounded-3xl glass-card p-0 h-full flex flex-col bg-white/5 border border-white/10 overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between p-6 pb-2 space-y-0">
+                            <CardTitle className="text-lg font-bold text-white">Evolução Patrimonial</CardTitle>
+                            <div className="text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">
                                 Projeção Linear
                             </div>
-                        </div>
-                        <div className="flex-1 min-h-0 w-full">
+                        </CardHeader>
+                        <CardContent className="flex-1 min-h-0 w-full p-6 pt-2">
                             <InvestmentChart data={chartData} />
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>

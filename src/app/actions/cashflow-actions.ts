@@ -1,10 +1,8 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-const prisma = new PrismaClient();
 
 async function getUserId() {
     const session = await getServerSession(authOptions);
@@ -91,8 +89,60 @@ export async function getCashFlow(year: number, month: number): Promise<CashFlow
         });
     });
 
+    // MERGE: Include Payables as "Scheduled" transactions
+    const payables = await prisma.payable.findMany({
+        where: {
+            paymentWindow: {
+                userId,
+                month: `${year}-${String(month + 1).padStart(2, '0')}`
+            },
+            isPaid: false
+        }
+    });
+
+    payables.forEach(p => {
+        // Use DueDate as the date key
+        const dateKey = p.dueDate.toISOString().split('T')[0];
+
+        // Ensure Day Map Entry exists (logic duplicated for safety)
+        if (!dayMap.has(dateKey)) {
+            let label: string;
+            const today = new Date(); // Re-instantiate to avoid scope issues if copied directly
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().split('T')[0];
+            const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+
+            if (dateKey === todayStr) {
+                label = 'Hoje';
+            } else if (dateKey === yesterdayStr) {
+                label = 'Ontem';
+            } else {
+                const [y, m, d] = dateKey.split('-');
+                const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+                    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                label = `${parseInt(d)} de ${monthNames[parseInt(m) - 1]}`;
+            }
+
+            dayMap.set(dateKey, {
+                date: dateKey,
+                label,
+                transactions: []
+            });
+        }
+
+        dayMap.get(dateKey)!.transactions.push({
+            id: p.id,
+            description: p.name,
+            category: 'Agendado',
+            amount: Number(p.amount),
+            type: 'EXPENSE',
+            status: 'agendado' // Distinct status for UI
+        });
+    });
+
     const totalIncome = transactions.filter(t => t.type === 'INCOME').reduce((acc, t) => acc + Number(t.amount), 0);
-    const totalExpense = transactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + Number(t.amount), 0);
+    const totalExpenseReal = transactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + Number(t.amount), 0);
+    const totalExpenseProjected = payables.reduce((acc, p) => acc + Number(p.amount), 0);
 
     const monthName = firstDay.toLocaleDateString('pt-BR', { month: 'long' });
 
@@ -101,7 +151,7 @@ export async function getCashFlow(year: number, month: number): Promise<CashFlow
         year,
         monthIndex: month,
         totalIncome,
-        totalExpense,
+        totalExpense: totalExpenseReal + totalExpenseProjected,
         days: Array.from(dayMap.values()).sort((a, b) => b.date.localeCompare(a.date))
     };
 }

@@ -219,3 +219,33 @@ export async function importPayables(csvData: { name: string, amount: number, du
         return { error: 'Erro ao processar importação.' };
     }
 }
+
+export async function checkDuplicatePayable(name: string, amount: number, dueDateStr: string) {
+    const userId = await getUserId();
+    if (!userId) return { error: 'Não autorizado' };
+
+    const date = new Date(dueDateStr);
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+    try {
+        const existing = await prisma.payable.findFirst({
+            where: {
+                paymentWindow: {
+                    userId
+                },
+                name,
+                amount: Math.abs(amount),
+                dueDate: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            }
+        });
+
+        return { isDuplicate: !!existing };
+    } catch (error) {
+        console.error('[CheckDuplicatePayable] Erro:', error);
+        return { error: 'Erro ao verificar duplicatas' };
+    }
+}

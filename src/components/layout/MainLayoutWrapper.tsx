@@ -78,7 +78,11 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             </main>
 
             {/* AI Chatbot */}
-            <ChatWidget isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
+            <ChatWidget
+                isOpen={isChatOpen}
+                onOpenChange={setIsChatOpen}
+                welcomeMessage="Olá! Sou seu assistente financeiro pessoal. Posso ajudar a analisar seus gastos, cadastrar contas ou tirar dúvidas sobre investimentos. Como posso ajudar hoje?"
+            />
         </>
     );
 }

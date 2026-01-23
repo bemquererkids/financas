@@ -22,7 +22,7 @@ export function FutureProjectionChart({ data }: FutureProjectionChartProps) {
     const isPositive = growth >= 0;
 
     return (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800 shadow-xl overflow-hidden h-full flex flex-col">
+        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800 shadow-xl overflow-hidden w-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
                 <div>
                     <CardTitle className="text-lg text-white font-bold">Projeção Patrimonial</CardTitle>
@@ -37,17 +37,17 @@ export function FutureProjectionChart({ data }: FutureProjectionChartProps) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 min-h-0">
-                <div className="h-[300px] w-full mt-4">
+            <CardContent className="flex-1 min-h-[350px]">
+                <div className="h-[350px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <AreaChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
+                                    <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.2} />
                                     <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
                             <XAxis
                                 dataKey="month"
                                 tickLine={false}
@@ -60,8 +60,11 @@ export function FutureProjectionChart({ data }: FutureProjectionChartProps) {
                                 axisLine={false}
                                 tick={{ fill: '#94a3b8', fontSize: 12 }}
                                 tickFormatter={(value) => `R$${value / 1000}k`}
+                                width={60}
                             />
                             <Tooltip
+                                wrapperStyle={{ zIndex: 100 }}
+                                cursor={{ stroke: '#475569', strokeWidth: 1 }}
                                 content={({ active, payload }) => {
                                     if (active && payload && payload.length) {
                                         return (

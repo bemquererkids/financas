@@ -80,3 +80,31 @@ export async function createTransaction(formData: FormData) {
         return { error: 'Erro no servidor ao salvar transação. Tente novamente mais tarde.' };
     }
 }
+
+export async function checkDuplicateTransaction(description: string, amount: number, dateStr: string) {
+    const userId = await getUserId();
+    if (!userId) return { error: 'Não autenticado' };
+
+    const date = new Date(dateStr);
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+    try {
+        const existing = await prisma.transaction.findFirst({
+            where: {
+                userId,
+                description,
+                amount: Math.abs(amount),
+                date: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            }
+        });
+
+        return { isDuplicate: !!existing };
+    } catch (error) {
+        console.error('[CheckDuplicate] Erro:', error);
+        return { error: 'Erro ao verificar duplicatas' };
+    }
+}

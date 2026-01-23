@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     // Para ver as transações antigas, precisamos passar o filtro de data também para getRecentTransactions
     const recentTransactions = await getRecentTransactions(currentMonth, currentYear);
     const expensesByCategory = await getExpensesByCategory(currentMonth, currentYear);
-    const monthlyTrend = await getMonthlyTrend(); // Trend ignora filtro, mostra últimos 6 meses
+    const monthlyTrend = await getMonthlyTrend(currentMonth, currentYear); // Agora dinâmico!
 
     // CashFlowView precisa saber onde estamos
     const cashFlowData = await getCashFlow(currentYear, currentMonth);
