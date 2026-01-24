@@ -5,6 +5,7 @@ import { FloatingTransactionButton } from "@/components/transactions/FloatingTra
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { UnifiedDashboardView } from "@/components/dashboard/UnifiedDashboardView";
 import { MobileTutorialBanner } from "@/components/dashboard/MobileTutorialBanner";
+import { OFXUploader } from "@/components/dashboard/OFXUploader";
 
 export const dynamic = 'force-dynamic';
 
@@ -37,12 +38,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
     return (
         <div className="flex-1 h-full md:h-screen flex flex-col p-4 md:p-6 gap-3 overflow-y-auto md:overflow-hidden">
+
             {/* Header - Desktop Only (Mobile usa o título do card) */}
             <div className="flex-shrink-0 hidden md:block">
-                <DashboardHeader
-                    title="Minha Carteira"
-                    subtitle="Onde estou financeiramente agora?"
-                />
+                <div className="flex items-center justify-between">
+                    <DashboardHeader
+                        title="Minha Carteira"
+                        subtitle="Onde estou financeiramente agora?"
+                    />
+                    <OFXUploader />
+                </div>
             </div>
 
             <MobileTutorialBanner />
