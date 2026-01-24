@@ -48,6 +48,7 @@
         "clsx": "^2.1.0",
         "date-fns": "^3.3.1",
         "form-data": "^4.0.5",
+        "framer-motion": "^12.29.0",
         "google-auth-library": "^10.5.0",
         "lucide-react": "^0.344.0",
         "next": "14.1.0",

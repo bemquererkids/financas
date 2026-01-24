@@ -7,7 +7,9 @@ import { MobileSidebar } from "@/components/layout/MobileSidebar";
 import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
-import { PiggyBank, Sparkles } from 'lucide-react';
+import { SplashScreen } from '@/components/layout/SplashScreen';
+import { Logo } from '@/components/ui/logo';
+import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +17,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [showSplash, setShowSplash] = useState(true);
     const isAuthPage = pathname?.startsWith('/auth');
 
     useEffect(() => {
@@ -64,6 +67,8 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+            {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+
             {/* Sidebar Desktop */}
             <div className={cn(
                 "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-[80] transition-all duration-300",
@@ -76,12 +81,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
                 <div className="flex items-center gap-3">
                     <MobileSidebar />
-                    <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <PiggyBank className="h-5 w-5 text-slate-900" />
-                        </div>
-                        <span className="font-bold text-lg text-white">MyWallet</span>
-                    </div>
+                    <Logo size={28} showText={true} />
                 </div>
                 <div className="flex items-center gap-2">
                     <Button
