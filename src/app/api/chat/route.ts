@@ -42,15 +42,11 @@ export async function POST(req: Request) {
 
         const userId = session.user.id;
         const userName = session.user.name?.split(' ')[0] || "Usuário";
-        const today = new Date();
-        const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const hour = today.getHours();
-        let timeGreeting = "Olá";
-        if (hour < 12) timeGreeting = "Bom dia";
-        else if (hour < 18) timeGreeting = "Boa tarde";
-        else timeGreeting = "Boa noite";
 
         const { messages, context = 'general' } = await req.json();
+
+        // Remove old todayStr logic
+
         const lastMessage = messages[messages.length - 1].content;
 
         // Obter contexto COMPLETO
@@ -122,9 +118,33 @@ FOCO: Gestão de fluxo de caixa e contas a pagar.
                 break;
         }
 
+        // Garantir fuso horário de São Paulo (Brasil)
+        const now = new Date();
+        const timeZone = 'America/Sao_Paulo';
+
+        const todayStr = now.toLocaleDateString('pt-BR', {
+            timeZone,
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        const hourStr = now.toLocaleTimeString('pt-BR', {
+            timeZone,
+            hour: '2-digit',
+            hour12: false
+        });
+
+        const currentHour = parseInt(hourStr);
+        let period = "madrugada";
+        if (currentHour >= 6 && currentHour < 12) period = "manhã";
+        else if (currentHour >= 12 && currentHour < 18) period = "tarde";
+        else if (currentHour >= 18) period = "noite";
+
         const systemPrompt = `Você é o Agente Financeiro MyWallet, atuando como ${expertRole}.
-O nome do usuário é **${userName}**. Trate-o pelo primeiro nome ocasionalmente para criar proximidade.
-Hoje é ${todayStr} (período: ${timeGreeting}).
+O nome do usuário é **${userName}**. 
+CONTEXTO TEMPORAL: Hoje é **${todayStr}**, horário aprox. **${hourStr}** (${period}).
 
 ${summaryText}
 
@@ -132,13 +152,19 @@ SUA MISSÃO:
 Atuar de forma proativa, segura e hiper-personalizada.
 ${specializedPrompt}
 
-GUARDRAILS DE SEGURANÇA & PERSONALIDADE:
-1. **Humanização**: Use "${timeGreeting}, ${userName}" se for o início da conversa. Adapte o tom ao dia da semana (ex: sexta-feira seja mais leve, segunda-feira mais focado).
-2. **Prioridade de Sobrevivência**: Se saldo <= 0, foco total em cortar gastos.
-3. **Contas Vencendo**: Alerte sobre contas próximas.
-4. **Reserva de Emergência**: Prioridade #1 antes de investimentos arriscados.
-5. **Tom de Voz**: Premium, direto, empático. Use bullets para listas.
-6. **Nome**: Use o nome ${userName} quando for dar um conselho importante ou elogio.
+GUARDRAILS DE PERSONALIDADE & SUTILEZA:
+1. **Saudação Inteligente**: 
+   - NÃO inicie toda resposta com "Bom dia/tarde". Isso é robótico.
+   - Use o horário/dia para dar contexto *apenas quando fizer sentido*. 
+   - Exemplo (Sexta à noite): "Sextou, ${userName}! Vamos ver se sobrou algo pro fim de semana?"
+   - Exemplo (Segunda manhã): "Começando a semana, ${userName}. Vamos organizar as contas?"
+   - Em interações seguidas, seja direto.
+2. **Nome**: Use o nome ${userName} para criar conexão, mas não em toda frase.
+3. **Tom de Voz**: Premium, direto, empático. Use bullets para listas.
+4. **Segurança**:
+   - Saldo <= 0? Foco total em cortar gastos.
+   - Contas vencendo? Alerte imediatamente.
+   - Sem Reserva? Prioridade #1.
 
 INTENÇÕES:
 - TRANSACTION: Registrar gasto/ganho.
