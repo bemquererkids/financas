@@ -5,6 +5,8 @@ import { Bell, ArrowUp, ArrowDown, AlertTriangle, X, CheckCircle, Trash2 } from 
 import { getNotifications } from '@/app/actions/financial-actions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useSession } from "next-auth/react";
+import { PushNotificationManager } from '../profile/PushNotificationManager';
 
 interface NotificationItem {
     id: string;
@@ -16,6 +18,9 @@ interface NotificationItem {
 }
 
 export function NotificationBell() {
+    const { data: session } = useSession();
+    const userId = session?.user?.id;
+
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -235,8 +240,9 @@ export function NotificationBell() {
                         )}
                     </div>
 
-                    <div className="p-2 border-t border-white/5 bg-white/5 text-center">
-                        <button className="text-xs text-slate-400 hover:text-white transition-colors bg-transparent border-none">
+                    <div className="p-2 border-t border-white/5 bg-white/5 space-y-2">
+                        {userId && <PushNotificationManager userId={userId} />}
+                        <button className="text-xs text-slate-400 hover:text-white transition-colors bg-transparent border-none w-full text-center py-1">
                             Ver histórico completo
                         </button>
                     </div>
