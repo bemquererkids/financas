@@ -13,6 +13,6 @@ export const config = {
         // - api/webhooks (integrações externas como UAZAPI)
         // - auth/signin e auth/signup (páginas públicas de autenticação)
         // - arquivos estáticos (_next, imagens)
-        "/((?!api/auth|api/webhooks|auth/signin|auth/signup|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg).*)",
+        "/((?!api/auth|api/webhooks|api/currency|auth/signin|auth/signup|_next/static|_next/image|favicon.ico|manifest.webmanifest|manifest.json|sw.js|custom-sw.js|workbox-.*|.*\\.png|.*\\.jpg).*)",
     ],
 };
