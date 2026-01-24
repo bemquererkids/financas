@@ -31,6 +31,17 @@ export function PushNotificationManager({ userId }: { userId: string }) {
         if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) {
             setIsSupported(true);
             setPermission(Notification.permission);
+
+            // Auto-Sync: Se já tem permissão, garante que está salvo no banco
+            // Isso corrige casos onde o banco foi resetado ou a tabela criada depois
+            if (Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(async (registration) => {
+                    const sub = await registration.pushManager.getSubscription();
+                    if (sub) {
+                        savePushSubscription(sub.toJSON());
+                    }
+                });
+            }
         }
     }, []);
 
