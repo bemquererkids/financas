@@ -202,16 +202,13 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                     )}
                 </div>
             </div>
-        </div>
 
-            {/* Instalação do App (Aparece se não instalado) */ }
-    {
-        !collapsed && (
-            <div className="px-3 pb-2">
-                <InstallPWA />
-            </div>
-        )
-    }
-        </div >
+            {/* Instalação do App (Aparece se não instalado) */}
+            {!collapsed && (
+                <div className="px-3 pb-2">
+                    <InstallPWA />
+                </div>
+            )}
+        </div>
     );
 }
