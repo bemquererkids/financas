@@ -13,27 +13,49 @@ const OFXInputSchema = z.string().min(10, "Arquivo OFX inválido ou vazio");
 function parseOFX(data: string) {
     const transactions: any[] = [];
 
-    // OFX é meio SGML/XML. Vamos usar Regex robusto para extrair o bloco STMTTRN
-    // Isso evita problemas com bibliotecas legadas que quebram no build
-    const transationsMatches = data.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g) || [];
+    // Normalizar quebras de linha para evitar problemas regex
+    // Alguns OFX vêm tudo em uma linha, outros com \r\n
+    const cleanData = data.replace(/\r/g, '');
 
-    transationsMatches.forEach(block => {
-        const type = block.match(/<TRNTYPE>(.*?)(\n|<)/)?.[1]?.trim();
-        const amount = block.match(/<TRNAMT>(.*?)(\n|<)/)?.[1]?.trim();
-        const id = block.match(/<FITID>(.*?)(\n|<)/)?.[1]?.trim();
-        const dateRaw = block.match(/<DTPOSTED>(.*?)(\n|<)/)?.[1]?.trim();
-        const memo = block.match(/<MEMO>(.*?)(\n|<)/)?.[1]?.trim();
-        const name = block.match(/<NAME>(.*?)(\n|<)/)?.[1]?.trim();
+    // Estratégia Robusta: Split por <STMTTRN>
+    // Isso funciona mesmo se não tiver tag de fechamento </STMTTRN> (comum em SGML antigo)
+    const blocks = cleanData.split(/<STMTTRN>/i);
 
-        if (amount && dateRaw) {
+    // Começa do 1 porque o 0 é o header antes da primeira tx
+    for (let i = 1; i < blocks.length; i++) {
+        const block = blocks[i];
+
+        // Helper para extrair valor de tag (case insensitive)
+        // P procura: <TAG>... (até encontrar <, \n ou fim da string)
+        const getTag = (tag: string) => {
+            const regex = new RegExp(`<${tag}>(.*?)(?:<|\\n|$)`, 'i');
+            return block.match(regex)?.[1]?.trim();
+        };
+
+        const type = getTag('TRNTYPE');
+        const amountStr = getTag('TRNAMT');
+        const id = getTag('FITID');
+        const dateRaw = getTag('DTPOSTED');
+        const memo = getTag('MEMO');
+        const name = getTag('NAME'); // Às vezes vem como NAME
+
+        if (amountStr && dateRaw) {
+            // Tratamento de valor para PT-BR (se vier virgula sem ponto, troca. Se vier 1.000,00...)
+            // O padrão OFX é PONTO decimal (US), mas alguns bancos BR mandam virrgula.
+            let safeAmount = amountStr;
+            // Hack simples: se tem virgula e não tem ponto -> troca virgula por ponto
+            if (safeAmount.includes(',') && !safeAmount.includes('.')) {
+                safeAmount = safeAmount.replace(',', '.');
+            }
+
             transactions.push({
-                TRNAMT: amount,
+                TRNAMT: safeAmount,
                 DTPOSTED: dateRaw,
                 MEMO: memo || name || "Sem descrição",
                 FITID: id
             });
         }
-    });
+    }
 
     return transactions;
 }

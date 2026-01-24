@@ -31,7 +31,36 @@ export async function GET() {
         });
 
         if (!response.ok) {
-            console.warn(`[Currency API] External API Error ${response.status}. Using fallback.`);
+            console.warn(`[Currency API] AwesomeAPI Error ${response.status}. Trying Backup (Frankfurter)...`);
+            try {
+                // Backup: Frankfurter API (Dados reais do Banco Central Europeu)
+                const [usdRes, eurRes] = await Promise.all([
+                    fetch('https://api.frankfurter.app/latest?from=USD&to=BRL', { next: { revalidate: 60 } }),
+                    fetch('https://api.frankfurter.app/latest?from=EUR&to=BRL', { next: { revalidate: 60 } })
+                ]);
+
+                if (usdRes.ok && eurRes.ok) {
+                    const usdData = await usdRes.json();
+                    const eurData = await eurRes.json();
+                    const now = new Date().toISOString();
+
+                    // Formata para o padrão que o frontend espera (igual AwesomeAPI)
+                    return NextResponse.json({
+                        USDBRL: {
+                            code: 'USD', codein: 'BRL', name: 'Dólar Americano/Real Brasileiro',
+                            bid: usdData.rates.BRL.toFixed(2), pctChange: '0.00', create_date: now
+                        },
+                        EURBRL: {
+                            code: 'EUR', codein: 'BRL', name: 'Euro/Real Brasileiro',
+                            bid: eurData.rates.BRL.toFixed(2), pctChange: '0.00', create_date: now
+                        }
+                    });
+                }
+            } catch (errBackup) {
+                console.error("[Currency API] Backup failed:", errBackup);
+            }
+
+            // Último recurso: Mock
             return NextResponse.json(getMockData());
         }
 
@@ -39,8 +68,25 @@ export async function GET() {
         return NextResponse.json(data);
 
     } catch (error: any) {
-        console.error("[Currency API] Network Error:", error.message);
-        // Em último caso, retorna Mock para não deixar o frontend vermelho
+        console.error("[Currency API] Primary Network Error:", error.message);
+
+        // Tenta Backup em caso de erro de rede no primário também
+        try {
+            const [usdRes, eurRes] = await Promise.all([
+                fetch('https://api.frankfurter.app/latest?from=USD&to=BRL'),
+                fetch('https://api.frankfurter.app/latest?from=EUR&to=BRL')
+            ]);
+            if (usdRes.ok && eurRes.ok) {
+                const usdData = await usdRes.json();
+                const eurData = await eurRes.json();
+                const now = new Date().toISOString();
+                return NextResponse.json({
+                    USDBRL: { code: 'USD', codein: 'BRL', name: 'Dólar/Real', bid: usdData.rates.BRL.toFixed(2), pctChange: '0', create_date: now },
+                    EURBRL: { code: 'EUR', codein: 'BRL', name: 'Euro/Real', bid: eurData.rates.BRL.toFixed(2), pctChange: '0', create_date: now }
+                });
+            }
+        } catch (e) { }
+
         return NextResponse.json(getMockData());
     }
 }
