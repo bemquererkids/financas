@@ -7,16 +7,21 @@ import { z } from 'zod';
 import webpush from 'web-push';
 
 // Configurar Web Push com chaves do ambiente
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!;
-const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:suporte@mywallet.com';
+// Configurar Web Push com chaves do ambiente (Trim para evitar espaços invisíveis)
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()!;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim()!;
+const vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'mailto:suporte@mywallet.com';
 
-if (vapidPublicKey && vapidPrivateKey) {
-    webpush.setVapidDetails(
-        vapidSubject,
-        vapidPublicKey,
-        vapidPrivateKey
-    );
+try {
+    if (vapidPublicKey && vapidPrivateKey) {
+        webpush.setVapidDetails(
+            vapidSubject,
+            vapidPublicKey,
+            vapidPrivateKey
+        );
+    }
+} catch (e) {
+    console.error("Erro ao configurar VAPID:", e);
 }
 
 const SubscriptionSchema = z.object({
@@ -108,8 +113,8 @@ export async function sendTestNotification(userId: string) {
         await Promise.all(sendPromises);
         return { success: true, message: "Notificação enviada!" };
 
-    } catch (error) {
-        console.error(error);
-        return { success: false, error: "Falha ao enviar." };
+    } catch (error: any) {
+        console.error("Action Error:", error);
+        return { success: false, error: `Erro push: ${error.message || error}` };
     }
 }
