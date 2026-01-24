@@ -79,9 +79,22 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
-        jwt: async ({ token, user }) => {
+        jwt: async ({ token, user, account }) => {
             if (user) {
-                token.sub = user.id;
+                // Se for login via Google/Provider, o user.id pode vir como o ID do Google
+                // Precisamos garantir que usamos o ID do nosso Banco de Dados
+                if (user.email) {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { email: user.email }
+                    });
+                    if (dbUser) {
+                        token.sub = dbUser.id;
+                    } else {
+                        token.sub = user.id;
+                    }
+                } else {
+                    token.sub = user.id;
+                }
             }
             return token;
         }
