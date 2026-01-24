@@ -63,9 +63,24 @@ export function PushNotificationManager({ userId }: { userId: string }) {
             const registration = await navigator.serviceWorker.ready;
 
             // 3. Criar Inscrição Push
-            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            // 3. Criar Inscrição Push
+            let vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+            // Fallback: Buscar do servidor se não estiver no build
             if (!vapidKey) {
-                toast.error("Configuração VAPID ausente.");
+                try {
+                    const res = await fetch('/api/config/vapid');
+                    if (res.ok) {
+                        const data = await res.json();
+                        vapidKey = data.key;
+                    }
+                } catch (err) {
+                    console.error("Erro ao buscar VAPID key:", err);
+                }
+            }
+
+            if (!vapidKey) {
+                toast.error("Configuração VAPID ausente (Env/API).");
                 return;
             }
 
@@ -126,12 +141,19 @@ export function PushNotificationManager({ userId }: { userId: string }) {
             let sub = await reg.pushManager.getSubscription();
 
             if (!sub) {
-                const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-                if (vapidKey) {
-                    sub = await reg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(vapidKey)
-                    });
+                if (!sub) {
+                    let vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+                    if (!vapidKey) {
+                        const res = await fetch('/api/config/vapid');
+                        if (res.ok) vapidKey = (await res.json()).key;
+                    }
+
+                    if (vapidKey) {
+                        sub = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(vapidKey)
+                        });
+                    }
                 }
             }
 
