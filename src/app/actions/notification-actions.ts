@@ -10,8 +10,13 @@ import webpush from 'web-push';
 // Configurar Web Push com chaves do ambiente (Trim para evitar espaços invisíveis)
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()!;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim()!;
-// Fallback para a URL do App se não houver email configurado (VAPID aceita URL ou mailto)
-const vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'https://financas-production-54b6.up.railway.app';
+// Fallback para a URL do App se não houver email configurado
+let vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'https://financas-production-54b6.up.railway.app';
+
+// Fix automático: Se parece email e não tem mailto:, adiciona
+if (vapidSubject.includes('@') && !vapidSubject.startsWith('mailto:')) {
+    vapidSubject = `mailto:${vapidSubject}`;
+}
 
 try {
     if (vapidPublicKey && vapidPrivateKey) {
