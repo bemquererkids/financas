@@ -171,62 +171,52 @@ export function PushNotificationManager({ userId }: { userId: string }) {
 
     if (permission === 'granted') {
         return (
-            <div className="space-y-3">
-                <div className="flex items-center gap-2 p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <div className="flex items-center justify-between p-3 rounded-lg border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors group">
+                <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    </div>
                     <div>
-                        <h4 className="text-sm font-medium text-emerald-400">Notificações Ativas</h4>
-                        <p className="text-xs text-slate-400">Você receberá alertas de contas a vencer.</p>
+                        <h4 className="text-sm font-medium text-emerald-100">Notificações Ativas</h4>
+                        <p className="text-[10px] text-emerald-500/60 max-w-[150px] leading-tight">Dispositivo registrado</p>
                     </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleTestNotification}
-                        disabled={isTesting}
-                        className="flex-1 min-w-[100px]"
-                    >
-                        {isTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                        Testar
-                    </Button>
 
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                            const { checkDueBills } = await import('@/app/actions/notification-actions');
-                            const toastId = toast.loading("Verificando contas...");
-                            try {
-                                const result = await checkDueBills();
-                                if (result.success) {
-                                    if (result.message?.includes('Nenhuma')) {
-                                        toast.info(result.message, { id: toastId });
-                                    } else {
-                                        toast.success(result.message, { id: toastId });
-                                    }
-                                } else {
-                                    toast.error(result.error, { id: toastId });
-                                }
-                            } catch (e) {
-                                toast.error("Erro ao verificar.", { id: toastId });
-                            }
-                        }}
-                        className="flex-1 min-w-[100px]"
-                        title="Verificar contas a vencer (Simula Cron)"
-                    >
-                        <RefreshCw className="h-4 w-4 mr-2" /> {/* Reusing RefreshCw icon for simplicity or logic */}
-                        Verificar Vencimentos
-                    </Button>
-
+                <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                     <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={handleSync}
-                        title="Sincronizar dispositivo"
-                        className="px-2 text-slate-400 hover:text-white"
+                        size="icon"
+                        className="h-7 w-7 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+                        onClick={async () => {
+                            const { checkDueBills } = await import('@/app/actions/notification-actions');
+                            toast.promise(checkDueBills(), {
+                                loading: 'Verificando vencimentos...',
+                                success: (data) => data.success ? data.message : `Erro: ${data.error}`,
+                                error: 'Erro ao verificar'
+                            });
+                        }}
+                        title="Verificar Vencimentos Agora"
                     >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                        onClick={handleTestNotification}
+                        disabled={isTesting}
+                        title="Enviar Teste"
+                    >
+                        {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+                        onClick={handleSync}
+                        title="Forçar Sincronização"
+                    >
+                        <RefreshCw className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             </div>
