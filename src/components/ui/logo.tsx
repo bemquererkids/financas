@@ -12,8 +12,7 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
     return (
         <div className={`flex items-center gap-2 ${className}`}>
             <div className={`relative flex items-center justify-center ${monochrome ? 'grayscale opacity-90' : ''}`}>
-                {/* Glow Effect - Only if not monochrome */}
-                {!monochrome && <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />}
+                {/* Clean Image Only */}
 
                 <img
                     src="/logo-icon.png"
@@ -28,8 +27,8 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
                 <div className="flex flex-col">
                     <span
                         className={`text-lg font-bold bg-clip-text text-transparent ${monochrome
-                                ? 'bg-slate-200'
-                                : 'bg-gradient-to-r from-emerald-400 to-purple-500'
+                            ? 'bg-slate-200'
+                            : 'bg-gradient-to-r from-emerald-400 to-purple-500'
                             }`}
                     >
                         MyWallet
