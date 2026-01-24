@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, BellOff, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { Bell, BellOff, CheckCircle2, Loader2, Send, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { savePushSubscription, sendTestNotification } from '@/app/actions/notification-actions';
 
@@ -120,6 +120,33 @@ export function PushNotificationManager({ userId }: { userId: string }) {
         );
     }
 
+    const handleSync = async () => {
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            let sub = await reg.pushManager.getSubscription();
+
+            if (!sub) {
+                const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+                if (vapidKey) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(vapidKey)
+                    });
+                }
+            }
+
+            if (sub) {
+                await savePushSubscription(sub.toJSON());
+                toast.success("Sincronizado com sucesso!");
+            } else {
+                toast.error("Não foi possível obter inscrição do navegador.");
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("Erro ao sincronizar.");
+        }
+    };
+
     if (permission === 'granted') {
         return (
             <div className="space-y-3">
@@ -130,16 +157,27 @@ export function PushNotificationManager({ userId }: { userId: string }) {
                         <p className="text-xs text-slate-400">Você receberá alertas de contas a vencer.</p>
                     </div>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestNotification}
-                    disabled={isTesting}
-                    className="w-full"
-                >
-                    {isTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                    Enviar Teste Agora
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestNotification}
+                        disabled={isTesting}
+                        className="flex-1"
+                    >
+                        {isTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                        Testar
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSync}
+                        title="Sincronizar dispositivo"
+                        className="px-2 text-slate-400 hover:text-white"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
         );
     }
