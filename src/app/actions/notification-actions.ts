@@ -10,7 +10,8 @@ import webpush from 'web-push';
 // Configurar Web Push com chaves do ambiente (Trim para evitar espaços invisíveis)
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()!;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim()!;
-const vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'mailto:suporte@mywallet.com';
+// Fallback para a URL do App se não houver email configurado (VAPID aceita URL ou mailto)
+const vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'https://financas-production-54b6.up.railway.app';
 
 try {
     if (vapidPublicKey && vapidPrivateKey) {
@@ -19,6 +20,7 @@ try {
             vapidPublicKey,
             vapidPrivateKey
         );
+        console.log("[VAPID] Configurado com sucesso. Subject:", vapidSubject);
     }
 } catch (e) {
     console.error("Erro ao configurar VAPID:", e);
