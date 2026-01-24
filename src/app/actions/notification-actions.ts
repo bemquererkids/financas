@@ -91,7 +91,8 @@ export async function sendTestNotification(userId?: string) {
         });
 
         if (subscriptions.length === 0) {
-            return { success: false, message: "Nenhum dispositivo registrado." };
+            console.log(`[Push] Nenhum device para UserID: ${currentUserId}`);
+            return { success: false, message: `Nenhum dispositivo registrado para este usuário (${currentUserId?.substring(0, 5)}...). Tente Sincronizar novamente.` };
         }
 
         const notificationPayload = JSON.stringify({
