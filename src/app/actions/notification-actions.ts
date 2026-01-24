@@ -76,17 +76,18 @@ export async function savePushSubscription(subscription: any) {
     }
 }
 
-export async function sendTestNotification(userId: string) {
-    // Apenas para Admin ou o próprio usuário
+export async function sendTestNotification(userId?: string) {
+    // Usar sempre a sessão atual para consistência
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.id !== userId) {
-        // Em um app real, admin poderia disparar para outros. Aqui vamos travar.
-        // Se quiser testar, o usuário chama para ele mesmo.
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) {
+        return { success: false, error: "Usuário não autenticado." };
     }
 
     try {
         const subscriptions = await prisma.pushSubscription.findMany({
-            where: { userId }
+            where: { userId: currentUserId }
         });
 
         if (subscriptions.length === 0) {
