@@ -179,17 +179,46 @@ export function PushNotificationManager({ userId }: { userId: string }) {
                         <p className="text-xs text-slate-400">Você receberá alertas de contas a vencer.</p>
                     </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTestNotification}
                         disabled={isTesting}
-                        className="flex-1"
+                        className="flex-1 min-w-[100px]"
                     >
                         {isTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                         Testar
                     </Button>
+
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                            const { checkDueBills } = await import('@/app/actions/notification-actions');
+                            const toastId = toast.loading("Verificando contas...");
+                            try {
+                                const result = await checkDueBills();
+                                if (result.success) {
+                                    if (result.message?.includes('Nenhuma')) {
+                                        toast.info(result.message, { id: toastId });
+                                    } else {
+                                        toast.success(result.message, { id: toastId });
+                                    }
+                                } else {
+                                    toast.error(result.error, { id: toastId });
+                                }
+                            } catch (e) {
+                                toast.error("Erro ao verificar.", { id: toastId });
+                            }
+                        }}
+                        className="flex-1 min-w-[100px]"
+                        title="Verificar contas a vencer (Simula Cron)"
+                    >
+                        <RefreshCw className="h-4 w-4 mr-2" /> {/* Reusing RefreshCw icon for simplicity or logic */}
+                        Verificar Vencimentos
+                    </Button>
+
                     <Button
                         variant="ghost"
                         size="sm"
