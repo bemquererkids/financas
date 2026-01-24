@@ -124,6 +124,7 @@ export function OFXUploader() {
                                 onChange={handleFileChange}
                                 className="hidden"
                                 id="ofx-upload"
+                                name="ofx-file"
                                 ref={fileInputRef}
                             />
                             <label
