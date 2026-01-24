@@ -23,9 +23,9 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             setIsCollapsed(JSON.parse(stored));
         }
 
-        // Register Service Worker for PWA
+        // Register Custom Service Worker for PWA & Push
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register('/custom-sw.js')
                 .then(registration => {
                     console.log('SW registered:', registration);
                 })
