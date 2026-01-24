@@ -10,6 +10,14 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "MyWallet - Gestão Inteligente",
     description: "Sistema de gestão financeira pessoal e familiar",
+    manifest: "/manifest.json",
+    themeColor: "#10b981",
+    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "MyWallet"
+    }
 };
 
 export default function RootLayout({
