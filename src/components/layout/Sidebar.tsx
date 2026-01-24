@@ -171,7 +171,10 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
                     {!collapsed && (
                         <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-600">
-                            <span>Status: Online</span>
+                            <div className="flex flex-col">
+                                <span>Status: Online</span>
+                                <span className="text-[9px] text-slate-700">v24.01-1730</span>
+                            </div>
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                         </div>
                     )}
