@@ -26,54 +26,80 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { InstallPWA } from '@/components/layout/InstallPWA';
+
 const routes = [
-    {
-        label: 'Minha Carteira',
+    <div className={cn("rounded-xl border border-white/5 bg-slate-900/50", !collapsed && "p-3")}>
+        {!collapsed && <p className="text-[10px] text-slate-500 mb-2 font-medium tracking-wider uppercase ml-1">Mercado Hoje</p>}
+        <CurrencyTicker collapsed={collapsed} />
+
+        {!collapsed && (
+            <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-600">
+                <span>Status: Online</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            </div>
+        )}
+    </div>
+        </div >
+
+    {/* Instalação do App (Aparece se não instalado) */ }
+{
+    !collapsed && (
+        <div className="px-3 pb-2">
+            <InstallPWA />
+        </div>
+    )
+}
+        </div >
+    );
+}
+{
+    label: 'Minha Carteira',
         icon: Wallet,
-        href: '/',
-        color: 'text-sky-500',
+            href: '/',
+                color: 'text-sky-500',
     },
-    {
-        label: 'Contas a Pagar',
+{
+    label: 'Contas a Pagar',
         icon: CalendarClock,
-        href: '/payments',
-        color: 'text-violet-500',
+            href: '/payments',
+                color: 'text-violet-500',
     },
-    {
-        label: 'Para Onde Vai',
+{
+    label: 'Para Onde Vai',
         icon: Compass,
-        href: '/planning',
-        color: 'text-pink-700',
+            href: '/planning',
+                color: 'text-pink-700',
     },
-    {
-        label: 'Meu Futuro',
+{
+    label: 'Meu Futuro',
         icon: Sprout,
-        href: '/investments',
-        color: 'text-emerald-500',
+            href: '/investments',
+                color: 'text-emerald-500',
     },
-    {
-        label: 'Minha Evolução',
+{
+    label: 'Minha Evolução',
         icon: LineChart,
-        href: '/performance',
-        color: 'text-orange-700',
+            href: '/performance',
+                color: 'text-orange-700',
     },
-    {
-        label: 'Minhas Dívidas',
+{
+    label: 'Minhas Dívidas',
         icon: LinkIcon,
-        href: '/debts',
-        color: 'text-red-500',
+            href: '/debts',
+                color: 'text-red-500',
     },
-    {
-        label: 'Meus Objetivos',
+{
+    label: 'Meus Objetivos',
         icon: Target,
-        href: '/goals',
-        color: 'text-yellow-500',
+            href: '/goals',
+                color: 'text-yellow-500',
     },
-    {
-        label: 'Primeiros Passos',
+{
+    label: 'Primeiros Passos',
         icon: Sparkles,
-        href: '/tutorial',
-        color: 'text-white',
+            href: '/tutorial',
+                color: 'text-white',
     },
 ];
 
@@ -177,5 +203,15 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                 </div>
             </div>
         </div>
+
+            {/* Instalação do App (Aparece se não instalado) */ }
+    {
+        !collapsed && (
+            <div className="px-3 pb-2">
+                <InstallPWA />
+            </div>
+        )
+    }
+        </div >
     );
 }
