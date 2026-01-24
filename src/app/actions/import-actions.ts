@@ -5,11 +5,38 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-// @ts-ignore
-import { parse } from 'ofx-parser';
 
-// Schema de validação para garantir que o input é texto OFX válido
+// Schema de validação
 const OFXInputSchema = z.string().min(10, "Arquivo OFX inválido ou vazio");
+
+// --- CUSTOM OFX PARSER (No External Deps) ---
+function parseOFX(data: string) {
+    const transactions: any[] = [];
+
+    // OFX é meio SGML/XML. Vamos usar Regex robusto para extrair o bloco STMTTRN
+    // Isso evita problemas com bibliotecas legadas que quebram no build
+    const transationsMatches = data.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g) || [];
+
+    transationsMatches.forEach(block => {
+        const type = block.match(/<TRNTYPE>(.*?)(\n|<)/)?.[1]?.trim();
+        const amount = block.match(/<TRNAMT>(.*?)(\n|<)/)?.[1]?.trim();
+        const id = block.match(/<FITID>(.*?)(\n|<)/)?.[1]?.trim();
+        const dateRaw = block.match(/<DTPOSTED>(.*?)(\n|<)/)?.[1]?.trim();
+        const memo = block.match(/<MEMO>(.*?)(\n|<)/)?.[1]?.trim();
+        const name = block.match(/<NAME>(.*?)(\n|<)/)?.[1]?.trim();
+
+        if (amount && dateRaw) {
+            transactions.push({
+                TRNAMT: amount,
+                DTPOSTED: dateRaw,
+                MEMO: memo || name || "Sem descrição",
+                FITID: id
+            });
+        }
+    });
+
+    return transactions;
+}
 
 export async function processOFXUpload(fileContent: string) {
     // 1. Autenticação e Segurança
@@ -26,17 +53,11 @@ export async function processOFXUpload(fileContent: string) {
     }
 
     try {
-        // 3. Parsing Seguro
-        const data = await parse(fileContent);
-
-        // Extração robusta (suporta diferentes formatos de bancos)
-        const transactions = data.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKTRANLIST?.STMTTRN || [];
-
-        // Se for array vazio ou objeto único (alguns parsers retornam objeto se só tiver 1 item)
-        const txList = Array.isArray(transactions) ? transactions : [transactions];
+        // 3. Parsing Seguro (Custom)
+        const txList = parseOFX(fileContent);
 
         if (txList.length === 0) {
-            return { success: false, error: "Nenhuma transação encontrada no arquivo" };
+            return { success: false, error: "Nenhuma transação válida encontrada." };
         }
 
         let importedCount = 0;
@@ -45,13 +66,14 @@ export async function processOFXUpload(fileContent: string) {
         // 4. Processamento Inteligente com Deduplicação
         for (const tx of txList) {
             const amount = parseFloat(tx.TRNAMT);
-            const description = tx.MEMO || tx.NAME || "Transação sem descrição";
-            // Data vem como YYYYMMDDHHMMSS... pegar só os primeiros 8 chars (YYYYMMDD)
-            const dateStr = tx.DTPOSTED?.substring(0, 8);
+            const description = tx.MEMO;
+
+            // Tratamento de Data (OFX vem como YYYYMMDDHHMMSS...)
+            const dateStr = tx.DTPOSTED.substring(0, 8);
             const year = dateStr.substring(0, 4);
             const month = dateStr.substring(4, 6);
             const day = dateStr.substring(6, 8);
-            const date = new Date(`${year}-${month}-${day}T12:00:00Z`); // Meio-dia para evitar problemas de fuso
+            const date = new Date(`${year}-${month}-${day}T12:00:00Z`); // Fix UTC
 
             // Lógica de Deduplicação: Verifica se já existe transação igual neste dia p/ este user
             const existing = await prisma.transaction.findFirst({
@@ -105,6 +127,6 @@ export async function processOFXUpload(fileContent: string) {
 
     } catch (error: any) {
         console.error("Erro ao processar OFX:", error);
-        return { success: false, error: "Erro ao ler o arquivo. Verifique se é um OFX válido." };
+        return { success: false, error: "Erro ao ler o arquivo. Verifique o formato." };
     }
 }
