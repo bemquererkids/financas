@@ -25,8 +25,8 @@ export function CurrencyTicker({ collapsed }: { collapsed?: boolean }) {
 
     const fetchRates = async () => {
         try {
-            // Adiciona timestamp para evitar cache do navegador e garantir dado real
-            const res = await fetch(`https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL?_=${Date.now()}`);
+            // Chama nossa API interna para evitar CORS e usar cache do servidor
+            const res = await fetch('/api/currency');
             if (!res.ok) throw new Error('API Error');
             const json = await res.json();
             setData(json);

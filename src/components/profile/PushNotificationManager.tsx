@@ -87,10 +87,10 @@ export function PushNotificationManager({ userId }: { userId: string }) {
             if (result.success) {
                 toast.success("Enviado! Verifique suas notificações.");
             } else {
-                toast.error(result.message || "Erro ao enviar teste.");
+                toast.error(`Erro: ${result.message || result.error || "Falha desconhecida"}`);
             }
-        } catch (error) {
-            toast.error("Falha no teste.");
+        } catch (error: any) {
+            toast.error(`Falha técnica: ${error.message}`);
         } finally {
             setIsTesting(false);
         }
