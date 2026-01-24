@@ -14,8 +14,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation';
 
 export function OFXUploader() {
+    const router = useRouter();
     const [isUploading, setIsUploading] = useState(false);
     const [fileName, setFileName] = useState<string | null>(null);
     const [stats, setStats] = useState<{ imported: number; skipped: number } | null>(null);
@@ -52,6 +54,8 @@ export function OFXUploader() {
                 if (result.stats) {
                     setStats(result.stats);
                 }
+                // Atualiza a UI (Server Components) para mostrar os novos dados
+                router.refresh();
             } else {
                 toast.error(result.error || "Erro ao processar arquivo");
                 setFileName(null); // Reset on error
