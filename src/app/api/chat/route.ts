@@ -211,7 +211,9 @@ INTENÇÕES:
             } catch (fallbackError: any) {
                 fs.appendFileSync(logPath, `${new Date().toISOString()} - Fallback Error: ${fallbackError.message}\n`);
                 console.error("Fallback Error:", fallbackError);
-                return new Response(JSON.stringify({ content: "Desculpe, estou com dificuldades para processar sua solicitação no momento. Tente reformular." }), {
+
+                // DIAGNÓSTICO EM PRODUÇÃO: Retorna o erro real para o usuário (temporário)
+                return new Response(JSON.stringify({ content: `Erro no sistema: ${fallbackError.message}. Tente novamente em instantes.` }), {
                     headers: { 'Content-Type': 'application/json' }
                 });
             }
