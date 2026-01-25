@@ -27,9 +27,10 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
             {showText && (
                 <div className="flex flex-col">
                     <span
-                        className={`text-lg font-bold bg-clip-text text-transparent ${monochrome
-                            ? 'bg-slate-200'
-                            : 'bg-gradient-to-r from-emerald-400 to-blue-500'
+                        className={`font-extrabold bg-clip-text text-transparent tracking-tight ${size > 40 ? 'text-2xl' : 'text-lg'
+                            } ${monochrome
+                                ? 'bg-slate-200'
+                                : 'bg-gradient-to-r from-emerald-400 to-blue-500'
                             }`}
                     >
                         MyWallet

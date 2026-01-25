@@ -81,7 +81,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
             <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between p-4 bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
                 <div className="flex items-center gap-3">
                     <MobileSidebar />
-                    <Logo size={28} showText={true} />
+                    <Logo size={36} showText={true} />
                 </div>
                 <div className="flex items-center gap-2">
                     <Button

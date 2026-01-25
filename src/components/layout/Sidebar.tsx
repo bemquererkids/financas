@@ -107,7 +107,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
             <div className="px-3 py-2 flex-1">
                 <div className="flex items-center justify-between mb-10 pl-1">
                     <Link href="/" className={cn("flex items-center gap-3 transition-opacity", collapsed ? "justify-center w-full" : "")}>
-                        <Logo size={36} showText={!collapsed} />
+                        <Logo size={48} showText={!collapsed} />
                     </Link>
                 </div>
 
