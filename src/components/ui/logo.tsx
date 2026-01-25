@@ -11,9 +11,9 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
     return (
         <div className={`flex items-center gap-2.5 ${className}`}>
             {/* 
-               Brand Mark: "The Modern Piggy"
-               Inspired by clean, rounded icon styles.
-               Features: Curly tail, distinct legs, drop-in coin.
+               Brand Mark: "The Reference Piggy"
+               Strictly modeled after the requested Icons8 reference.
+               Side view, facing left, coin dropping in.
             */}
             <div className={`relative flex items-center justify-center ${monochrome ? 'opacity-90' : ''}`}>
                 <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,28 +32,27 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
                         </filter>
                     </defs>
 
-                    {/* Gold Coin Dropping In */}
+                    {/* Gold Coin Dropping In (Above Slot) */}
                     {!monochrome && (
-                        <circle cx="256" cy="80" r="32" fill="url(#coin_gradient)" filter="url(#soft_shadow)" />
-                    )}
-                    {/* Coin Symbol ($) */}
-                    {!monochrome && (
-                        <path d="M256 64V96M248 68C248 68 264 68 264 74C264 80 248 80 248 86C248 92 264 92 264 92" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                        <g filter="url(#soft_shadow)">
+                            <circle cx="256" cy="100" r="36" fill="url(#coin_gradient)" />
+                            {/* Inner detail of coin */}
+                            <circle cx="256" cy="100" r="28" stroke="white" strokeOpacity="0.5" strokeWidth="2" fill="none" />
+                            <path d="M256 86V114M248 90C248 90 264 90 264 96C264 102 248 102 248 108C248 114 264 114 264 114" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                        </g>
                     )}
 
-                    {/* Main Piggy Body */}
+                    {/* Main Piggy Body - Side View Facing Left */}
+                    {/* Path traces: Snout -> Head -> Ear -> Back -> Rump -> Tail -> Leg -> Belly -> Leg -> Snout */}
                     <path
                         fill={monochrome ? "currentColor" : "url(#body_gradient)"}
-                        d="M448 240C448 247 447.1 253.9 445.4 260.5L462.2 272.7C468.9 277.6 471.2 286.8 467.6 294.3L452.2 326.6C448.1 335.2 437.9 338.3 429.8 333.6L412.3 323.5C397.7 348.5 376.5 369.4 351.3 383.8L359.5 419.8C361.6 429.1 355.7 438.4 346.4 440.6L311.2 449C301.9 451.1 292.6 445.2 290.4 435.9L283.4 405.3C274.5 406.8 265.3 407.6 256 407.6C239.5 407.6 223.5 405.1 208.3 400.4L195.9 437.6C192.9 446.6 183.1 451.4 174.1 448.4L140.5 437.2C131.5 434.2 126.7 424.4 129.7 415.4L142 378.5C110 357.6 86.6 326.8 74.5 290.7C74.3 290.2 74.2 289.8 74 289.4C69 292 63.4 293.4 57.4 293.4C40.6 293.4 27 279.8 27 263C27 246.2 40.6 232.6 57.4 232.6C59.9 232.6 62.3 232.9 64.6 233.4C66.8 198.9 80.7 167.3 103.5 142.1L82.9 116.3C77.4 109.4 78.5 99.3 85.4 93.8L112.7 72C119.6 66.5 129.7 67.6 135.2 74.5L157.6 102.5C186.3 87.7 219.7 79 255.4 79C265.4 79 275.2 79.7 284.7 81C283.5 86.8 285.5 92.7 289.6 96.8C296.2 103.4 306.8 103.4 313.4 96.8C319.4 90.8 320.1 81.6 315.6 74.9C391.8 84.6 448 156.4 448 240Z"
+                        d="M416 234.3C416 195.8 402.7 160.7 379.8 132.8C356.5 104.4 321.6 85.3 282.7 76.5V64H229.3V76.5C148.8 85.2 84.6 148.5 76.5 229.3H64V282.7H76.5C80.3 320.9 99.4 355.8 127.8 379.1V448H192V408H320V448H384.2V379.1C403.4 363.3 416 339.4 416 312.7V296C433.7 296 448 281.7 448 264V256C448 244 434 234.3 416 234.3ZM128 176C136.8 176 144 183.2 144 192C144 200.8 136.8 208 128 208C119.2 208 112 200.8 112 192C112 183.2 119.2 176 128 176Z"
                         filter={monochrome ? "" : "url(#soft_shadow)"}
                         className={monochrome ? "text-slate-200" : ""}
                     />
 
-                    {/* Coin Slot (Darker for depth) */}
-                    <path d="M224 128H288C296.8 128 304 120.8 304 112C304 103.2 296.8 96 288 96H224C215.2 96 208 103.2 208 112C208 120.8 215.2 128 224 128Z" fill="black" fillOpacity="0.2" />
-
-                    {/* Eye (Closed/Happy curve) */}
-                    <path d="M120 220C120 220 130 210 144 220" stroke="white" strokeWidth="6" strokeLinecap="round" strokeOpacity="0.9" />
+                    {/* Slot Detail on Back */}
+                    <rect x="229" y="96" width="54" height="10" rx="5" fill="black" fillOpacity="0.2" />
 
                 </svg>
             </div>
