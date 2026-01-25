@@ -11,9 +11,8 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
     return (
         <div className={`flex items-center gap-2.5 ${className}`}>
             {/* 
-               Brand Mark: "The Geometric Pig"
-               A pure SVG vector constructed from circular arcs and rounded rectangles.
-               Scales infinitely, zero pixelation.
+               Brand Mark: "The Geometric Pig v2"
+               Improved silhouette with distinct snout and ears.
             */}
             <div className={`relative flex items-center justify-center ${monochrome ? 'opacity-90' : ''}`}>
                 <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,28 +31,36 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
                         </filter>
                     </defs>
 
-                    {/* Main Body - Smooth Rounded Shape */}
+                    {/* Main Body - Clear Pig Silhouette */}
+                    {/* Constructed using rounded rectangles and boolean operations mentally */}
                     <path
                         fill={monochrome ? "currentColor" : "url(#brand_gradient)"}
-                        d="M416 288C416 358.7 358.7 416 288 416H152C134.3 416 120 401.7 120 384V330C86.7 312 64 277 64 237C64 179.6 110.6 133 168 133H192V112C192 94.3 206.3 80 224 80H256C273.7 80 288 94.3 288 112V133H312C369.4 133 416 179.6 416 237V288Z"
+                        d="M448 256C448 290 430 320 400 340V400C400 408.8 392.8 416 384 416H336C327.2 416 320 408.8 320 400V352H192V400C192 408.8 184.8 416 176 416H128C119.2 416 112 408.8 112 400V340C70 315 48 270 48 224C48 135.6 119.6 64 208 64H256C344.4 64 416 135.6 416 224V256H448ZM336 96L368 128H304L336 96Z"
                         filter={monochrome ? "" : "url(#dropShadow)"}
                         className={monochrome ? "text-slate-200" : ""}
                     />
+
+                    {/* Ear Overlay (To smooth the connection) */}
+                    <path d="M140 100 L180 64 H200 L160 120 Z" fill={monochrome ? "currentColor" : "url(#brand_gradient)"} />
+
 
                     {/* Glass/Shine Overlay for Depth */}
                     {!monochrome && (
                         <path
                             fill="url(#shine_gradient)"
-                            d="M416 288C416 358.7 358.7 416 288 416H152C134.3 416 120 401.7 120 384V330C86.7 312 64 277 64 237C64 179.6 110.6 133 168 133H192V112C192 94.3 206.3 80 224 80H256C273.7 80 288 94.3 288 112V133H312C369.4 133 416 179.6 416 237V288Z"
+                            d="M448 256C448 290 430 320 400 340V400C400 408.8 392.8 416 384 416H336C327.2 416 320 408.8 320 400V352H192V400C192 408.8 184.8 416 176 416H128C119.2 416 112 408.8 112 400V340C70 315 48 270 48 224C48 135.6 119.6 64 208 64H256C344.4 64 416 135.6 416 224V256H448ZM336 96L368 128H304L336 96Z"
                             style={{ mixBlendMode: 'overlay' }}
                         />
                     )}
 
-                    {/* Coin Slot - Crisp White Pill */}
-                    <rect x="208" y="160" width="96" height="16" rx="8" fill="white" fillOpacity={monochrome ? 0.3 : 0.9} />
+                    {/* Coin Slot */}
+                    <rect x="208" y="144" width="96" height="12" rx="6" fill="white" fillOpacity={monochrome ? 0.3 : 0.9} />
 
-                    {/* Eye - Simple Dot */}
-                    <circle cx="340" cy="220" r="16" fill="white" fillOpacity={monochrome ? 0.3 : 0.9} />
+                    {/* Eye */}
+                    <circle cx="350" cy="200" r="14" fill="white" fillOpacity={monochrome ? 0.3 : 0.9} />
+
+                    {/* Snout Detail */}
+                    <path d="M416 256H432C440.8 256 448 250 448 240V230C448 221.2 440.8 214 432 214H416V256Z" fill="white" fillOpacity="0.2" />
 
                 </svg>
             </div>
