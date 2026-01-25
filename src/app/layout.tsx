@@ -11,8 +11,11 @@ export const metadata: Metadata = {
     title: "MyWallet - Gestão Inteligente",
     description: "Sistema de gestão financeira pessoal e familiar",
     manifest: "/manifest.json",
-    themeColor: "#10b981",
-    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+    icons: {
+        icon: "/logo-icon.png",
+        apple: "/apple-icon.png",
+        shortcut: "/logo-icon.png",
+    },
     appleWebApp: {
         capable: true,
         statusBarStyle: "black-translucent",

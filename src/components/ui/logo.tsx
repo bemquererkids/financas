@@ -11,7 +11,7 @@ interface LogoProps {
 export function Logo({ className = "", size = 32, showText = true, monochrome = false }: LogoProps) {
     return (
         <div className={`flex items-center gap-2 ${className}`}>
-            <div className={`relative flex items-center justify-center ${monochrome ? 'grayscale opacity-90' : ''}`}>
+            <div className={`flex items-center justify-center ${monochrome ? 'grayscale opacity-90' : ''}`}>
                 {/* Glow Effect - Keeping it subtle for the solid logo */}
                 {!monochrome && <div className="absolute inset-0 bg-emerald-500/10 blur-xl rounded-full" />}
 
@@ -20,7 +20,8 @@ export function Logo({ className = "", size = 32, showText = true, monochrome = 
                     alt="MyWallet Piggy"
                     width={size}
                     height={size}
-                    className="object-contain drop-shadow-lg relative z-10"
+                    className="object-contain relative z-10"
+                    style={{ marginBottom: size > 40 ? '6px' : '2px' }}
                 />
             </div>
 
