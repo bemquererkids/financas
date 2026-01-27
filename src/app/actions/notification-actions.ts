@@ -81,3 +81,91 @@ export async function getUnreadNotifications(): Promise<NotificationItem[]> {
         return b.date.getTime() - a.date.getTime();
     });
 }
+
+// ------------------------------------------------------------------
+// PUSH NOTIFICATION HELPERS
+// ------------------------------------------------------------------
+
+export async function savePushSubscription(subscription: any) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+        const userId = session.user.id;
+
+        // Ensure we handle endpoint uniqueness
+        await prisma.pushSubscription.upsert({
+            where: { endpoint: subscription.endpoint },
+            update: {
+                userId,
+                p256dh: subscription.keys.p256dh,
+                auth: subscription.keys.auth,
+            },
+            create: {
+                userId,
+                endpoint: subscription.endpoint,
+                p256dh: subscription.keys.p256dh,
+                auth: subscription.keys.auth,
+            }
+        });
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Save subscription error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function sendTestNotification(userId: string) {
+    // This requires web-push setup which might be missing configurations
+    // For now, we stub it to prevent build errors, or implement basic logic if keys exist.
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const webPush = require('web-push');
+
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+        // Return success mock to not break UI if keys missing (dev mode)
+        // Usually local dev doesn't have VAPID keys set up unless user did it.
+        // We'll return false but a friendly message.
+        return { success: false, message: "Chaves VAPID não configuradas (.env)" };
+    }
+
+    try {
+        webPush.setVapidDetails(
+            'mailto:admin@example.com',
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+            process.env.VAPID_PRIVATE_KEY
+        );
+
+        const subs = await prisma.pushSubscription.findMany({ where: { userId } });
+
+        await Promise.all(subs.map(sub => {
+            return webPush.sendNotification(
+                {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth }
+                },
+                JSON.stringify({
+                    title: "Teste de Notificação",
+                    body: "Se você recebeu isso, o sistema de alertas está funcionando!",
+                    icon: "/icon.png"
+                })
+            ).catch((err: any) => {
+                if (err.statusCode === 410) {
+                    // Cleanup expired
+                    prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(console.error);
+                }
+            });
+        }));
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Test notification error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function checkDueBills() {
+    await getUnreadNotifications();
+    return { success: true, message: "Verificação concluída" };
+}

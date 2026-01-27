@@ -202,7 +202,7 @@ export function PushNotificationManager({ userId }: { userId: string }) {
                             const { checkDueBills } = await import('@/app/actions/notification-actions');
                             toast.promise(checkDueBills(), {
                                 loading: 'Verificando vencimentos...',
-                                success: (data) => data.success ? data.message : `Erro: ${data.error}`,
+                                success: (data: any) => data.success ? data.message : `Erro: ${data.message || 'Desconhecido'}`,
                                 error: 'Erro ao verificar'
                             });
                         }}

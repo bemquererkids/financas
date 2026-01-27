@@ -1,14 +1,37 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { cn } from "@/lib/utils";
+import { History as HistoryIcon, PieChart, LineChart, Activity, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { TransactionList } from "@/components/transactions/TransactionList";
+import { ExpensesCategoryChart } from "@/components/dashboard/ExpensesCategoryChart";
+import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
+import { CashFlowView } from "@/components/dashboard/CashFlowView";
+import { CashFlowData } from "@/app/actions/cashflow-actions";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
 
-// ... existing imports
+interface UnifiedDashboardViewProps {
+    transactions: any[];
+    expensesByCategory: any[];
+    monthlyTrend: any[];
+    cashFlowData: CashFlowData;
+    currentMonth: number;
+    currentYear: number;
+}
 
 export function UnifiedDashboardView({ transactions, expensesByCategory, monthlyTrend, cashFlowData, currentMonth, currentYear }: UnifiedDashboardViewProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'cashflow' | 'transactions' | 'categories' | 'trend' | 'budget'>('transactions'); // Added budget
 
-    // ... handleMonthChange
+    const handleMonthChange = (increment: number) => {
+        const newDate = new Date(currentYear, currentMonth + increment, 1);
+        router.push(`/?month=${newDate.getMonth()}&year=${newDate.getFullYear()}`);
+    };
 
-    // ...
+    const periodLabel = new Date(currentYear, currentMonth, 1)
+        .toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+    const capitalizedPeriod = periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1);
 
     return (
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-2xl p-4 flex flex-col h-full transition-all duration-300 relative overflow-hidden">

@@ -107,12 +107,12 @@ FOCO: Educação financeira e estratégia de investimentos.
             case 'payments':
                 expertRole = "Organizador Financeiro e Concierge";
                 specializedPrompt = `
-FOCO: Gestão de fluxo de caixa e contas a pagar.
-- Ajude a organizar vencimentos.
-- Se houver pouco saldo, priorize contas essenciais (Luz, Água, Aluguel).
-- Sugira janelas de pagamento (dia 7, 15, 30).
+FOCO: Gestão de fluxo de caixa e inteligência de vencimentos.
+- Analise os padrões de data: Se o usuário tem várias contas vencendo perto (ex: dia 11, 12, 14), sugira agrupar o pagamento (ex: dia 10 ou 15) para facilitar a gestão.
+- NÃO fique preso rigidamente às janelas padrão (7, 15, 30) se não fizer sentido. Se o usuário tem tudo vencendo dia 20, adapte a sugestão.
+- Identifique gargalos: "Você tem muitas contas no início do mês, mas recebe dia 20. Isso é um risco."
+- Seja consultivo: "Identifiquei que você paga 3 contas picadas na segunda semana. Que tal centralizar?"
 `;
-                break;
             default:
                 specializedPrompt = "FOCO: Visão holística das finanças, saúde financeira e bons hábitos.";
                 break;
@@ -143,31 +143,31 @@ FOCO: Gestão de fluxo de caixa e contas a pagar.
         else if (currentHour >= 18) period = "noite";
 
         const systemPrompt = `Você é o Agente Financeiro MyWallet, atuando como ${expertRole}.
-O nome do usuário é **${userName}**. 
-CONTEXTO TEMPORAL: Hoje é **${todayStr}**, horário aprox. **${hourStr}** (${period}).
+O nome do usuário é ** ${userName}**. 
+CONTEXTO TEMPORAL: Hoje é ** ${todayStr}**, horário aprox. ** ${hourStr}** (${period}).
 
 ${summaryText}
 
 SUA MISSÃO:
-Atuar de forma proativa, segura e hiper-personalizada.
-${specializedPrompt}
+Atuar de forma proativa, segura e hiper - personalizada.
+                    ${specializedPrompt}
 
 GUARDRAILS DE PERSONALIDADE & SUTILEZA:
-1. **Saudação Inteligente**: 
-   - NÃO inicie toda resposta com "Bom dia/tarde". Isso é robótico.
-   - Use o horário/dia para dar contexto *apenas quando fizer sentido*. 
-   - Exemplo (Sexta à noite): "Sextou, ${userName}! Vamos ver se sobrou algo pro fim de semana?"
-   - Exemplo (Segunda manhã): "Começando a semana, ${userName}. Vamos organizar as contas?"
-   - Em interações seguidas, seja direto.
-2. **Nome**: Use o nome ${userName} para criar conexão, mas não em toda frase.
-3. **Tom de Voz**: Premium, direto, empático. Use bullets para listas.
-4. **Segurança**:
-   - Saldo <= 0? Foco total em cortar gastos.
-   - Contas vencendo? Alerte imediatamente.
-   - Sem Reserva? Prioridade #1.
+                1. ** Saudação Inteligente **:
+                - NÃO inicie toda resposta com "Bom dia/tarde".Isso é robótico.
+   - Use o horário / dia para dar contexto * apenas quando fizer sentido *. 
+   - Exemplo(Sexta à noite): "Sextou, ${userName}! Vamos ver se sobrou algo pro fim de semana?"
+                    - Exemplo(Segunda manhã): "Começando a semana, ${userName}. Vamos organizar as contas?"
+                        - Em interações seguidas, seja direto.
+2. ** Nome **: Use o nome ${userName} para criar conexão, mas não em toda frase.
+3. ** Tom de Voz **: Premium, direto, empático.Use bullets para listas.
+4. ** Segurança **:
+                - Saldo <= 0 ? Foco total em cortar gastos.
+   - Contas vencendo ? Alerte imediatamente.
+   - Sem Reserva ? Prioridade #1.
 
-INTENÇÕES:
-- TRANSACTION: Registrar gasto/ganho.
+                INTENÇÕES:
+                - TRANSACTION: Registrar gasto / ganho.
 - PAYABLE: Agendar conta.
 - CHAT: Consultoria.`;
 
@@ -177,7 +177,7 @@ INTENÇÕES:
                 model: google('gemini-2.0-flash'), // Reverting to 2.0-flash as per user request
                 schema: IntentSchema,
                 system: systemPrompt,
-                prompt: `Mensagem atual (${context}) de ${userName}: "${lastMessage}"`
+                prompt: `Mensagem atual(${context}) de ${userName}: "${lastMessage}"`
             });
 
             let finalResponse = analysis.chatMessage || "Entendido.";
@@ -195,7 +195,7 @@ INTENÇÕES:
                     }
                 });
                 revalidatePath('/');
-                finalResponse = `✅ Gasto registrado: ${analysis.transaction.description} - R$ ${analysis.transaction.amount.toFixed(2)}`;
+                finalResponse = `✅ Gasto registrado: ${analysis.transaction.description} - R$ ${analysis.transaction.amount.toFixed(2)} `;
             }
             else if (analysis.intent === 'PAYABLE' && analysis.payable) {
                 const date = new Date(analysis.payable.dueDate);
@@ -221,7 +221,7 @@ INTENÇÕES:
                     }
                 });
                 revalidatePath('/payments');
-                finalResponse = `✅ Conta agendada: ${analysis.payable.name} - R$ ${analysis.payable.amount.toFixed(2)} para ${analysis.payable.dueDate}`;
+                finalResponse = `✅ Conta agendada: ${analysis.payable.name} - R$ ${analysis.payable.amount.toFixed(2)} para ${analysis.payable.dueDate} `;
             }
 
             return new Response(JSON.stringify({ content: finalResponse }), {
@@ -230,7 +230,7 @@ INTENÇÕES:
 
         } catch (innerError: any) {
             const logPath = path.join(process.cwd(), 'chat_error.log');
-            fs.appendFileSync(logPath, `${new Date().toISOString()} - Intent Error: ${innerError.message}\n`);
+            fs.appendFileSync(logPath, `${new Date().toISOString()} - Intent Error: ${innerError.message} \n`);
             console.error("Intent Error:", innerError);
 
             // Fallback: Se falhar a estrutura, tente apenas conversar
@@ -244,7 +244,7 @@ INTENÇÕES:
                     headers: { 'Content-Type': 'application/json' }
                 });
             } catch (fallbackError: any) {
-                fs.appendFileSync(logPath, `${new Date().toISOString()} - Fallback Error: ${fallbackError.message}\n`);
+                fs.appendFileSync(logPath, `${new Date().toISOString()} - Fallback Error: ${fallbackError.message} \n`);
                 console.error("Fallback Error:", fallbackError);
 
                 // DIAGNÓSTICO EM PRODUÇÃO: Retorna o erro real para o usuário (temporário)
@@ -256,6 +256,6 @@ INTENÇÕES:
 
     } catch (error: any) {
         console.error('API Error:', error);
-        return new Response(JSON.stringify({ error: `Erro: ${error.message}` }), { status: 500 });
+        return new Response(JSON.stringify({ error: `Erro: ${error.message} ` }), { status: 500 });
     }
 }
