@@ -12,6 +12,7 @@ import { Logo } from '@/components/ui/logo';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PWAUpdateManager } from '@/components/pwa/PWAUpdateManager';
 
 export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -67,6 +68,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+            <PWAUpdateManager />
             {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
 
             {/* Sidebar Desktop */}

@@ -2,8 +2,14 @@
 const CACHE_NAME = 'mywallet-cache-v1';
 
 self.addEventListener('install', (event) => {
-    // Força o SW a assumir controle imediatamente
-    self.skipWaiting();
+    // O novo SW instala, mas fica em "waiting" até o usuário confirmar a atualização
+    // self.skipWaiting(); // Removido para permitir o prompt de atualização
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 self.addEventListener('activate', (event) => {
