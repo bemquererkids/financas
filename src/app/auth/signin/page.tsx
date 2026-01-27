@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/logo';
 import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { OAuthErrorAlert } from '@/components/auth/OAuthErrorAlert';
 

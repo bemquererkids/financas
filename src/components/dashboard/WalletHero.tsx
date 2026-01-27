@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { InlineTransactionForm } from "@/components/transactions/InlineTransactionForm";
-import { Logo } from "@/components/ui/Logo";
+import { Logo } from "@/components/ui/logo";
 
 interface WalletHeroProps {
     summary: {

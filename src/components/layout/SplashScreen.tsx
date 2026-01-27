@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Logo } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/logo';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function SplashScreen({ onFinish }: { onFinish?: () => void }) {

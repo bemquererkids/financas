@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { InstallPWA } from '@/components/layout/InstallPWA';
-import { Logo } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/logo';
 
 const routes = [
     {

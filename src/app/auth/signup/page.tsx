@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/logo';
 import { Mail, Lock, User, Loader2, Eye, EyeOff, Smartphone } from 'lucide-react';
 
 export default function SignUpPage() {
