@@ -14,3 +14,4 @@ vertex-ai-credentials.json
 test-*.js
 TESTE_*.md
 RESUMO_*.md
+gemini-tools/
