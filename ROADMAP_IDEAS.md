@@ -1,8 +1,8 @@
 # 🚀 MyWallet - Roadmap de Evolução (SaaS)
 
 ## 1. Experiência Mobile First (PWA)
-- [ ] **Configurar Manifesto PWA**: Permitir instalação na Home Screen (Android/iOS) com ícone e splash screen nativos.
-- [ ] **Service Workers**: Cache offline para visualização básica mesmo sem internet.
+- [x] **Configurar Manifesto PWA**: Permitir instalação na Home Screen (Android/iOS) com ícone e splash screen nativos.
+- [x] **Service Workers**: Cache offline e gerenciamento de atualizações (Update Prompt).
 - [ ] **Push Notifications**: Sistema de lembretes ativos.
     - [ ] Cron Job diário (ex: 9h da manhã).
     - [ ] Regra: Avisar 3 dias antes, 1 dia antes e no dia do vencimento.
