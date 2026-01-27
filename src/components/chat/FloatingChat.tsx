@@ -15,7 +15,12 @@ interface Message {
     isPending?: boolean;
 }
 
+import { usePathname } from 'next/navigation';
+
 export function FloatingChat() {
+    const pathname = usePathname();
+    const isAuthPage = pathname?.startsWith('/auth') || pathname === '/login' || pathname === '/signup';
+
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         { id: 'welcome', role: 'assistant', content: 'Olá! Sou seu assistente financeiro pessoal. Como posso ajudar com seu dinheiro hoje?' }
@@ -120,6 +125,8 @@ export function FloatingChat() {
 
     // confirmEntry was for OCR. Since we are fixing the CHAT, we leave OCR as is for now or ignore if not called.
     const confirmEntry = async () => { }; // Stub to prevent undefined reference if UI calls it
+
+    if (isAuthPage) return null;
 
     return (
         <>
