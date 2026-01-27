@@ -4,6 +4,7 @@ const nextConfig = {
     experimental: {
         serverComponentsExternalPackages: ['@google/adk'],
     },
+    swcMinify: true,
 };
 
 export default nextConfig;

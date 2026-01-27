@@ -8,7 +8,7 @@ import { UserGreeting } from "@/components/profile/UserGreeting";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { SplashScreen } from '@/components/layout/SplashScreen';
-import { Logo } from '@/components/ui/logo';
+import { Logo } from '@/components/ui/Logo';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

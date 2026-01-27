@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LockKeyhole, Loader2 } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -44,15 +45,13 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#09090b] relative overflow-hidden">
             {/* Background Effects */}
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[100px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/10 blur-[100px]" />
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-pink-500/10 blur-[100px]" />
 
             <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl relative z-10">
                 <CardHeader className="space-y-1 text-center">
-                    <div className="flex justify-center mb-4">
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <LockKeyhole className="h-6 w-6 text-white" />
-                        </div>
+                    <div className="flex justify-center mb-6">
+                        <Logo size={60} showText={false} />
                     </div>
                     <CardTitle className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
                         Acesso Restrito
@@ -76,7 +75,7 @@ export default function LoginPage() {
                                 placeholder="Seu usuário"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="bg-zinc-950/50 border-zinc-800 focus:border-emerald-500/50"
+                                className="bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50"
                                 required
                             />
                         </div>
@@ -88,7 +87,7 @@ export default function LoginPage() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="bg-zinc-950/50 border-zinc-800 focus:border-emerald-500/50"
+                                className="bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50"
                                 required
                             />
                         </div>
@@ -96,7 +95,7 @@ export default function LoginPage() {
                     <CardFooter>
                         <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-300"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white font-medium shadow-lg shadow-indigo-500/20 transition-all duration-300"
                             disabled={isLoading}
                         >
                             {isLoading ? (

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { InstallPWA } from '@/components/layout/InstallPWA';
-import { Logo } from '@/components/ui/logo';
+import { Logo } from '@/components/ui/Logo';
 
 const routes = [
     {
@@ -97,7 +97,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
             {onToggle && (
                 <button
                     onClick={onToggle}
-                    className="absolute -right-3 top-9 z-50 h-6 w-6 rounded-full bg-[#0A0F1C] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-emerald-500/10 hover:border-emerald-500/50 hover:text-emerald-500 text-slate-500 transition-all duration-300 shadow-sm"
+                    className="absolute -right-3 top-9 z-50 h-6 w-6 rounded-full bg-[#0A0F1C] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-indigo-500/10 hover:border-indigo-500/50 hover:text-indigo-500 text-slate-500 transition-all duration-300 shadow-sm"
                     title={collapsed ? "Expandir menu" : "Recolher menu"}
                 >
                     {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
@@ -122,7 +122,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                                     className={cn(
                                         "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer rounded-xl transition-all duration-200",
                                         isActive
-                                            ? "text-white bg-emerald-500/10 border border-emerald-500/20 shadow-sm shadow-emerald-900/10"
+                                            ? "text-white bg-indigo-500/10 border border-indigo-500/20 shadow-sm shadow-indigo-900/10"
                                             : "text-slate-400 hover:text-white hover:bg-white/5",
                                         collapsed ? "justify-center px-2" : ""
                                     )}
@@ -136,7 +136,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                                         {!collapsed && <span className="truncate">{route.label}</span>}
                                     </div>
                                     {isActive && !collapsed && (
-                                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />
                                     )}
                                 </Link>
                             );
@@ -169,7 +169,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                                 <span>Status: Online</span>
                                 <span className="text-[9px] text-slate-700">v24.01-1730</span>
                             </div>
-                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                         </div>
                     )}
                 </div>

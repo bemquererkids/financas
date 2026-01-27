@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
+import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { OAuthErrorAlert } from '@/components/auth/OAuthErrorAlert';
 
 export default function SignInPage() {
@@ -57,12 +58,12 @@ export default function SignInPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400 shadow-lg shadow-emerald-500/20 mb-4">
-                        <PiggyBank className="h-8 w-8 text-slate-900" />
+                    <div className="inline-flex items-center justify-center mb-6">
+                        <Logo size={64} showText={false} />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">Entrar na Conta</h1>
                     <p className="text-slate-400">Acesse sua conta MyWallet</p>
@@ -84,7 +85,7 @@ export default function SignInPage() {
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="pl-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
+                                    className="pl-10 bg-white/5 border-white/10 text-white focus:ring-indigo-500/50"
                                     placeholder="seu@email.com"
                                     required
                                 />
@@ -95,7 +96,7 @@ export default function SignInPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="password" className="text-slate-300">Senha</Label>
-                                <Link href="/auth/forgot-password" className="text-xs text-emerald-400 hover:text-emerald-300">
+                                <Link href="/auth/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300">
                                     Esqueceu?
                                 </Link>
                             </div>
@@ -106,7 +107,7 @@ export default function SignInPage() {
                                     type={showPassword ? "text" : "password"}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white focus:ring-emerald-500/50"
+                                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white focus:ring-indigo-500/50"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -131,7 +132,7 @@ export default function SignInPage() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold py-6 shadow-lg shadow-emerald-900/20"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-semibold py-6 shadow-lg shadow-indigo-900/20"
                         >
                             {loading ? (
                                 <>
@@ -173,7 +174,7 @@ export default function SignInPage() {
                     {/* Sign Up Link */}
                     <p className="mt-6 text-center text-sm text-slate-400">
                         Não tem uma conta?{' '}
-                        <Link href="/auth/signup" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                        <Link href="/auth/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
                             Criar conta grátis
                         </Link>
                     </p>

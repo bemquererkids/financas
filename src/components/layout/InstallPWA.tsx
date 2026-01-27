@@ -81,7 +81,7 @@ export function InstallPWA() {
                 <Button
                     onClick={handleInstallClick}
                     variant="outline"
-                    className="w-full justify-start gap-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 hover:text-emerald-300"
+                    className="w-full justify-start gap-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-400 hover:text-indigo-300"
                     size="sm"
                 >
                     <Download className="h-4 w-4" />
@@ -93,7 +93,7 @@ export function InstallPWA() {
             <Dialog open={showIOSHint} onOpenChange={setShowIOSHint}>
                 <DialogContent className="sm:max-w-md bg-zinc-950 border-white/10 text-white">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-emerald-400">
+                        <DialogTitle className="flex items-center gap-2 text-indigo-400">
                             <Download className="h-5 w-5" /> Instalar no iPhone
                         </DialogTitle>
                         <DialogDescription className="text-slate-400">

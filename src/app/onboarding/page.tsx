@@ -117,8 +117,8 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4 overflow-hidden relative">
             {/* Background elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" />
             </div>
 
             <div className="w-full max-w-lg relative z-10">
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
                         {[1, 2, 3, 4, 5].map((s) => (
                             <div
                                 key={s}
-                                className={`h-1 w-8 rounded-full transition-all duration-300 ${s <= step ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`}
+                                className={`h-1 w-8 rounded-full transition-all duration-300 ${s <= step ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-zinc-800'}`}
                             />
                         ))}
                     </div>
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
                                     value={monthlyIncome}
                                     onChange={(e) => setMonthlyIncome(e.target.value)}
                                     placeholder="0,00"
-                                    className="w-full pl-16 pr-4 py-6 bg-zinc-950/50 border border-zinc-800 rounded-2xl text-white text-4xl font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-center placeholder:text-zinc-700"
+                                    className="w-full pl-16 pr-4 py-6 bg-zinc-950/50 border border-zinc-800 rounded-2xl text-white text-4xl font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-center placeholder:text-zinc-700"
                                     autoFocus
                                     onKeyDown={(e) => e.key === 'Enter' && parseFloat(monthlyIncome) > 0 && handleNext()}
                                 />
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
                             <Button
                                 onClick={handleNext}
                                 disabled={!monthlyIncome || parseFloat(monthlyIncome) <= 0}
-                                className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium"
+                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium"
                             >
                                 Continuar
                             </Button>
@@ -276,7 +276,7 @@ export default function OnboardingPage() {
                     {/* Step 6: Result */}
                     {step === 6 && !isAnalyzing && profileAnalysis && (
                         <div className="text-center animate-in fade-in zoom-in-95 duration-500">
-                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-[0_0_30px_rgba(16,185,129,0.3)] mb-6">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_30px_rgba(99,102,241,0.3)] mb-6">
                                 <Sparkles className="h-8 w-8 text-white" />
                             </div>
 
@@ -300,7 +300,7 @@ export default function OnboardingPage() {
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-lg font-bold shadow-lg shadow-emerald-500/20"
+                                className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-lg font-bold shadow-lg shadow-indigo-500/20"
                             >
                                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Acessar Dashboard"}
                             </Button>

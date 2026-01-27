@@ -64,7 +64,13 @@ export function ChatWidget({
 
     const toggleRecording = () => {
         if (!recognition) return toast.error('Navegador sem suporte a voz.');
-        isRecording ? recognition.stop() : recognition.start();
+        try {
+            isRecording ? recognition.stop() : recognition.start();
+        } catch (err) {
+            console.warn("Speech recognition state mismatch:", err);
+            // Se der erro ao iniciar, provavelmente já está rodando, então paramos
+            if (!isRecording) recognition.stop();
+        }
     };
 
     // Initialize welcome message
@@ -102,7 +108,23 @@ export function ChatWidget({
                 setInput(transcript);
                 setIsRecording(false);
             };
-            rec.onerror = () => setIsRecording(false);
+            rec.onerror = (event: any) => {
+                setIsRecording(false);
+                console.error("Speech recognition error:", event.error);
+                switch (event.error) {
+                    case 'not-allowed':
+                        toast.error('Permissão de microfone negada. Verifique as configurações do navegador.');
+                        break;
+                    case 'no-speech':
+                        toast.error('Nenhuma fala detectada. Tente falar mais alto.');
+                        break;
+                    case 'network':
+                        toast.error('Erro de rede no reconhecimento de voz.');
+                        break;
+                    default:
+                        toast.error(`Erro no comando de voz: ${event.error}`);
+                }
+            };
             setRecognition(rec);
         }
     }, []);
@@ -242,13 +264,13 @@ export function ChatWidget({
                 <Card className="w-[420px] h-[680px] bg-zinc-950 border-white/10 shadow-3xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 rounded-[2.5rem]">
                     <CardHeader className="bg-zinc-900/40 border-b border-white/5 p-6 flex flex-row items-center justify-between backdrop-blur-2xl">
                         <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-emerald-500 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-500 flex items-center justify-center">
                                 <Bot className="h-7 w-7 text-zinc-950" />
                             </div>
                             <div>
                                 <CardTitle className="text-base font-black text-white uppercase tracking-tight">Agente Inteligente</CardTitle>
                                 <div className="flex items-center gap-1 opacity-60">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
                                     <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Ativo</span>
                                 </div>
                             </div>
@@ -269,8 +291,8 @@ export function ChatWidget({
                         {messages.map((m) => (
                             <div key={m.id} className={cn("flex w-full animate-in fade-in slide-in-from-bottom-4 duration-300", m.role === 'user' ? "justify-end" : "justify-start")}>
                                 {m.role === 'assistant' && (
-                                    <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mr-3 mt-1 shrink-0">
-                                        <Bot className="h-4 w-4 text-emerald-500" />
+                                    <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center mr-3 mt-1 shrink-0">
+                                        <Bot className="h-4 w-4 text-indigo-500" />
                                     </div>
                                 )}
                                 <div className={cn("max-w-[85%] rounded-[2rem] px-6 py-4 text-[13px] leading-relaxed shadow-lg",
@@ -284,7 +306,7 @@ export function ChatWidget({
                             <div className="animate-in fade-in zoom-in-95 duration-500">
                                 <div className="bg-zinc-950 border border-white/10 rounded-[2.5rem] p-8 space-y-6 shadow-2xl">
                                     <div>
-                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Valor Detectado</p>
+                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Valor Detectado</p>
                                         <h2 className="text-4xl font-black text-white tracking-tighter">
                                             R$ {extractedData.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </h2>
@@ -292,10 +314,10 @@ export function ChatWidget({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 bg-zinc-900/50 p-1 rounded-2xl border border-white/5">
-                                        <button onClick={() => setSaveType('TRANSACTION')} className={cn("py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", saveType === 'TRANSACTION' ? "bg-emerald-500 text-zinc-950 shadow-lg" : "text-zinc-500 hover:text-white")}>
+                                        <button onClick={() => setSaveType('TRANSACTION')} className={cn("py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", saveType === 'TRANSACTION' ? "bg-indigo-500 text-white shadow-lg" : "text-zinc-500 hover:text-white")}>
                                             Pago
                                         </button>
-                                        <button onClick={() => setSaveType('PAYABLE')} className={cn("py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", saveType === 'PAYABLE' ? "bg-emerald-500 text-zinc-950 shadow-lg" : "text-zinc-500 hover:text-white")}>
+                                        <button onClick={() => setSaveType('PAYABLE')} className={cn("py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", saveType === 'PAYABLE' ? "bg-indigo-500 text-white shadow-lg" : "text-zinc-500 hover:text-white")}>
                                             Agendar
                                         </button>
                                     </div>
@@ -311,7 +333,7 @@ export function ChatWidget({
 
                         {isLoading && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
                             <div className="flex items-center gap-4 bg-white/5 w-fit px-6 py-3 rounded-full border border-white/5 animate-pulse">
-                                <Loader2 className="h-4 w-4 text-emerald-500 animate-spin" />
+                                <Loader2 className="h-4 w-4 text-indigo-500 animate-spin" />
                                 <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Agente pensando...</span>
                             </div>
                         )}
@@ -332,7 +354,7 @@ export function ChatWidget({
                                     </>
                                 )}
                             </div>
-                            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={inputPlaceholder} className="bg-white/5 border-white/10 text-white h-14 rounded-2xl px-6 focus:border-emerald-500/50 transition-all font-medium" disabled={isLoading || isProcessingImage} />
+                            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={inputPlaceholder} className="bg-white/5 border-white/10 text-white h-14 rounded-2xl px-6 focus:border-indigo-500/50 transition-all font-medium" disabled={isLoading || isProcessingImage} />
                             <Button type="submit" size="icon" className="bg-white hover:bg-zinc-200 h-14 w-14 shrink-0 rounded-2xl text-zinc-950 transition-all active:scale-95" disabled={isLoading || !input.trim() || isProcessingImage}>
                                 <Send className="h-6 w-6" />
                             </Button>
@@ -343,7 +365,7 @@ export function ChatWidget({
 
             {externalIsOpen === undefined && (
                 <Button onClick={() => setIsOpen(!isOpen)} className={cn("h-20 w-20 rounded-[2.5rem] shadow-3xl transition-all relative z-10",
-                    isOpen ? "bg-zinc-800" : "bg-emerald-500 hover:scale-105 shadow-emerald-500/20")}>
+                    isOpen ? "bg-zinc-800" : "bg-indigo-500 hover:scale-105 shadow-indigo-500/20")}>
                     {isOpen ? <X className="h-8 w-8 text-white" /> : <MessageCircle className="h-9 w-9 text-zinc-950" />}
                 </Button>
             )}

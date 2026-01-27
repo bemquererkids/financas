@@ -14,39 +14,40 @@ export const contentType = 'image/png'
 export default function Icon() {
     return new ImageResponse(
         (
-            // ImageResponse JSX element
             <div
                 style={{
-                    fontSize: 24,
-                    background: 'linear-gradient(135deg, #5EEAD4 0%, #34D399 100%)', // Brighter Teal/Emerald gradient matching reference
+                    background: 'linear-gradient(180deg, #06402B 0%, #032A1C 100%)', // Deep Fintech Green
                     width: '100%',
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: '8px', // ~25% for 32px
+                    borderRadius: '0px', // Browser/OS handles rounding
                 }}
             >
-                {/* Minimalist Piggy Bank SVG matching the reference style */}
+                {/* Pixel-Perfect Solid White Piggy Bank */}
                 <svg
-                    width="20"
-                    height="20"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#022c22" // Very dark teal/black for contrast
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    fill="white"
+                    xmlns="http://www.w3.org/2000/svg"
                 >
-                    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2.5V5z" />
-                    <path d="M2 9v1c0 1.1.9 2 2 2h1" />
-                    <path d="M16 11h.01" />
+                    <path d="M19.006 3.705a.75.75 0 0 0-.512-1.41L15 3.262V2a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v1.262l-3.494-.967a.75.75 0 0 0-.512 1.41l3.5.968L4 5.922V7a1 1 0 0 0 1 1h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H5a1 1 0 0 0-1 1v2.5a3.5 3.5 0 0 0 3.5 3.5h.547A5.99 5.99 0 0 0 8 18h8a5.99 5.99 0 0 0-.047-3H16.5a3.5 3.5 0 0 0 3.5-3.5V8.922l-.494-1.248 3.5-.969H23a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-.5a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h.5V3.705l-3.494.968z"
+                        fillRule="evenodd" clipRule="evenodd" opacity="0" />
+                    {/* 
+                       Re-drawing a cleaner, more accurate shape based on the visual reference:
+                       - Snout (Left)
+                       - Round Body
+                       - Pointy Ear
+                       - Curled Tail
+                       - Legs
+                     */}
+                    <path d="M14.5 5.5C14.5 5.5 13.5 2 9.5 3.5C9.5 3.5 8 11 8 11L5.5 11C4.11929 11 3 12.1193 3 13.5V14.5C3 15.8807 4.11929 17 5.5 17H6.08579L5.29289 17.7929C4.90237 18.1834 4.90237 18.8166 5.29289 19.2071L6.79289 20.7071C7.18342 21.0976 7.81658 21.0976 8.20711 20.7071L10 19H14L15.7929 20.7071C16.1834 21.0976 16.8166 21.0976 17.2071 20.7071L18.7071 19.2071C19.0976 18.8166 19.0976 18.1834 18.7071 17.7929L18 17.0858V14C18 13.7956 18.0266 13.5966 18.077 13.4079C19.2032 12.8251 20 11.5997 20 10.165V10.125C20.5959 10.0384 21.084 9.61053 21.2335 9.02705C21.7826 6.88414 19.4674 5.38541 18.2505 7.15243C17.6186 6.13677 16.6343 5.37893 15.4646 5.09334C15.1786 5.29653 14.8516 5.43283 14.5 5.5ZM7 13C7 12.4477 7.44772 12 8 12C8.55228 12 9 12.4477 9 13C9 13.5523 8.55228 14 8 14C7.44772 14 7 13.5523 7 13ZM11 7C10.4477 7 10 7.44772 10 8C10 8.55228 10.4477 9 11 9H15C15.5523 9 16 8.55228 16 8C16 7.44772 15.5523 7 15 7H11Z"
+                        fill="white" />
                 </svg>
             </div>
         ),
-        // ImageResponse options
-        {
-            ...size,
-        }
+        { ...size }
     )
 }

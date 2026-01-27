@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+  </defs>
+  <!-- Approved MyWallet Logo: Internal Coin + Secure Slot -->
+  <path fill-rule="evenodd" clip-rule="evenodd" 
+    d="M 6 6 H 18 A 4 4 0 0 1 22 10 V 16 A 4 4 0 0 1 18 20 H 6 A 4 4 0 0 1 2 16 V 10 A 4 4 0 0 1 6 6 Z M 12 10.55 A 2.25 2.25 0 1 0 12 15.05 A 2.25 2.25 0 0 0 12 10.55 Z M 7 8.8 H 17 A 0.7 0.7 0 0 1 17.7 9.5 A 0.7 0.7 0 0 1 17 10.2 H 7 A 0.7 0.7 0 0 1 6.3 9.5 A 0.7 0.7 0 0 1 7 8.8 Z"
+    fill="url(#grad1)" 
+  />
+</svg>

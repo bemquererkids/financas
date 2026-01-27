@@ -2,11 +2,10 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
-export function InvestmentChart({ data }: { data: any[] }) {
+export function InvestmentChart({ data, color = '#10b981' }: { data: any[], color?: string }) {
     if (!data || data.length === 0) return null;
 
     const formatCurrency = (val: number) => {
-        // Formato abreviado para o eixo (10k, 1M)
         if (val >= 1000000) return `R$${(val / 1000000).toFixed(1)}M`;
         if (val >= 1000) return `R$${(val / 1000).toFixed(0)}k`;
         return val.toString();
@@ -30,8 +29,8 @@ export function InvestmentChart({ data }: { data: any[] }) {
                 >
                     <defs>
                         <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={color} stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -49,14 +48,14 @@ export function InvestmentChart({ data }: { data: any[] }) {
                     />
                     <Tooltip
                         contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }}
-                        itemStyle={{ color: '#10b981' }}
+                        itemStyle={{ color: color }}
                         formatter={(value: number) => [formatCurrencyFull(value), "Saldo Patrimonial"]}
                         labelFormatter={(label) => `${label} Anos de Acumulação`}
                     />
                     <Area
                         type="monotone"
                         dataKey="balance"
-                        stroke="#10b981"
+                        stroke={color}
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorBalance)"

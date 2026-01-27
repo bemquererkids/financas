@@ -74,7 +74,7 @@ export function UserGreeting() {
         return (
             <Button
                 onClick={() => signIn("google")}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full gap-2 shadow-lg shadow-emerald-500/20"
+                className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-full gap-2 shadow-lg shadow-indigo-500/20"
                 size="sm"
             >
                 <LogIn className="h-4 w-4" />
@@ -91,15 +91,15 @@ export function UserGreeting() {
         <div className="flex items-center gap-3">
             <Popover>
                 <PopoverTrigger asChild>
-                    <button className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
+                    <button className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
                         {session.user?.image ? (
                             <img
                                 src={session.user.image}
                                 alt={session.user.name || "User"}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/50 shadow-md group-hover:border-emerald-400 transition-all"
+                                className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/50 shadow-md group-hover:border-indigo-400 transition-all"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold border-2 border-white/10 group-hover:border-white/30 transition-all">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold border-2 border-white/10 group-hover:border-white/30 transition-all">
                                 <span className="text-sm">{userInitial}</span>
                             </div>
                         )}
@@ -117,16 +117,16 @@ export function UserGreeting() {
                                     <img
                                         src={session.user.image}
                                         alt={session.user.name || "User"}
-                                        className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500/50"
+                                        className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/50"
                                     />
                                 ) : (
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-2xl border-2 border-white/10">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl border-2 border-white/10">
                                         {userInitial}
                                     </div>
                                 )}
                                 <label
                                     htmlFor="avatar-upload"
-                                    className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-600 transition-colors shadow-lg"
+                                    className="absolute bottom-0 right-0 w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-600 transition-colors shadow-lg"
                                 >
                                     <Camera className="h-3 w-3 text-white" />
                                     <input
@@ -152,7 +152,7 @@ export function UserGreeting() {
                         {/* Informações */}
                         <div className="space-y-2 pt-2 border-t border-slate-700/50">
                             <div className="flex items-center gap-2 text-sm">
-                                <Mail className="h-4 w-4 text-emerald-400" />
+                                <Mail className="h-4 w-4 text-indigo-400" />
                                 <span className="text-slate-300">{session.user?.email}</span>
                             </div>
                         </div>

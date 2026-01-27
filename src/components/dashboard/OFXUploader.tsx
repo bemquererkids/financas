@@ -72,7 +72,7 @@ export function OFXUploader() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2 border-dashed border-slate-700 hover:border-emerald-500 hover:bg-emerald-500/5 text-slate-400 hover:text-emerald-400">
+                <Button variant="outline" className="gap-2 border-dashed border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/5 text-slate-400 hover:text-indigo-400">
                     <UploadCloud className="h-4 w-4" />
                     Importar OFX
                 </Button>
@@ -80,7 +80,7 @@ export function OFXUploader() {
             <DialogContent className="sm:max-w-md bg-slate-950 border-slate-800">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-emerald-500" />
+                        <FileText className="h-5 w-5 text-indigo-500" />
                         Importação Bancária
                     </DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -91,7 +91,7 @@ export function OFXUploader() {
                 <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50 hover:bg-slate-900 transition-colors">
                     {isUploading ? (
                         <div className="text-center space-y-3">
-                            <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mx-auto" />
+                            <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mx-auto" />
                             <p className="text-sm text-slate-300 animate-pulse">Processando transações...</p>
                         </div>
                     ) : stats ? (

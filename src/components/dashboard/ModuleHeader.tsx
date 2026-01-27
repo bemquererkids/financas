@@ -1,5 +1,5 @@
 import { UserGreeting } from "@/components/profile/UserGreeting";
-import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";

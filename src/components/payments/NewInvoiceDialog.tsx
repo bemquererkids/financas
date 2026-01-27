@@ -138,7 +138,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/20">
                     <Upload className="mr-2 h-4 w-4" />
                     Adicionar Documento
                 </Button>
@@ -146,7 +146,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
             <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800 text-white">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-emerald-400" />
+                        <FileText className="h-5 w-5 text-indigo-400" />
                         Smart Document
                     </DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -159,10 +159,10 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                         <div className="grid gap-4">
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex items-center justify-between p-4 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:border-emerald-500/50 transition-all group"
+                                className="flex items-center justify-between p-4 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:border-indigo-500/50 transition-all group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20">
+                                    <div className="p-2 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20">
                                         <Upload className="h-5 w-5" />
                                     </div>
                                     <div className="text-left">
@@ -206,8 +206,8 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                     {step === 'LOADING' && (
                         <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
                             <div className="relative">
-                                <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full" />
-                                <Loader2 className="h-10 w-10 text-emerald-400 animate-spin relative z-10" />
+                                <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
+                                <Loader2 className="h-10 w-10 text-indigo-400 animate-spin relative z-10" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-medium text-white">Lendo arquivo...</h3>
@@ -222,8 +222,8 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                 <button
                                     onClick={() => setFormData({ ...formData, type: 'PAYABLE' })}
                                     className={`flex-1 text-xs py-2 rounded-md transition-all font-medium ${formData.type === 'PAYABLE'
-                                            ? 'bg-emerald-600 text-white shadow-lg'
-                                            : 'text-slate-400 hover:text-white'
+                                        ? 'bg-indigo-600 text-white shadow-lg'
+                                        : 'text-slate-400 hover:text-white'
                                         }`}
                                 >
                                     Conta a Pagar (Futuro)
@@ -231,8 +231,8 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                 <button
                                     onClick={() => setFormData({ ...formData, type: 'TRANSACTION' })}
                                     className={`flex-1 text-xs py-2 rounded-md transition-all font-medium ${formData.type === 'TRANSACTION'
-                                            ? 'bg-blue-600 text-white shadow-lg'
-                                            : 'text-slate-400 hover:text-white'
+                                        ? 'bg-blue-600 text-white shadow-lg'
+                                        : 'text-slate-400 hover:text-white'
                                         }`}
                                 >
                                     Gasto Já Feito (Passado)
@@ -245,7 +245,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                     <Input
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="bg-slate-900 border-slate-700 text-white focus:border-emerald-500"
+                                        className="bg-slate-900 border-slate-700 text-white focus:border-indigo-500"
                                     />
                                 </div>
 
@@ -256,7 +256,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                             type="number"
                                             value={formData.amount}
                                             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                            className="bg-slate-900 border-slate-700 text-white focus:border-emerald-500 font-mono"
+                                            className="bg-slate-900 border-slate-700 text-white focus:border-indigo-500 font-mono"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -267,7 +267,7 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                             type="date"
                                             value={formData.date}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                            className="bg-slate-900 border-slate-700 text-white focus:border-emerald-500"
+                                            className="bg-slate-900 border-slate-700 text-white focus:border-indigo-500"
                                         />
                                     </div>
                                 </div>
@@ -306,8 +306,8 @@ export function NewInvoiceDialog({ onOpenChange }: { onOpenChange?: (open: boole
                                 <Button
                                     onClick={handleSubmit}
                                     className={`flex-1 text-white ${formData.type === 'PAYABLE'
-                                            ? 'bg-emerald-600 hover:bg-emerald-700'
-                                            : 'bg-blue-600 hover:bg-blue-700'
+                                        ? 'bg-indigo-600 hover:bg-indigo-700'
+                                        : 'bg-blue-600 hover:bg-blue-700'
                                         }`}
                                 >
                                     <CheckCircle2 className="mr-2 h-4 w-4" />

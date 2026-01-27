@@ -118,11 +118,11 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
                         className="w-12 h-12 rounded-full object-cover border-2 border-white/20 group-hover:border-emerald-500 transition-colors"
                     />
                 ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm border-2 border-white/20 group-hover:border-emerald-400 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm border-2 border-white/20 group-hover:border-indigo-400 transition-colors">
                         {initials || <User className="h-5 w-5" />}
                     </div>
                 )}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="h-3 w-3 text-white" />
                 </div>
             </button>
@@ -149,13 +149,13 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
                                     autoPlay
                                     playsInline
                                     muted
-                                    className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500"
+                                    className="w-40 h-40 rounded-full object-cover border-4 border-indigo-500"
                                 />
                             ) : preview ? (
                                 <img
                                     src={preview}
                                     alt="Preview"
-                                    className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500"
+                                    className="w-40 h-40 rounded-full object-cover border-4 border-indigo-500"
                                 />
                             ) : currentAvatar ? (
                                 <img
@@ -175,7 +175,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
                             {isCameraActive ? (
                                 <button
                                     onClick={capturePhoto}
-                                    className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+                                    className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
                                 >
                                     <Camera className="h-5 w-5" />
                                     Tirar Foto
@@ -184,7 +184,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
                                 <button
                                     onClick={saveAvatar}
                                     disabled={isPending}
-                                    className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                    className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                                 >
                                     <Check className="h-5 w-5" />
                                     {isPending ? 'Salvando...' : 'Salvar Foto'}

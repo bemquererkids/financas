@@ -35,12 +35,21 @@ export function PushNotificationManager({ userId }: { userId: string }) {
             // Auto-Sync: Se já tem permissão, garante que está salvo no banco
             // Isso corrige casos onde o banco foi resetado ou a tabela criada depois
             if (Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then(async (registration) => {
-                    const sub = await registration.pushManager.getSubscription();
-                    if (sub) {
-                        savePushSubscription(sub.toJSON());
-                    }
-                });
+                const alreadySynced = localStorage.getItem('push_subscription_synced');
+                // Se já sincronizou recentemente (últimas 24h), evita call desnecessária
+                const lastSync = alreadySynced ? parseInt(alreadySynced) : 0;
+                const now = Date.now();
+
+                // Só sincroniza se passou mais de 24h ou nunca sincronizou
+                if (now - lastSync > 24 * 60 * 60 * 1000) {
+                    navigator.serviceWorker.ready.then(async (registration) => {
+                        const sub = await registration.pushManager.getSubscription();
+                        if (sub) {
+                            await savePushSubscription(sub.toJSON());
+                            localStorage.setItem('push_subscription_synced', now.toString());
+                        }
+                    });
+                }
             }
         }
     }, []);
@@ -94,6 +103,7 @@ export function PushNotificationManager({ userId }: { userId: string }) {
 
             if (result.success) {
                 toast.success("Notificações ativadas com sucesso!");
+                localStorage.setItem('push_subscription_synced', Date.now().toString());
             } else {
                 toast.error("Erro ao salvar inscrição.");
             }
@@ -159,6 +169,7 @@ export function PushNotificationManager({ userId }: { userId: string }) {
 
             if (sub) {
                 await savePushSubscription(sub.toJSON());
+                localStorage.setItem('push_subscription_synced', Date.now().toString());
                 toast.success("Sincronizado com sucesso!");
             } else {
                 toast.error("Não foi possível obter inscrição do navegador.");
@@ -238,7 +249,7 @@ export function PushNotificationManager({ userId }: { userId: string }) {
                 <Button
                     onClick={subscribeToPush}
                     disabled={isSubscribing}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white w-full"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white w-full"
                 >
                     {isSubscribing ? (
                         <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Ativando...</>

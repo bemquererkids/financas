@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 interface EmptyStateProps {
-    icon: LucideIcon;
+    icon?: LucideIcon;
+    useLogo?: boolean;
     title: string;
     description: string;
     ctaLabel?: string;
@@ -15,6 +17,7 @@ interface EmptyStateProps {
 
 export function EmptyState({
     icon: Icon,
+    useLogo,
     title,
     description,
     ctaLabel,
@@ -28,8 +31,12 @@ export function EmptyState({
             className
         )}>
             <div className="bg-slate-800/50 p-4 rounded-full mb-6 relative group">
-                <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all duration-500" />
-                <Icon className="h-8 w-8 text-slate-400 group-hover:text-emerald-400 transition-colors duration-500 relative z-10" />
+                <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all duration-500" />
+                {useLogo ? (
+                    <Logo size={32} showText={false} monochrome={true} className="text-slate-400 group-hover:text-indigo-400 transition-colors duration-500 relative z-10" />
+                ) : (
+                    Icon && <Icon className="h-8 w-8 text-slate-400 group-hover:text-indigo-400 transition-colors duration-500 relative z-10" />
+                )}
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2 max-w-sm">
@@ -43,14 +50,14 @@ export function EmptyState({
             {ctaLabel && (
                 ctaLink ? (
                     <Link href={ctaLink}>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 transition-all">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 shadow-lg shadow-indigo-900/20 hover:shadow-indigo-900/40 transition-all">
                             {ctaLabel}
                         </Button>
                     </Link>
                 ) : (
                     <Button
                         onClick={onCtaClick}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 transition-all"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 shadow-lg shadow-indigo-900/20 hover:shadow-indigo-900/40 transition-all"
                     >
                         {ctaLabel}
                     </Button>

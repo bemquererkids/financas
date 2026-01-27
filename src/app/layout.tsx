@@ -23,6 +23,8 @@ export const metadata: Metadata = {
     }
 };
 
+import { FloatingChat } from "@/components/chat/FloatingChat";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -36,6 +38,7 @@ export default function RootLayout({
                         <MainLayoutWrapper>
                             {children}
                         </MainLayoutWrapper>
+                        <FloatingChat />
                         <Toaster />
                     </AuthProvider>
                 </div>

@@ -3,220 +3,81 @@
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { z } from 'zod';
-import webpush from 'web-push';
+import { getBudgetsStatus } from './budget-actions';
 
-// Configurar Web Push com chaves do ambiente
-// Configurar Web Push com chaves do ambiente (Trim para evitar espaços invisíveis)
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()!;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim()!;
-// Fallback para a URL do App se não houver email configurado
-let vapidSubject = process.env.VAPID_SUBJECT?.trim() || 'https://financas-production-54b6.up.railway.app';
-
-// Fix automático: Se parece email e não tem mailto:, adiciona
-if (vapidSubject.includes('@') && !vapidSubject.startsWith('mailto:')) {
-    vapidSubject = `mailto:${vapidSubject}`;
+interface NotificationItem {
+    id: string;
+    type: 'BILL' | 'BUDGET_RISK' | 'INFO';
+    title: string;
+    message: string;
+    date: Date;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
-try {
-    if (vapidPublicKey && vapidPrivateKey) {
-        webpush.setVapidDetails(
-            vapidSubject,
-            vapidPublicKey,
-            vapidPrivateKey
-        );
-        console.log("[VAPID] Configurado com sucesso. Subject:", vapidSubject);
-    }
-} catch (e) {
-    console.error("Erro ao configurar VAPID:", e);
-}
-
-const SubscriptionSchema = z.object({
-    endpoint: z.string(),
-    keys: z.object({
-        p256dh: z.string(),
-        auth: z.string()
-    })
-});
-
-export async function savePushSubscription(subscription: any) {
+export async function getUnreadNotifications(): Promise<NotificationItem[]> {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-        return { success: false, error: "Não autorizado (Email ausente)" };
-    }
+    if (!session?.user?.id) return [];
 
-    // Busca infalível pelo ID correto no banco via Email
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email }
-    });
+    const userId = session.user.id;
+    const notifications: NotificationItem[] = [];
 
-    if (!dbUser) {
-        return { success: false, error: "Usuário não encontrado no banco." };
-    }
+    // 1. Check Bills Due Soon (Next 5 Days)
+    const today = new Date();
+    const next5Days = new Date();
+    next5Days.setDate(today.getDate() + 5);
 
-    const userId = dbUser.id;
-
-    const validation = SubscriptionSchema.safeParse(subscription);
-    if (!validation.success) {
-        return { success: false, error: "Dados de inscrição inválidos" };
-    }
-
-    const { endpoint, keys } = validation.data;
-
-    try {
-        // Salvar ou atualizar com o ID CORRETO (dbUser.id)
-        await prisma.pushSubscription.upsert({
-            where: { endpoint },
-            update: {
-                userId: userId,
-                p256dh: keys.p256dh,
-                auth: keys.auth,
-            },
-            create: {
-                userId: userId, // ID correto do DB
-                endpoint,
-                p256dh: keys.p256dh,
-                auth: keys.auth,
-            }
-        });
-
-        return { success: true };
-    } catch (error) {
-        console.error("Erro ao salvar inscrição push:", error);
-        return { success: false, error: "Erro interno ao salvar notificação" };
-    }
-}
-
-export async function sendTestNotification(userIdParam?: string) {
-    // Usar sempre a sessão atual para consistência
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-        return { success: false, error: "Usuário não autenticado." };
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email }
-    });
-
-    if (!dbUser) {
-        return { success: false, error: "Usuário não encontrado." };
-    }
-
-    const currentUserId = dbUser.id;
-
-    try {
-        const subscriptions = await prisma.pushSubscription.findMany({
-            where: { userId: currentUserId }
-        });
-
-        if (subscriptions.length === 0) {
-            console.log(`[Push] Nenhum device para UserID: ${currentUserId}`);
-            return { success: false, message: `Nenhum dispositivo registrado para este usuário (${currentUserId?.substring(0, 5)}...). Tente Sincronizar novamente.` };
-        }
-
-        const notificationPayload = JSON.stringify({
-            title: 'MyWallet - Teste',
-            body: '🔔 Suas notificações estão funcionando perfeitamente!',
-            icon: '/icon-192x192.png'
-        });
-
-        const sendPromises = subscriptions.map(sub => {
-            const pushConfig = {
-                endpoint: sub.endpoint,
-                keys: {
-                    p256dh: sub.p256dh,
-                    auth: sub.auth
-                }
-            };
-            return webpush.sendNotification(pushConfig, notificationPayload)
-                .catch(err => {
-                    if (err.statusCode === 410) {
-                        // Inscrição expirou, remover do banco
-                        return prisma.pushSubscription.delete({ where: { id: sub.id } });
-                    }
-                    console.error("Erro ao enviar push:", err);
-                });
-        });
-
-        await Promise.all(sendPromises);
-        return { success: true, message: "Notificação enviada!" };
-
-    } catch (error: any) {
-        console.error("Action Error:", error);
-        return { success: false, error: `Erro push: ${error.message || error}` };
-    }
-}
-
-export async function checkDueBills() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-        return { success: false, error: "Usuário não autenticado." };
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        include: { pushSubscriptions: true }
-    });
-
-    if (!dbUser) {
-        return { success: false, error: "Usuário não encontrado." };
-    }
-
-    if (dbUser.pushSubscriptions.length === 0) {
-        return { success: false, error: "Nenhum dispositivo registrado para notificações." };
-    }
-
-    // Definir intervalo: Hoje (00:00) até Depois de Amanhã (00:00) -> Pega Hoje e Amanhã
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfTomorrow = new Date(startOfToday);
-    endOfTomorrow.setDate(endOfTomorrow.getDate() + 2);
-
-    const dueBills = await prisma.payable.findMany({
+    const upcomingBills = await prisma.payable.findMany({
         where: {
-            paymentWindow: { userId: dbUser.id },
+            paymentWindow: { userId },
             isPaid: false,
             dueDate: {
-                gte: startOfToday,
-                lt: endOfTomorrow
+                gte: today,
+                lte: next5Days
             }
+        },
+        take: 5
+    });
+
+    upcomingBills.forEach(bill => {
+        const daysLeft = Math.ceil((bill.dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        notifications.push({
+            id: `bill-${bill.id}`,
+            type: 'BILL',
+            title: `Conta vencendo: ${bill.name}`,
+            message: daysLeft === 0 ? 'Vence HOJE!' : `Vence em ${daysLeft} dias. Valor: R$ ${Number(bill.amount).toFixed(2)}`,
+            date: bill.dueDate,
+            severity: daysLeft <= 1 ? 'HIGH' : 'MEDIUM'
+        });
+    });
+
+    // 2. Check Budget Overflows
+    const budgets = await getBudgetsStatus();
+    budgets.forEach(b => {
+        if (b.percentage >= 100) {
+            notifications.push({
+                id: `budget-${b.id}`,
+                type: 'BUDGET_RISK',
+                title: `Orçamento Estourado: ${b.category}`,
+                message: `Você usou ${b.percentage.toFixed(0)}% do limite definido de R$ ${b.limit}.`,
+                date: new Date(),
+                severity: 'HIGH'
+            });
+        } else if (b.percentage >= 90) {
+            notifications.push({
+                id: `budget-${b.id}`,
+                type: 'BUDGET_RISK',
+                title: `Atenção ao Orçamento: ${b.category}`,
+                message: `Você usou ${b.percentage.toFixed(0)}% do limite.`,
+                date: new Date(),
+                severity: 'MEDIUM'
+            });
         }
     });
 
-    if (dueBills.length === 0) {
-        return { success: true, message: "Nenhuma conta próxima do vencimento encontrada." };
-    }
-
-    // Montar mensagem
-    const billNames = dueBills.map(b => b.name).join(", ");
-    const totalAmount = dueBills.reduce((sum, b) => sum + Number(b.amount), 0);
-    const notificationPayload = JSON.stringify({
-        title: '⚠️ Contas a Vencer!',
-        body: `Você tem ${dueBills.length} conta(s) vencendo em breve: ${billNames}. Total: R$ ${totalAmount.toFixed(2)}`,
-        icon: '/icon-192x192.png',
-        data: { url: '/dashboard/contas' } // Link para abrir ao clicar
+    // Sort: High severity first, then date
+    return notifications.sort((a, b) => {
+        if (a.severity === 'HIGH' && b.severity !== 'HIGH') return -1;
+        if (a.severity !== 'HIGH' && b.severity === 'HIGH') return 1;
+        return b.date.getTime() - a.date.getTime();
     });
-
-    // Enviar para todos os dispositivos do usuário
-    const sendPromises = dbUser.pushSubscriptions.map(sub => {
-        const pushConfig = {
-            endpoint: sub.endpoint,
-            keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth
-            }
-        };
-        return webpush.sendNotification(pushConfig, notificationPayload)
-            .catch(err => {
-                if (err.statusCode === 410) {
-                    return prisma.pushSubscription.delete({ where: { id: sub.id } });
-                }
-                console.error("Erro ao enviar notificação de conta:", err);
-            });
-    });
-
-    await Promise.all(sendPromises);
-    return { success: true, message: `Notificação enviada para ${dueBills.length} contas.` };
 }

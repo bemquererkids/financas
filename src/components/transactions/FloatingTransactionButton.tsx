@@ -38,10 +38,10 @@ export function FloatingTransactionButton() {
             <div className="fixed bottom-6 right-6 md:right-28 z-40 group">
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-14 h-14 rounded-full bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center justify-center hover:scale-110 hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:border-emerald-500/50 hover:bg-slate-800 transition-all duration-300 relative"
+                    className="w-14 h-14 rounded-full bg-slate-900/90 backdrop-blur-xl border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)] flex items-center justify-center hover:scale-110 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:border-indigo-500/50 hover:bg-slate-800 transition-all duration-300 relative"
                     aria-label="Nova Transação"
                 >
-                    <Plus className="h-6 w-6 text-emerald-500 group-hover:text-emerald-400 transition-colors" />
+                    <Plus className="h-6 w-6 text-indigo-500 group-hover:text-indigo-400 transition-colors" />
                 </button>
 
                 {/* Close Button - Always visible on mobile, on Hover for desktop - Cleaner Style */}

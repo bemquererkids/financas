@@ -17,8 +17,7 @@ export default function Icon() {
             // ImageResponse JSX element
             <div
                 style={{
-                    fontSize: 24,
-                    background: 'linear-gradient(135deg, #5EEAD4 0%, #34D399 100%)', // Brighter Teal/Emerald gradient
+                    background: 'linear-gradient(180deg, #06402B 0%, #032A1C 100%)',
                     width: '100%',
                     height: '100%',
                     display: 'flex',
@@ -26,20 +25,16 @@ export default function Icon() {
                     justifyContent: 'center',
                 }}
             >
-                {/* Scaled Piggy Bank SVG */}
+                {/* Approved MyWallet Logo Symbol (White) */}
                 <svg
-                    width="108"
-                    height="108"
+                    width="120"
+                    height="120"
                     viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#022c22" // Very dark teal/black
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    fill="white"
+                    xmlns="http://www.w3.org/2000/svg"
                 >
-                    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2.5V5z" />
-                    <path d="M2 9v1c0 1.1.9 2 2 2h1" />
-                    <path d="M16 11h.01" />
+                    <path d="M14.5 5.5C14.5 5.5 13.5 2 9.5 3.5C9.5 3.5 8 11 8 11L5.5 11C4.11929 11 3 12.1193 3 13.5V14.5C3 15.8807 4.11929 17 5.5 17H6.08579L5.29289 17.7929C4.90237 18.1834 4.90237 18.8166 5.29289 19.2071L6.79289 20.7071C7.18342 21.0976 7.81658 21.0976 8.20711 20.7071L10 19H14L15.7929 20.7071C16.1834 21.0976 16.8166 21.0976 17.2071 20.7071L18.7071 19.2071C19.0976 18.8166 19.0976 18.1834 18.7071 17.7929L18 17.0858V14C18 13.7956 18.0266 13.5966 18.077 13.4079C19.2032 12.8251 20 11.5997 20 10.165V10.125C20.5959 10.0384 21.084 9.61053 21.2335 9.02705C21.7826 6.88414 19.4674 5.38541 18.2505 7.15243C17.6186 6.13677 16.6343 5.37893 15.4646 5.09334C15.1786 5.29653 14.8516 5.43283 14.5 5.5ZM7 13C7 12.4477 7.44772 12 8 12C8.55228 12 9 12.4477 9 13C9 13.5523 8.55228 14 8 14C7.44772 14 7 13.5523 7 13ZM11 7C10.4477 7 10 7.44772 10 8C10 8.55228 10.4477 9 11 9H15C15.5523 9 16 8.55228 16 8C16 7.44772 15.5523 7 15 7H11Z"
+                        fill="white" />
                 </svg>
             </div>
         ),

@@ -44,16 +44,16 @@ const categoryColors: Record<string, string> = {
     'Energia': 'bg-yellow-500',
     'Educação': 'bg-purple-500',
     'Faculdade': 'bg-purple-500',
-    'Creche': 'bg-green-500',
+    'Creche': 'bg-indigo-500',
     'Saúde': 'bg-pink-500',
     'Transporte': 'bg-slate-500',
     'Uber': 'bg-slate-500',
     'Combustível': 'bg-slate-500',
     'Alimentação': 'bg-amber-500',
     'Restaurante': 'bg-amber-500',
-    'Salário': 'bg-emerald-500',
-    'Renda': 'bg-emerald-500',
-    'Investimento': 'bg-cyan-500',
+    'Salário': 'bg-indigo-500',
+    'Renda': 'bg-indigo-500',
+    'Investimento': 'bg-purple-500',
     'Cartão': 'bg-rose-500',
     'Fatura': 'bg-rose-500',
     'CREDIT_CARD_BILL': 'bg-rose-500',
@@ -107,7 +107,7 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
     return (
         <div className="rounded-2xl glass-card overflow-hidden h-full flex flex-col">
             {/* Header com navegação */}
-            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-emerald-600 to-emerald-500 flex-shrink-0">
+            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-indigo-600 to-indigo-500 flex-shrink-0">
                 <h3 className="text-lg font-bold text-white text-center">Fluxo de Caixa</h3>
             </div>
 
@@ -143,7 +143,7 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
             <div className="grid grid-cols-2 gap-4 p-4 border-b border-white/5 bg-white/2 flex-shrink-0">
                 <div className="text-center">
                     <p className="text-xs text-slate-400">Entradas</p>
-                    <p className="text-lg font-bold text-emerald-400">{formatCurrency(data.totalIncome)}</p>
+                    <p className="text-lg font-bold text-indigo-400">{formatCurrency(data.totalIncome)}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-xs text-slate-400">Saídas</p>
@@ -185,7 +185,7 @@ export function CashFlowView({ initialData }: CashFlowViewProps) {
 
                                         {/* Amount */}
                                         <div className="text-right">
-                                            <p className={`text-sm font-mono font-medium ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            <p className={`text-sm font-mono font-medium ${isIncome ? 'text-indigo-400' : 'text-red-400'}`}>
                                                 {isIncome ? '' : '- '}{formatCurrency(tx.amount)}
                                             </p>
                                             <p className="text-[10px] text-slate-500">{tx.status}</p>

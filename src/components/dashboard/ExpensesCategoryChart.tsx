@@ -12,14 +12,14 @@ interface ExpensesCategoryChartProps {
 }
 
 const COLORS = [
-    '#10b981', // emerald
-    '#8b5cf6', // violet
+    '#6366f1', // indigo
+    '#a855f7', // purple
+    '#ec4899', // pink
+    '#3b82f6', // blue
     '#f59e0b', // amber
     '#ef4444', // red
-    '#3b82f6', // blue
-    '#ec4899', // pink
+    '#8b5cf6', // violet
     '#14b8a6', // teal
-    '#f97316', // orange
 ];
 
 export function ExpensesCategoryChart({ data }: ExpensesCategoryChartProps) {
@@ -36,7 +36,14 @@ export function ExpensesCategoryChart({ data }: ExpensesCategoryChartProps) {
             'EXPENSE': 'Despesa',
             'SALARY': 'Salário',
             'INVESTMENT': 'Investimento',
-            // Adicione outros conforme necessário
+            'TRANSPORT': 'Transporte',
+            'FOOD': 'Alimentação',
+            'HOUSING': 'Moradia',
+            'OTHER': 'Outros',
+            'LEISURE': 'Lazer',
+            'HEALTH': 'Saúde',
+            'EXTRAS': 'Extras',
+            'SHOPPING': 'Compras',
         };
         if (dict[cat]) return dict[cat];
         // Title Case fallback
@@ -59,7 +66,7 @@ export function ExpensesCategoryChart({ data }: ExpensesCategoryChartProps) {
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: payload[0].color || payload[0].fill }}
                         />
-                        <p className="text-emerald-400 font-mono font-bold text-lg">{formatCurrency(item.amount)}</p>
+                        <p className="text-indigo-400 font-mono font-bold text-lg">{formatCurrency(item.amount)}</p>
                     </div>
                     <p className="text-slate-400 text-xs mt-1">{percentage}% do total</p>
                 </div>

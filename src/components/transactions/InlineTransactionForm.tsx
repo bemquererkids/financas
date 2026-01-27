@@ -20,16 +20,47 @@ interface InlineTransactionFormProps {
 
 export function InlineTransactionForm({ onSuccess, defaultType = 'EXPENSE' }: InlineTransactionFormProps) {
     const [loading, setLoading] = useState(false);
+    const [amount, setAmount] = useState('');
+
+    const formatCurrency = (value: string) => {
+        // Remove tudo que não é dígito
+        const numericValue = value.replace(/\D/g, '');
+
+        // Converte para centavos (ex: "100" -> 1.00)
+        // Se vazio, retorna 0
+        if (!numericValue) return '';
+
+        const floatValue = Number(numericValue) / 100;
+
+        // Formata para BRL (R$ 0,00)
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(floatValue);
+    };
+
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value;
+        setAmount(formatCurrency(rawValue));
+    };
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setLoading(true);
         const formData = new FormData(event.currentTarget);
 
+        // Limpar o valor do amount (R$ 1.000,00 -> 1000.00) para o backend
+        // Se o usuario digitou, limpa. Se não, usa 0.
+        const rawAmt = amount ? amount.replace(/[R$\s.]/g, '').replace(',', '.') : '0';
+        formData.set('amount', rawAmt);
+
         const result = await createTransaction(formData);
 
         setLoading(false);
         if (result?.success) {
+            setAmount(''); // Reset
+            // Reset form fields
+            event.currentTarget.reset();
             onSuccess?.();
         } else {
             alert('Erro ao salvar');
@@ -89,11 +120,13 @@ export function InlineTransactionForm({ onSuccess, defaultType = 'EXPENSE' }: In
                 <div className="space-y-1.5">
                     <Label className="text-xs text-slate-400">Valor</Label>
                     <Input
-                        name="amount"
+                        name="amount_display"
+                        value={amount}
+                        onChange={handleAmountChange}
                         type="text"
-                        inputMode="decimal"
-                        placeholder="0,00"
-                        className="h-10 bg-white/5 border-white/10"
+                        inputMode="numeric"
+                        placeholder="R$ 0,00"
+                        className="h-10 bg-white/5 border-white/10 font-bold text-emerald-400"
                         required
                     />
                 </div>
@@ -112,7 +145,7 @@ export function InlineTransactionForm({ onSuccess, defaultType = 'EXPENSE' }: In
             <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                className="w-full h-11 bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white font-bold"
             >
                 {loading ? 'Salvando...' : 'Salvar Transação'}
             </Button>

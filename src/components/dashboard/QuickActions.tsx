@@ -10,11 +10,11 @@ export function QuickActions() {
             {/* Nova Receita */}
             <Button
                 variant="outline"
-                className="h-auto flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl glass-card border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all active:scale-95"
+                className="h-auto flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl glass-card border-indigo-500/20 hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all active:scale-95"
                 onClick={() => document.getElementById('add-income-trigger')?.click()}
             >
-                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-400" />
                 </div>
                 <span className="text-xs font-medium text-slate-200">Nova Receita</span>
             </Button>

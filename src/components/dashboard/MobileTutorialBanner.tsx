@@ -20,10 +20,10 @@ export function MobileTutorialBanner() {
     if (!visible) return null;
 
     return (
-        <div className="md:hidden mb-4 relative rounded-xl border border-emerald-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 p-3 shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+        <div className="md:hidden mb-4 relative rounded-xl border border-indigo-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/30 p-3 shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center gap-3">
-                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                    <Compass className="h-5 w-5 text-emerald-400" />
+                <div className="h-10 w-10 shrink-0 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                    <Compass className="h-5 w-5 text-indigo-400" />
                 </div>
                 <div>
                     <h3 className="text-sm font-semibold text-white">Por onde começar?</h3>
@@ -34,7 +34,7 @@ export function MobileTutorialBanner() {
             <div className="flex items-center gap-2">
                 <Link
                     href="/tutorial"
-                    className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors shadow-sm shadow-emerald-900/50"
+                    className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-sm shadow-indigo-900/50"
                 >
                     Ver Guia
                 </Link>

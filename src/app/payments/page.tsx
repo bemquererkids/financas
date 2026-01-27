@@ -1,15 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { getPaymentWindows, togglePayableStatus } from '@/app/actions/payment-actions';
+import { useState, useEffect } from 'react';
+import { getPaymentWindows } from '@/app/actions/payment-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle, Circle, Calendar, Save, Upload, X, Wallet, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, CheckCircle, Calendar, Save, Upload, X, Wallet, Activity, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ModuleHeader } from '@/components/dashboard/ModuleHeader';
 import { ChatWidget } from '@/components/ai/ChatWidget';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function PaymentsPage() {
     const [data, setData] = useState<any>(null);
@@ -44,240 +52,228 @@ export default function PaymentsPage() {
     const progress = totalBills > 0 ? (paidBills / totalBills) * 100 : 0;
 
     return (
-        <div className="flex-1 space-y-8 p-6 md:p-8 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.05),transparent)] min-h-screen">
-            <ModuleHeader
-                title="Gestão de Compromissos"
-                subtitle="Visualize e controle suas janelas de pagamento de forma inteligente"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-zinc-900/50 rounded-2xl border border-white/5 p-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleMonthChange(-1)} className="h-9 w-9 text-zinc-400 hover:text-white rounded-xl">
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm font-bold text-white px-2 min-w-[100px] text-center capitalize">
-                            {selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                        </span>
-                        <Button variant="ghost" size="icon" onClick={() => handleMonthChange(1)} className="h-9 w-9 text-zinc-400 hover:text-white rounded-xl">
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => setChatOpen(true)}
-                        className="border-emerald-500/30 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 rounded-2xl h-11 px-6 transition-all"
-                    >
-                        <Upload className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Importar / Scan AI</span>
-                    </Button>
-
-                    <Button
-                        onClick={() => setIsAdding(!isAdding)}
-                        className={cn(
-                            "rounded-2xl h-11 px-6 shadow-lg transition-all font-bold",
-                            isAdding ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-700" : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20"
-                        )}
-                    >
-                        {isAdding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                        <span className="ml-2 hidden sm:inline">{isAdding ? 'Cancelar' : 'Nova Conta'}</span>
-                    </Button>
-                </div>
-            </ModuleHeader>
-
-            {/* Resumo de Saúde Financeira */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="bg-zinc-900/40 border-white/5 backdrop-blur-xl p-6 rounded-[2rem] space-y-4">
-                    <div className="flex justify-between items-start">
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
-                            <Wallet className="w-5 h-5 text-zinc-400" />
+        <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6 md:h-[calc(100vh-2rem)] md:overflow-hidden bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.05),transparent)]">
+            {/* Header Section */}
+            <div className="flex-shrink-0">
+                <ModuleHeader
+                    title="Gestão de Compromissos"
+                    subtitle="Visualize e controle suas janelas de pagamento."
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-zinc-900/50 rounded-xl border border-white/5 p-1 h-9">
+                            <Button variant="ghost" size="icon" onClick={() => handleMonthChange(-1)} className="h-7 w-7 text-zinc-400 hover:text-white rounded-lg">
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="text-xs font-bold text-white px-2 min-w-[80px] text-center capitalize">
+                                {selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '')}
+                            </span>
+                            <Button variant="ghost" size="icon" onClick={() => handleMonthChange(1)} className="h-7 w-7 text-zinc-400 hover:text-white rounded-lg">
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
                         </div>
-                        <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Total Previsto</p>
-                        <h3 className="text-2xl font-black text-white tracking-tighter">{formatCurrency(totalBills)}</h3>
-                    </div>
-                </Card>
 
-                <Card className="bg-zinc-900/40 border-white/5 backdrop-blur-xl p-6 rounded-[2rem] space-y-4">
-                    <div className="flex justify-between items-start">
-                        <div className="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                            <Activity className="w-5 h-5 text-emerald-500" />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Total Pago</p>
-                        <h3 className="text-2xl font-black text-emerald-400 tracking-tighter">{formatCurrency(paidBills)}</h3>
-                    </div>
-                </Card>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setChatOpen(true)}
+                            className="hidden sm:flex border-emerald-500/30 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 rounded-xl h-9"
+                        >
+                            <Upload className="h-3.5 w-3.5 mr-2" />
+                            Importar AI
+                        </Button>
 
-                <Card className="bg-zinc-900/40 border-white/5 backdrop-blur-xl p-6 rounded-[2rem] col-span-1 md:col-span-2 flex flex-col justify-between">
-                    <div className="flex justify-between items-center mb-4">
+                        <Dialog open={isAdding} onOpenChange={setIsAdding}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    className="rounded-xl h-9 bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20"
+                                >
+                                    <Plus className="h-4 w-4 mr-1.5" />
+                                    <span className="hidden sm:inline">Nova Conta</span>
+                                    <span className="sm:hidden">Nova</span>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-white/10 text-white">
+                                <DialogHeader>
+                                    <DialogTitle>Adicionar Novo Compromisso</DialogTitle>
+                                </DialogHeader>
+                                <form action={async (formData) => {
+                                    const { addPayable } = await import('@/app/actions/payment-actions');
+                                    await addPayable(formData);
+                                    setIsAdding(false);
+                                    loadData(selectedDate);
+                                    toast.success("Conta adicionada com sucesso!");
+                                }} className="space-y-4 mt-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Nome da Conta</label>
+                                        <Input name="name" placeholder="Ex: Aluguel" required className="bg-white/5 border-white/5 text-white" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Valor (R$)</label>
+                                        <Input name="amount" type="number" step="0.01" placeholder="0.00" required className="bg-white/5 border-white/5 text-white" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Vencimento</label>
+                                            <Input name="dueDate" type="date" required className="bg-white/5 border-white/5 text-white" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Janela</label>
+                                            <Select name="windowDay" required defaultValue="7">
+                                                <SelectTrigger className="bg-white/5 border-white/5 text-white">
+                                                    <SelectValue placeholder="Dia" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-zinc-800 border-white/10 text-white">
+                                                    <SelectItem value="7">Dia 07</SelectItem>
+                                                    <SelectItem value="15">Dia 15</SelectItem>
+                                                    <SelectItem value="30">Dia 30</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
+                                        Salvar Conta
+                                    </Button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </ModuleHeader>
+
+                {/* Compact Stats Row */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+                    <Card className="bg-zinc-900/40 border-white/5 p-4 rounded-2xl flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status do Mês</p>
-                            <h3 className="text-lg font-bold text-white tracking-tight">
-                                {progress === 100 ? 'Mês Quitado! 🎉' : `${progress.toFixed(0)}% das contas pagas`}
-                            </h3>
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Previsto</p>
+                            <p className="text-lg font-black text-white">{formatCurrency(totalBills)}</p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-[10px] font-black text-rose-500/80 uppercase tracking-widest">Restante</p>
-                            <p className="text-xl font-black text-white tracking-tighter">{formatCurrency(pendingBills)}</p>
+                        <div className="h-8 w-8 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                            <Wallet className="h-4 w-4 text-zinc-400" />
                         </div>
-                    </div>
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-1000 ease-out"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                </Card>
+                    </Card>
+                    <Card className="bg-zinc-900/40 border-white/5 p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider">Pago</p>
+                            <p className="text-lg font-black text-emerald-400">{formatCurrency(paidBills)}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <Activity className="h-4 w-4 text-emerald-500" />
+                        </div>
+                    </Card>
+                    <Card className="col-span-2 bg-zinc-900/40 border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-2">
+                        <div className="flex justify-between items-end">
+                            <span className="text-xs font-medium text-emerald-400">{progress.toFixed(0)}% Pago</span>
+                            <span className="text-[10px] text-zinc-500 font-mono">Restante: {formatCurrency(pendingBills)}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-1000" style={{ width: `${progress}%` }} />
+                        </div>
+                    </Card>
+                </div>
             </div>
 
-            {isAdding && (
-                <div className="p-8 rounded-[2.5rem] bg-zinc-900/60 border border-emerald-500/20 backdrop-blur-2xl animate-in fade-in slide-in-from-top-4 shadow-2xl">
-                    <form action={async (formData) => {
-                        const { addPayable } = await import('@/app/actions/payment-actions');
-                        await addPayable(formData);
-                        setIsAdding(false);
-                        loadData(selectedDate);
-                    }} className="flex flex-col md:flex-row items-end gap-6">
-                        <div className="flex-1 w-full min-w-[200px] space-y-2">
-                            <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Nome da Conta</label>
-                            <Input name="name" placeholder="Ex: Aluguel, Internet" required className="bg-white/5 border-white/5 text-white h-12 rounded-2xl focus:ring-emerald-500/20" />
-                        </div>
-                        <div className="w-full md:w-40 space-y-2">
-                            <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Valor</label>
-                            <Input name="amount" type="text" inputMode="decimal" placeholder="R$ 0,00" required className="bg-white/5 border-white/5 text-white h-12 rounded-2xl focus:ring-emerald-500/20 font-mono" />
-                        </div>
-                        <div className="w-full md:w-auto space-y-2">
-                            <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Vencimento</label>
-                            <Input name="dueDate" type="date" required className="bg-white/5 border-white/5 text-zinc-400 h-12 rounded-2xl focus:ring-emerald-500/20" />
-                        </div>
-                        <div className="w-full md:w-32 space-y-2">
-                            <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Janela</label>
-                            <Select name="windowDay" required defaultValue="7">
-                                <SelectTrigger className="bg-white/5 border-white/5 text-white h-12 rounded-2xl focus:ring-emerald-500/20">
-                                    <SelectValue placeholder="Dia" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-2xl">
-                                    <SelectItem value="7">Dia 07</SelectItem>
-                                    <SelectItem value="15">Dia 15</SelectItem>
-                                    <SelectItem value="30">Dia 30</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button type="submit" size="icon" className="bg-emerald-600 hover:bg-emerald-500 h-14 w-14 rounded-2xl transition-all shadow-lg shadow-emerald-600/20" title="Salvar">
-                            <Save className="h-6 w-6" />
-                        </Button>
-                    </form>
-                </div>
-            )}
+            {/* Main Content - 3 Column Grid for One Screen Experience */}
+            <div className="flex-1 min-h-0"> {/* min-h-0 is crucial for nested flex scrolling */}
+                {!data ? (
+                    <div className="h-full flex flex-col items-center justify-center opacity-30">
+                        <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-4">Sincronizando...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+                        {[7, 15, 30].map(day => {
+                            const window = data.windows[day];
+                            const windowPaid = window.items.filter((i: any) => i.isPaid).length;
+                            const windowTotal = window.items.length;
+                            const windowProgress = windowTotal > 0 ? (windowPaid / windowTotal) * 100 : 0;
 
-            {!data ? (
-                <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                    <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mt-4">Sincronizando Compromissos...</p>
-                </div>
-            ) : (
-                <div className="grid gap-8 md:grid-cols-3">
-                    {[7, 15, 30].map(day => {
-                        const window = data.windows[day];
-                        const windowPaid = window.items.filter((i: any) => i.isPaid).length;
-                        const windowTotal = window.items.length;
-                        const windowProgress = windowTotal > 0 ? (windowPaid / windowTotal) * 100 : 0;
-
-                        return (
-                            <Card key={day} className="bg-zinc-900/30 border-white/5 backdrop-blur-xl rounded-[2.5rem] flex flex-col h-full overflow-hidden transition-all hover:bg-zinc-900/40 group">
-                                <CardHeader className="p-8 border-b border-white/5 space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
-                                            <CardTitle className="text-xl font-black text-white tracking-tight">Janela Dia {day}</CardTitle>
-                                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{windowTotal} {windowTotal === 1 ? 'Contas' : 'Contas'}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-black text-emerald-400 tracking-tighter">
+                            return (
+                                <Card key={day} className="bg-zinc-900/30 border-white/5 backdrop-blur-md rounded-3xl flex flex-col h-full overflow-hidden transition-all hover:bg-zinc-900/40 group border-t-4 border-t-emerald-500/20 hover:border-t-emerald-500/50">
+                                    <div className="p-5 border-b border-white/5 shrink-0">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div>
+                                                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                                                    Dia {day}
+                                                    {windowTotal > 0 && windowTotal === windowPaid && (
+                                                        <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                                    )}
+                                                </h3>
+                                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{windowTotal} Contas</p>
+                                            </div>
+                                            <p className="text-xl font-black text-emerald-400/90 font-mono">
                                                 {formatCurrency(window.total)}
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-emerald-500/40 transition-all duration-1000"
-                                            style={{ width: `${windowProgress}%` }}
-                                        />
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-1 p-8 space-y-4 custom-scrollbar overflow-y-auto max-h-[400px]">
-                                    {window.items.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-10 grayscale opacity-20">
-                                            <Calendar className="h-10 w-10 text-zinc-400 mb-2" />
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Janela Livre</p>
+                                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-emerald-500/50 transition-all duration-1000"
+                                                style={{ width: `${windowProgress}%` }}
+                                            />
                                         </div>
-                                    ) : (
-                                        window.items.map((item: any) => (
-                                            <div key={item.id} className="flex items-center justify-between group/item p-4 hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/5">
-                                                <div className="flex items-center gap-4">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const { togglePayableStatus } = await import('@/app/actions/payment-actions');
-                                                            await togglePayableStatus(item.id, item.isPaid);
-                                                            loadData(selectedDate);
-                                                        }}
-                                                        className="transition-transform active:scale-90"
-                                                    >
-                                                        {item.isPaid ? (
-                                                            <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                                                                <CheckCircle className="h-4 w-4 text-zinc-950" />
+                                    </div>
+
+                                    <CardContent className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2">
+                                        {window.items.length === 0 ? (
+                                            <div className="h-full flex flex-col items-center justify-center opacity-20 py-10">
+                                                <Calendar className="h-8 w-8 text-zinc-400 mb-2" />
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Janela Livre</p>
+                                            </div>
+                                        ) : (
+                                            window.items.map((item: any) => (
+                                                <div key={item.id} className="flex items-center justify-between group/item p-3 hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/5">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const { togglePayableStatus } = await import('@/app/actions/payment-actions');
+                                                                await togglePayableStatus(item.id, item.isPaid);
+                                                                loadData(selectedDate);
+                                                            }}
+                                                            className="shrink-0 transition-transform active:scale-95"
+                                                        >
+                                                            {item.isPaid ? (
+                                                                <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                                                    <CheckCircle className="h-3.5 w-3.5 text-zinc-950" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="h-5 w-5 rounded-full border-2 border-zinc-700 hover:border-emerald-500 transition-colors" />
+                                                            )}
+                                                        </button>
+                                                        <div className="min-w-0">
+                                                            <p className={cn(
+                                                                "text-sm font-bold leading-none mb-1 transition-all text-zinc-200 truncate",
+                                                                item.isPaid && "text-zinc-600 line-through"
+                                                            )}>
+                                                                {item.name}
+                                                            </p>
+                                                            <div className="flex items-center gap-1.5 text-zinc-600">
+                                                                <span className="text-[10px] font-medium">
+                                                                    {new Date(item.dueDate).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}
+                                                                </span>
                                                             </div>
-                                                        ) : (
-                                                            <div className="h-6 w-6 rounded-full border-2 border-zinc-700 hover:border-emerald-500 transition-colors" />
-                                                        )}
-                                                    </button>
-                                                    <div>
-                                                        <p className={cn(
-                                                            "text-[13px] font-bold leading-none mb-1.5 transition-all text-zinc-100 uppercase",
-                                                            item.isPaid && "text-zinc-600 line-through"
-                                                        )}>
-                                                            {item.name}
-                                                        </p>
-                                                        <div className="flex items-center gap-1.5 text-zinc-500">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span className="text-[10px] font-bold tracking-tighter">
-                                                                {new Date(item.dueDate).toLocaleDateString()}
-                                                            </span>
                                                         </div>
                                                     </div>
+                                                    <span className={cn(
+                                                        "text-sm font-black font-mono transition-all shrink-0 ml-2",
+                                                        item.isPaid ? "text-zinc-700" : "text-emerald-400 group-hover/item:scale-105"
+                                                    )}>
+                                                        {formatCurrency(item.amount)}
+                                                    </span>
                                                 </div>
-                                                <span className={cn(
-                                                    "text-[13px] font-black font-mono transition-all",
-                                                    item.isPaid ? "text-zinc-600" : "text-emerald-400 group-hover/item:scale-110"
-                                                )}>
-                                                    {formatCurrency(item.amount)}
-                                                </span>
-                                            </div>
-                                        ))
-                                    )}
-                                </CardContent>
-                                <div className="p-8 pt-0 mt-auto">
-                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">Nota Inteligente</p>
-                                        <p className="text-[10px] text-zinc-400 leading-tight">
-                                            Estes valores são deduzidos do seu <span className="text-emerald-500 font-bold">Dinheiro Livre</span> no Dashboard principal.
-                                        </p>
-                                    </div>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
-            )}
+                                            ))
+                                        )}
+                                    </CardContent>
 
-            {/* Agente Widget - Integrado para unificação */}
+                                    {/* Footer Gradient for visual anchoring */}
+                                    <div className="h-4 bg-gradient-to-t from-zinc-900/50 to-transparent shrink-0" />
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Agente Widget */}
             <ChatWidget isOpen={chatOpen} onOpenChange={setChatOpen} />
         </div>
     );
-}
-
-function Loader2({ className }: { className?: string }) {
-    return <Activity className={cn("animate-spin", className)} />;
 }

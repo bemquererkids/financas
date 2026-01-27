@@ -13,23 +13,43 @@ const OFXInputSchema = z.string().min(10, "Arquivo OFX inválido ou vazio");
 function parseOFX(data: string) {
     const transactions: any[] = [];
 
-    // Normalizar quebras de linha para evitar problemas regex
-    // Alguns OFX vêm tudo em uma linha, outros com \r\n
-    const cleanData = data.replace(/\r/g, '');
+    // Normalizar quebras de linha e espaços extras
+    // Remove caracteres nulos ou de controle que as vezes vêm em arquivos bancários
+    const cleanData = data.replace(/\r/g, '').trim();
 
-    // Estratégia Robusta: Split por <STMTTRN>
-    // Isso funciona mesmo se não tiver tag de fechamento </STMTTRN> (comum em SGML antigo)
-    const blocks = cleanData.split(/<STMTTRN>/i);
+    // Estratégia Robusta v2: Split por "STMTTRN" (ignorando < e > no split para ser mais flexível)
+    // Tenta encontrar o início de cada bloco de transação
+    // O split vai "comer" o tag inicial, mas o conteúdo estará no item do array
+    const parts = cleanData.split(/<STMTTRN/i);
 
-    // Começa do 1 porque o 0 é o header antes da primeira tx
-    for (let i = 1; i < blocks.length; i++) {
-        const block = blocks[i];
+    // O primeiro item (parts[0]) geralmente é o header ou lixo antes da primeira tx
+    for (let i = 1; i < parts.length; i++) {
+        let block = parts[i];
 
-        // Helper para extrair valor de tag (case insensitive)
-        // P procura: <TAG>... (até encontrar <, \n ou fim da string)
+        // Se o bloco foi splitado apenas em "STMTTRN" (sem >), o ">" pode estar no início do block.
+        // Vamos garantir que começamos a ler DEPOIS do fechamento da tag inicial se ela existir
+        if (block.startsWith('>')) {
+            block = block.substring(1);
+        } else if (block.startsWith(' >')) {
+            block = block.substring(2);
+        }
+
+        // Remove, se houver, o fechamento </STMTTRN> e tudo depois dele
+        // Para garantir que não estamos lendo lixo de outras tags
+        const endBlock = block.search(/<\/STMTTRN/i);
+        if (endBlock !== -1) {
+            block = block.substring(0, endBlock);
+        }
+
+        // Helper mais tolerante para extrair valor
+        // Procura <TAG>VALOR, onde VALOR vai até <, \n ou fim.
         const getTag = (tag: string) => {
-            const regex = new RegExp(`<${tag}>(.*?)(?:<|\\n|$)`, 'i');
-            return block.match(regex)?.[1]?.trim();
+            // Regex:
+            // <TAG\s*> : Abre tag, possiveis espaços
+            // ([^<]*)  : O valor (tudo que não é <)
+            const regex = new RegExp(`<${tag}[^>]*>([^<]*)`, 'i');
+            const match = block.match(regex);
+            return match ? match[1].trim() : null;
         };
 
         const type = getTag('TRNTYPE');
@@ -37,22 +57,40 @@ function parseOFX(data: string) {
         const id = getTag('FITID');
         const dateRaw = getTag('DTPOSTED');
         const memo = getTag('MEMO');
-        const name = getTag('NAME'); // Às vezes vem como NAME
+        const name = getTag('NAME');
+        const checkNum = getTag('CHECKNUM');
+        const refNum = getTag('REFNUM');
 
         if (amountStr && dateRaw) {
-            // Tratamento de valor para PT-BR (se vier virgula sem ponto, troca. Se vier 1.000,00...)
-            // O padrão OFX é PONTO decimal (US), mas alguns bancos BR mandam virrgula.
-            let safeAmount = amountStr;
-            // Hack simples: se tem virgula e não tem ponto -> troca virgula por ponto
-            if (safeAmount.includes(',') && !safeAmount.includes('.')) {
+            // Tratamento de valor para PT-BR e outros formatos
+            let safeAmount = amountStr.replace(/\s/g, ''); // Remove espaços internos
+
+            // Corrige sinal invertido se necessário (alguns bancos mandam débito como positivo e Type=DEBIT)
+            // Mas o padrão OFX é: Saída = Negativo, Entrada = Positivo.
+            // Vamos respeitar o sinal do valor numérico se existir.
+
+            // Hack para formatos brasileiros errados (ex: 1.200,50 ou 1,200.50)
+            // Se tem apenas vírgula como separador, troca por ponto
+            if (safeAmount.indexOf(',') !== -1 && safeAmount.indexOf('.') === -1) {
                 safeAmount = safeAmount.replace(',', '.');
+            }
+            // Se tem ponto e vírgula (ex: 1.000,00)
+            else if (safeAmount.indexOf('.') !== -1 && safeAmount.indexOf(',') !== -1) {
+                // Assume que o último separador é o decimal
+                if (safeAmount.lastIndexOf(',') > safeAmount.lastIndexOf('.')) {
+                    // Euro/BR style: 1.000,00 -> remove ponto, troca virgula por ponto
+                    safeAmount = safeAmount.replace(/\./g, '').replace(',', '.');
+                } else {
+                    // US style: 1,000.00 -> remove virgula
+                    safeAmount = safeAmount.replace(/,/g, '');
+                }
             }
 
             transactions.push({
                 TRNAMT: safeAmount,
                 DTPOSTED: dateRaw,
-                MEMO: memo || name || "Sem descrição",
-                FITID: id
+                MEMO: memo || name || checkNum || refNum || "Transação Importada",
+                FITID: id || `${dateRaw}-${Math.random().toString(36).substr(2, 9)}` // Fallback ID
             });
         }
     }
