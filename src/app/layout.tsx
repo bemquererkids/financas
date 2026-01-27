@@ -12,9 +12,9 @@ export const metadata: Metadata = {
     description: "Sistema de gestão financeira pessoal e familiar",
     manifest: "/manifest.json",
     icons: {
-        icon: "/favicon.ico",
-        apple: "/apple-icon.png",
-        shortcut: "/favicon.ico",
+        icon: "/favicon.ico?v=2",
+        apple: "/apple-icon.png?v=2",
+        shortcut: "/favicon.ico?v=2",
     },
     appleWebApp: {
         capable: true,
